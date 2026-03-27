@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Read(//c/Users/gulbr/Desktop/**)",
+      "Bash(npx create-next-app@latest bible-vibe --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --yes)",
+      "Bash(mv claude.md _claude.md)",
+      "Bash(mv _claude.md claude.md)",
+      "Bash(cp -r \"c:\\\\Users\\\\gulbr\\\\Desktop\\\\bible-vibe-temp/.\" \"c:\\\\Users\\\\gulbr\\\\Desktop\\\\bible-vibe/\")",
+      "Bash(rm -rf \"c:\\\\Users\\\\gulbr\\\\Desktop\\\\bible-vibe-temp\")",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init --yes --defaults)",
+      "Bash(npx shadcn@canary init --yes --defaults)"
+    ]
+  }
+}
