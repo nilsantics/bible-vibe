@@ -49,72 +49,87 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Bible Vibe brand — earthy parchment tones, forest green primary */
+  --background: oklch(0.98 0.005 85);
+  --foreground: oklch(0.15 0.01 85);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.15 0.01 85);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.15 0.01 85);
+  --primary: oklch(0.4 0.1 150);        /* Forest green */
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.95 0.01 85);
+  --secondary-foreground: oklch(0.15 0.01 85);
+  --muted: oklch(0.95 0.008 85);
+  --muted-foreground: oklch(0.5 0.01 85);
+  --accent: oklch(0.72 0.12 70);        /* Warm gold */
+  --accent-foreground: oklch(0.15 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --border: oklch(0.9 0.008 85);
+  --input: oklch(0.9 0.008 85);
+  --ring: oklch(0.4 0.1 150);
+  --chart-1: oklch(0.4 0.1 150);
+  --chart-2: oklch(0.72 0.12 70);
+  --chart-3: oklch(0.6 0.08 230);
+  --chart-4: oklch(0.65 0.1 30);
+  --chart-5: oklch(0.55 0.09 290);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.97 0.006 85);
+  --sidebar-foreground: oklch(0.15 0.01 85);
+  --sidebar-primary: oklch(0.4 0.1 150);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.93 0.01 85);
+  --sidebar-accent-foreground: oklch(0.15 0.01 85);
+  --sidebar-border: oklch(0.88 0.008 85);
+  --sidebar-ring: oklch(0.4 0.1 150);
+
+  /* Highlight colors */
+  --verse-hl-yellow: oklch(0.95 0.1 85 / 0.5);
+  --verse-hl-green:  oklch(0.92 0.08 150 / 0.4);
+  --verse-hl-blue:   oklch(0.92 0.06 240 / 0.4);
+  --verse-hl-pink:   oklch(0.93 0.07 0 / 0.35);
+  --verse-hl-purple: oklch(0.92 0.07 290 / 0.35);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.12 0.01 240);
+  --foreground: oklch(0.92 0.005 85);
+  --card: oklch(0.16 0.01 240);
+  --card-foreground: oklch(0.92 0.005 85);
+  --popover: oklch(0.16 0.01 240);
+  --popover-foreground: oklch(0.92 0.005 85);
+  --primary: oklch(0.65 0.15 150);      /* Lighter green for dark mode */
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.2 0.01 240);
+  --secondary-foreground: oklch(0.92 0.005 85);
+  --muted: oklch(0.2 0.01 240);
+  --muted-foreground: oklch(0.6 0.01 240);
+  --accent: oklch(0.72 0.12 70);
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.65 0.2 22);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.65 0.15 150);
+  --chart-1: oklch(0.65 0.15 150);
+  --chart-2: oklch(0.72 0.12 70);
+  --chart-3: oklch(0.6 0.1 230);
+  --chart-4: oklch(0.65 0.1 30);
+  --chart-5: oklch(0.6 0.1 290);
+  --sidebar: oklch(0.15 0.01 240);
+  --sidebar-foreground: oklch(0.92 0.005 85);
+  --sidebar-primary: oklch(0.65 0.15 150);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --sidebar-accent: oklch(0.2 0.01 240);
+  --sidebar-accent-foreground: oklch(0.92 0.005 85);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.65 0.15 150);
+
+  /* Highlight colors — more translucent in dark mode */
+  --verse-hl-yellow: oklch(0.85 0.12 85 / 0.18);
+  --verse-hl-green:  oklch(0.75 0.1 150 / 0.18);
+  --verse-hl-blue:   oklch(0.75 0.08 240 / 0.18);
+  --verse-hl-pink:   oklch(0.78 0.1 0 / 0.18);
+  --verse-hl-purple: oklch(0.75 0.1 290 / 0.18);
 }
 
 @layer base {
@@ -123,8 +138,74 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: Georgia, 'Times New Roman', serif;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* Bible reading typography */
+.bible-text {
+  font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+  font-size: 1.05rem;
+  line-height: 1.95;
+  letter-spacing: 0.012em;
+}
+
+.verse-number {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  vertical-align: super;
+  margin-right: 0.25em;
+  opacity: 0.4;
+  user-select: none;
+}
+
+/* Highlight swatches */
+.hl-yellow { background-color: var(--verse-hl-yellow); border-radius: 2px; padding: 1px 0; }
+.hl-green  { background-color: var(--verse-hl-green);  border-radius: 2px; padding: 1px 0; }
+.hl-blue   { background-color: var(--verse-hl-blue);   border-radius: 2px; padding: 1px 0; }
+.hl-pink   { background-color: var(--verse-hl-pink);   border-radius: 2px; padding: 1px 0; }
+.hl-purple { background-color: var(--verse-hl-purple); border-radius: 2px; padding: 1px 0; }
+
+/* Sepia reading theme */
+.sepia {
+  --background: oklch(0.94 0.03 75);
+  --foreground: oklch(0.2 0.03 60);
+  --card: oklch(0.96 0.025 75);
+  --card-foreground: oklch(0.2 0.03 60);
+  --popover: oklch(0.96 0.025 75);
+  --popover-foreground: oklch(0.2 0.03 60);
+  --primary: oklch(0.38 0.09 145);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.9 0.025 75);
+  --secondary-foreground: oklch(0.2 0.03 60);
+  --muted: oklch(0.9 0.025 75);
+  --muted-foreground: oklch(0.48 0.03 70);
+  --accent: oklch(0.65 0.1 65);
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.84 0.025 75);
+  --input: oklch(0.84 0.025 75);
+  --ring: oklch(0.38 0.09 145);
+  --verse-hl-yellow: oklch(0.88 0.12 75 / 0.5);
+  --verse-hl-green:  oklch(0.82 0.08 145 / 0.4);
+  --verse-hl-blue:   oklch(0.82 0.06 230 / 0.35);
+  --verse-hl-pink:   oklch(0.85 0.08 10 / 0.35);
+  --verse-hl-purple: oklch(0.82 0.07 280 / 0.35);
+}
+
+/* Streak fire */
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(-1deg); }
+  50%       { transform: scale(1.08) rotate(1deg); }
+}
+.streak-fire { display: inline-block; animation: flicker 1.8s ease-in-out infinite; }
+
+/* UI uses sans-serif */
+button, input, select, textarea, label,
+nav, header, aside, footer, [data-ui] {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }

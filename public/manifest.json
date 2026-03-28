@@ -1,0 +1,38 @@
+{
+  "name": "Bible Vibe",
+  "short_name": "Bible Vibe",
+  "description": "Deep Bible study — AI explanations, cross-references, Strong's Hebrew & Greek, and more.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#3a6b45",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["education", "lifestyle", "books"],
+  "shortcuts": [
+    {
+      "name": "Read Bible",
+      "url": "/dashboard/reading/john/1",
+      "description": "Open the Bible reader"
+    },
+    {
+      "name": "Search",
+      "url": "/dashboard/search",
+      "description": "Search all 31,102 verses"
+    }
+  ]
+}
