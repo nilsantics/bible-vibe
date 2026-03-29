@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -16,17 +16,14 @@ import {
   ChevronRight,
   MessageSquare,
   Columns2,
-  ScrollText,
-  ChevronDown,
-  ChevronUp,
   X,
   Type,
+  Languages,
 } from 'lucide-react'
 import { VersePopup } from '@/components/verse-popup'
 import { ChatPanel } from '@/components/chat-panel'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { toast } from 'sonner'
-import ReactMarkdown from 'react-markdown'
 import type { HighlightColor } from '@/types'
 
 interface Verse {
@@ -60,18 +57,18 @@ interface Props {
   nextBook: BookMeta | null
 }
 
+interface TaggedWord {
+  word: string
+  original: string
+  number: string
+  transliteration: string
+  brief: string
+}
+
 const TRANSLATIONS = [
   { code: 'WEB', name: 'World English Bible' },
   { code: 'KJV', name: 'King James Version' },
   { code: 'ESV', name: 'Eng. Standard Version' },
-]
-
-const HIGHLIGHT_COLORS: { color: HighlightColor; label: string; className: string }[] = [
-  { color: 'yellow', label: 'Yellow',  className: 'bg-yellow-300' },
-  { color: 'green',  label: 'Green',   className: 'bg-green-300' },
-  { color: 'blue',   label: 'Blue',    className: 'bg-blue-300' },
-  { color: 'pink',   label: 'Pink',    className: 'bg-pink-300' },
-  { color: 'purple', label: 'Purple',  className: 'bg-purple-300' },
 ]
 
 export function BibleReader({
@@ -98,13 +95,44 @@ export function BibleReader({
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [compareTranslation, setCompareTranslation] = useState<string | null>(null)
   const [compareVerses, setCompareVerses] = useState<Verse[]>([])
-  const [commentaryOpen, setCommentaryOpen] = useState(false)
-  const [commentaryText, setCommentaryText] = useState('')
-  const [commentaryLoading, setCommentaryLoading] = useState(false)
-  const commentaryFetched = useRef(false)
+  const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif')
   const readerRef = useRef<HTMLDivElement>(null)
   const [showVerseHint, setShowVerseHint] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
+
+  // Interlinear state
+  const [interlinearOn, setInterlinearOn] = useState(false)
+  const [interlinearWords, setInterlinearWords] = useState<Record<number, TaggedWord[]>>({})
+  const [interlinearLoading, setInterlinearLoading] = useState(false)
+  const [selectedInterlinearWord, setSelectedInterlinearWord] = useState<TaggedWord | null>(null)
+
+  // Word count → reading time (~200 wpm)
+  const wordCount = verses.reduce((n, v) => n + v.text.split(/\s+/).length, 0)
+  const readingMinutes = Math.max(1, Math.round(wordCount / 200))
+
+  // Persist font family preference
+  useEffect(() => {
+    const saved = localStorage.getItem('bv_font_family') as 'serif' | 'sans' | null
+    if (saved) setFontFamily(saved)
+  }, [])
+
+  function cycleFontFamily() {
+    setFontFamily((f) => {
+      const next = f === 'serif' ? 'sans' : 'serif'
+      localStorage.setItem('bv_font_family', next)
+      return next
+    })
+  }
+
+  // Save last reading position
+  useEffect(() => {
+    if (!isAuthenticated) return
+    localStorage.setItem('bv_last_position', JSON.stringify({
+      book: book.name.toLowerCase().replace(/\s+/g, '-'),
+      chapter,
+      translation,
+    }))
+  }, [book.name, chapter, translation, isAuthenticated])
 
   useEffect(() => {
     function onScroll() {
@@ -128,6 +156,51 @@ export function BibleReader({
     setShowVerseHint(false)
     localStorage.setItem('bv_verse_hint_seen', '1')
   }
+
+  // ── Interlinear functions ────────────────────────────────────────────────────
+
+  async function loadInterlinear() {
+    if (interlinearLoading) return
+    setInterlinearLoading(true)
+    try {
+      const res = await fetch('/api/interlinear-chapter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          book_id: book.id,
+          chapter,
+          translation,
+          testament: book.testament,
+        }),
+      })
+      const data = await res.json()
+      if (data.verses) {
+        const words: Record<number, TaggedWord[]> = {}
+        for (const [k, v] of Object.entries(data.verses)) {
+          words[parseInt(k, 10)] = v as TaggedWord[]
+        }
+        setInterlinearWords(words)
+      }
+    } catch {
+      toast.error('Could not load interlinear data')
+    } finally {
+      setInterlinearLoading(false)
+    }
+  }
+
+  function toggleInterlinear() {
+    if (interlinearOn) {
+      setInterlinearOn(false)
+      setSelectedInterlinearWord(null)
+      return
+    }
+    setInterlinearOn(true)
+    if (Object.keys(interlinearWords).length === 0) {
+      loadInterlinear()
+    }
+  }
+
+  // ── Data loading effects ─────────────────────────────────────────────────────
 
   // Load bookmarks for this chapter on mount
   useEffect(() => {
@@ -179,7 +252,7 @@ export function BibleReader({
           }
         }
       })
-      .catch(() => {}) // non-critical
+      .catch(() => {})
   }, [book.id, chapter, isAuthenticated])
 
   // Fetch compare translation verses
@@ -191,48 +264,20 @@ export function BibleReader({
       .catch(() => setCompareVerses([]))
   }, [compareTranslation, book.id, chapter])
 
-  // Stream commentary
-  async function loadCommentary() {
-    if (commentaryFetched.current) return
-    commentaryFetched.current = true
-    setCommentaryLoading(true)
-    try {
-      const res = await fetch(`/api/commentary?book_id=${book.id}&chapter=${chapter}`)
-      if (!res.ok || !res.body) throw new Error()
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let acc = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        acc += decoder.decode(value, { stream: true })
-        setCommentaryText(acc)
-      }
-    } catch {
-      setCommentaryText('Unable to load commentary.')
-    } finally {
-      setCommentaryLoading(false)
-    }
-  }
-
-  function handleCommentaryToggle() {
-    setCommentaryOpen((o) => {
-      if (!o) loadCommentary()
-      return !o
-    })
-  }
+  // ── Derived values ───────────────────────────────────────────────────────────
 
   const fontSizePx = { sm: '0.9rem', md: '1.05rem', lg: '1.2rem' }[fontSize]
+  const fontFamilyCss = fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif'
+  const isOT = book.testament === 'OT' || book.testament === 'Old'
+
+  // ── Event handlers ───────────────────────────────────────────────────────────
 
   function handleVerseClick(verse: Verse, event: React.MouseEvent) {
-    // Don't open popup if user is selecting text
     const selection = window.getSelection()
     if (selection && selection.toString().length > 0) return
-
     setSelectedVerse(verse)
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
     setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
-    // Update URL hash without navigation
     history.replaceState(null, '', `#v${verse.verse_number}`)
   }
 
@@ -258,18 +303,9 @@ export function BibleReader({
   }
 
   async function handleHighlight(verseId: number, color: HighlightColor | null) {
-    if (!isAuthenticated) {
-      toast.info('Sign in to save highlights')
-      return
-    }
-
+    if (!isAuthenticated) { toast.info('Sign in to save highlights'); return }
     if (color === null) {
-      // Remove highlight
-      setHighlights((prev) => {
-        const next = { ...prev }
-        delete next[verseId]
-        return next
-      })
+      setHighlights((prev) => { const next = { ...prev }; delete next[verseId]; return next })
       await fetch(`/api/highlights?verse_id=${verseId}`, { method: 'DELETE' })
     } else {
       setHighlights((prev) => ({ ...prev, [verseId]: color }))
@@ -282,11 +318,7 @@ export function BibleReader({
   }
 
   async function handleSaveNote(verseId: number, content: string) {
-    if (!isAuthenticated) {
-      toast.info('Sign in to save notes')
-      return
-    }
-
+    if (!isAuthenticated) { toast.info('Sign in to save notes'); return }
     const existing = notes[verseId]
     if (existing) {
       const res = await fetch('/api/notes', {
@@ -325,27 +357,28 @@ export function BibleReader({
     ? `/dashboard/reading/${nextBook.name.toLowerCase().replace(/\s+/g, '-')}/1?translation=${translation}`
     : null
 
-  // Touch swipe gestures for mobile chapter navigation
+  // Eagerly prefetch adjacent chapters for instant navigation
+  useEffect(() => {
+    if (nextHref) router.prefetch(nextHref)
+    if (prevHref) router.prefetch(prevHref)
+  }, [nextHref, prevHref, router])
+
+  // Touch swipe gestures
   useEffect(() => {
     let touchStartX = 0
     let touchStartY = 0
-
     function onTouchStart(e: TouchEvent) {
       touchStartX = e.touches[0].clientX
       touchStartY = e.touches[0].clientY
     }
-
     function onTouchEnd(e: TouchEvent) {
       const dx = e.changedTouches[0].clientX - touchStartX
       const dy = e.changedTouches[0].clientY - touchStartY
-      // Only trigger on horizontal swipe > 60px with small vertical drift
       if (Math.abs(dx) < 60 || Math.abs(dy) > 80) return
-      // Don't trigger if a popup is open
       if (selectedVerse) return
       if (dx < 0 && nextHref) router.push(nextHref)
       if (dx > 0 && prevHref) router.push(prevHref)
     }
-
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
     return () => {
@@ -354,7 +387,7 @@ export function BibleReader({
     }
   }, [nextHref, prevHref, selectedVerse, router])
 
-  // Keyboard shortcuts: j/ArrowRight = next, k/ArrowLeft = prev, / = chat, Esc = close
+  // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName
@@ -369,7 +402,10 @@ export function BibleReader({
       } else if (e.key === 'Escape') {
         if (shortcutsOpen) setShortcutsOpen(false)
         else if (selectedVerse) closePopup()
-        else setChatOpen(false)
+        else {
+          setSelectedInterlinearWord(null)
+          setChatOpen(false)
+        }
       } else if (e.key === '?' || e.key === 'F1') {
         e.preventDefault()
         setShortcutsOpen((o) => !o)
@@ -379,7 +415,7 @@ export function BibleReader({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [nextHref, prevHref, selectedVerse])
+  }, [nextHref, prevHref, selectedVerse, shortcutsOpen, router])
 
   if (!verses || verses.length === 0) {
     return (
@@ -398,10 +434,12 @@ export function BibleReader({
     <div className="flex min-h-screen">
       {/* Main reading area */}
       <div className={`flex-1 transition-all ${chatOpen ? 'sm:mr-80' : ''} ${chatOpen ? 'hidden sm:block' : ''}`}>
+
         {/* Reading toolbar */}
         <div className="sticky top-13 z-30 bg-background/95 backdrop-blur-sm border-b border-border" data-ui>
           {/* Scroll progress bar */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
+
           {/* Row 1: Book / Chapter navigation */}
           <div className="max-w-3xl mx-auto px-4 pt-2 pb-1 flex items-center gap-1">
             <Select
@@ -439,59 +477,51 @@ export function BibleReader({
             </Select>
           </div>
 
-          {/* Row 2: Tool controls — labeled */}
+          {/* Row 2: Tool controls */}
           <div className="max-w-3xl mx-auto px-4 pb-2 flex items-center gap-1 flex-wrap">
             {/* Translation */}
-            <div className="flex items-center gap-1 border border-border rounded-lg px-2 h-7">
-              <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>Translation:</span>
-              <Select value={translation} onValueChange={handleTranslationChange}>
-                <SelectTrigger className="h-6 border-0 bg-transparent text-xs font-semibold p-0 w-auto gap-0.5 focus:ring-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSLATIONS.map((t) => (
-                    <SelectItem key={t.code} value={t.code}>
-                      <span className="font-semibold">{t.code}</span>
-                      <span className="text-muted-foreground ml-2 text-xs">{t.name}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={translation} onValueChange={handleTranslationChange}>
+              <SelectTrigger className="h-7 border border-border rounded-lg px-2 text-xs font-semibold bg-transparent w-auto gap-1 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TRANSLATIONS.map((t) => (
+                  <SelectItem key={t.code} value={t.code}>
+                    <span className="font-semibold">{t.code}</span>
+                    <span className="text-muted-foreground ml-2 text-xs">{t.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Compare translation — clearly labelled */}
-            {compareTranslation ? (
-              <div className="flex items-center gap-1 border border-primary/40 bg-primary/5 rounded-lg px-2 h-7">
-                <Columns2 className="w-3 h-3 text-primary shrink-0" />
-                <span className="text-xs font-medium text-primary" style={{ fontFamily: 'system-ui' }}>
-                  Comparing {translation} · {compareTranslation}
-                </span>
-                <button
-                  className="ml-1 text-primary/60 hover:text-primary"
-                  onClick={() => setCompareTranslation(null)}
-                  title="Close comparison"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ) : (
-              <Select
-                value="none"
-                onValueChange={(v) => v !== 'none' && setCompareTranslation(v)}
-              >
-                <SelectTrigger className="h-7 border border-border rounded-lg px-2 text-xs text-muted-foreground bg-transparent gap-1 w-auto focus:ring-0">
-                  <Columns2 className="w-3 h-3" />
-                  <span style={{ fontFamily: 'system-ui' }}>Compare translations</span>
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSLATIONS.filter((t) => t.code !== translation).map((t) => (
-                    <SelectItem key={t.code} value={t.code}>
-                      Show {t.code} side-by-side — <span className="text-muted-foreground">{t.name}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            {/* Compare — desktop only */}
+            <div className="hidden sm:flex items-center">
+              {compareTranslation ? (
+                <div className="flex items-center gap-1 border border-primary/40 bg-primary/5 rounded-lg px-2 h-7">
+                  <Columns2 className="w-3 h-3 text-primary shrink-0" />
+                  <span className="text-xs font-medium text-primary" style={{ fontFamily: 'system-ui' }}>
+                    {translation} · {compareTranslation}
+                  </span>
+                  <button className="ml-1 text-primary/60 hover:text-primary" onClick={() => setCompareTranslation(null)}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <Select value="none" onValueChange={(v) => v !== 'none' && setCompareTranslation(v)}>
+                  <SelectTrigger className="h-7 border border-border rounded-lg px-2 text-xs text-muted-foreground bg-transparent gap-1 w-auto focus:ring-0">
+                    <Columns2 className="w-3 h-3" />
+                    <span style={{ fontFamily: 'system-ui' }}>Compare</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRANSLATIONS.filter((t) => t.code !== translation).map((t) => (
+                      <SelectItem key={t.code} value={t.code}>
+                        {t.code} — <span className="text-muted-foreground">{t.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
 
             {/* Font size */}
             <Button
@@ -502,10 +532,40 @@ export function BibleReader({
               title="Change font size"
             >
               <Type className="w-3 h-3" />
-              <span style={{ fontFamily: 'system-ui' }}>{fontSize === 'sm' ? 'Small' : fontSize === 'md' ? 'Medium' : 'Large'}</span>
+              <span style={{ fontFamily: 'system-ui' }} className="hidden sm:inline">
+                {fontSize === 'sm' ? 'Small' : fontSize === 'md' ? 'Medium' : 'Large'}
+              </span>
             </Button>
 
-            {/* AI Chat */}
+            {/* Font family toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 font-normal"
+              onClick={cycleFontFamily}
+              title="Toggle font style"
+            >
+              <span className="text-xs" style={{ fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui' }}>
+                {fontFamily === 'serif' ? 'Serif' : 'Sans'}
+              </span>
+            </Button>
+
+            {/* Interlinear toggle */}
+            <Button
+              variant={interlinearOn ? 'secondary' : 'outline'}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 font-normal"
+              onClick={toggleInterlinear}
+              title="Interlinear view — original Hebrew/Greek under each word"
+              disabled={interlinearLoading}
+            >
+              <Languages className="w-3 h-3" />
+              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>
+                {interlinearLoading ? 'Loading…' : 'Interlinear'}
+              </span>
+            </Button>
+
+            {/* Ask Ezra */}
             <Button
               variant={chatOpen ? 'secondary' : 'outline'}
               size="sm"
@@ -513,10 +573,10 @@ export function BibleReader({
               onClick={() => setChatOpen((o) => !o)}
             >
               <MessageSquare className="w-3 h-3" />
-              <span style={{ fontFamily: 'system-ui' }}>Ask Logos</span>
+              <span style={{ fontFamily: 'system-ui' }}>Ask Ezra</span>
             </Button>
 
-            {/* Keyboard shortcuts hint */}
+            {/* Keyboard shortcuts — desktop only */}
             <Button
               variant="ghost"
               size="sm"
@@ -543,7 +603,7 @@ export function BibleReader({
                 {[
                   { key: 'j / →', desc: 'Next chapter' },
                   { key: 'k / ←', desc: 'Previous chapter' },
-                  { key: '/', desc: 'Open Logos chat' },
+                  { key: '/', desc: 'Open Ezra chat' },
                   { key: 'f', desc: 'Cycle font size' },
                   { key: '?', desc: 'Show shortcuts' },
                   { key: 'Esc', desc: 'Close popup / chat' },
@@ -561,25 +621,70 @@ export function BibleReader({
           </div>
         )}
 
+        {/* Interlinear word detail popup */}
+        {selectedInterlinearWord && (
+          <div
+            className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/20"
+            onClick={() => setSelectedInterlinearWord(null)}
+          >
+            <div
+              className="bg-card border border-border rounded-2xl shadow-xl p-5 w-full max-w-xs"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p
+                    className="text-3xl font-bold leading-none"
+                    dir={isOT ? 'rtl' : 'ltr'}
+                    style={{ fontFamily: isOT ? 'serif' : 'system-ui' }}
+                  >
+                    {selectedInterlinearWord.original || '—'}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1 font-mono" style={{ fontFamily: 'system-ui' }}>
+                    {selectedInterlinearWord.transliteration}
+                  </p>
+                </div>
+                <button onClick={() => setSelectedInterlinearWord(null)} className="text-muted-foreground hover:text-foreground mt-1">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                {selectedInterlinearWord.number && (
+                  <span className={`text-xs font-mono px-2 py-0.5 rounded-full font-semibold ${
+                    selectedInterlinearWord.number.startsWith('H')
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                  }`}>
+                    {selectedInterlinearWord.number}
+                  </span>
+                )}
+                <span className="text-sm font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                  {selectedInterlinearWord.word.replace(/[.,;:!?'"()[\]]/g, '')}
+                </span>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                {selectedInterlinearWord.brief}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Bible text */}
-        <div className="max-w-3xl mx-auto px-4 py-10 pb-24" ref={readerRef}>
+        <div className="max-w-3xl mx-auto px-4 py-10 pb-32" ref={readerRef}>
           {/* Chapter header */}
           <div className="mb-8 text-center">
-            <h1
-              className="text-3xl font-bold text-foreground"
-              style={{ fontFamily: 'Georgia, serif' }}
-            >
+            <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Georgia, serif' }}>
               {book.name}
             </h1>
-            <p
-              className="text-muted-foreground mt-1 text-base"
-              style={{ fontFamily: 'system-ui' }}
-            >
+            <p className="text-muted-foreground mt-1 text-base" style={{ fontFamily: 'system-ui' }}>
               Chapter {chapter}
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1" style={{ fontFamily: 'system-ui' }}>
+              ~{readingMinutes} min read · {verses.length} verses
             </p>
           </div>
 
-          {/* Verse click hint — shown once to new users */}
+          {/* Verse click hint */}
           {showVerseHint && (
             <div className="flex items-center justify-between gap-3 mb-6 bg-primary/8 border border-primary/20 rounded-xl px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -593,24 +698,101 @@ export function BibleReader({
                   </p>
                 </div>
               </div>
-              <button
-                onClick={dismissVerseHint}
-                className="text-muted-foreground hover:text-foreground shrink-0"
-                aria-label="Dismiss hint"
-              >
+              <button onClick={dismissVerseHint} className="text-muted-foreground hover:text-foreground shrink-0">
                 <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Verses — normal or side-by-side */}
-          {compareTranslation && compareVerses.length > 0 ? (
+          {/* Interlinear loading indicator */}
+          {interlinearLoading && (
+            <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              Loading original {isOT ? 'Hebrew' : 'Greek'} words…
+            </div>
+          )}
+
+          {/* ── INTERLINEAR VIEW ── */}
+          {interlinearOn && Object.keys(interlinearWords).length > 0 ? (
+            <div className="space-y-8">
+              {verses.map((verse) => {
+                const words = interlinearWords[verse.verse_number] ?? []
+                const hlColor = highlights[verse.id]
+                const hlClass = hlColor ? `hl-${hlColor}` : ''
+                return (
+                  <div
+                    key={verse.id}
+                    id={`verse-${verse.verse_number}`}
+                    className={`${hlClass} transition-colors`}
+                  >
+                    <div className="flex gap-2 items-start">
+                      {/* Verse number — click to open popup */}
+                      <sup
+                        className="verse-number shrink-0 mt-2 cursor-pointer hover:text-primary transition-colors"
+                        onClick={(e) => {
+                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                          setSelectedVerse(verse)
+                          setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
+                          history.replaceState(null, '', `#v${verse.verse_number}`)
+                        }}
+                        title={`Tap to study ${book.name} ${chapter}:${verse.verse_number}`}
+                      >
+                        {verse.verse_number}
+                      </sup>
+
+                      {/* Word grid */}
+                      <div className="flex flex-wrap gap-x-2 gap-y-2 leading-none">
+                        {words.length > 0 ? words.map((w, i) => (
+                          <button
+                            key={i}
+                            onClick={() => w.number ? setSelectedInterlinearWord(w) : undefined}
+                            className={`flex flex-col items-center text-center rounded px-0.5 py-0.5 transition-colors ${
+                              w.number ? 'hover:bg-primary/10 cursor-pointer' : 'cursor-default'
+                            }`}
+                            title={w.number ? `${w.number} — ${w.brief}` : undefined}
+                          >
+                            <span style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                              {w.word}
+                            </span>
+                            {w.transliteration && (
+                              <span className="text-[9px] text-muted-foreground/60 font-mono leading-none mt-0.5">
+                                {w.transliteration}
+                              </span>
+                            )}
+                            {w.original && (
+                              <span
+                                className={`text-[11px] font-semibold leading-none mt-0.5 ${
+                                  w.number?.startsWith('H')
+                                    ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-blue-600 dark:text-blue-400'
+                                }`}
+                                dir={isOT ? 'rtl' : 'ltr'}
+                              >
+                                {w.original}
+                              </span>
+                            )}
+                          </button>
+                        )) : (
+                          // Fallback: no tagged words yet for this verse
+                          <span style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                            {verse.text}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+          /* ── COMPARE VIEW ── */
+          ) : compareTranslation && compareVerses.length > 0 ? (
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <p className="text-xs font-semibold text-muted-foreground mb-4 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
                   {translation}
                 </p>
-                <div className="bible-text space-y-0" style={{ fontSize: fontSizePx }}>
+                <div className="bible-text space-y-0" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
                   {verses.map((verse) => {
                     const hlColor = highlights[verse.id]
                     const hasNote = !!notes[verse.id]
@@ -629,7 +811,7 @@ export function BibleReader({
                 <p className="text-xs font-semibold text-muted-foreground mb-4 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
                   {compareTranslation}
                 </p>
-                <div className="bible-text space-y-0" style={{ fontSize: fontSizePx }}>
+                <div className="bible-text space-y-0" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
                   {compareVerses.map((verse) => (
                     <span key={verse.id} className="text-muted-foreground/90">
                       <sup className="verse-number">{verse.verse_number}</sup>
@@ -639,8 +821,10 @@ export function BibleReader({
                 </div>
               </div>
             </div>
+
+          /* ── NORMAL VIEW ── */
           ) : (
-            <div className="bible-text space-y-0" style={{ fontSize: fontSizePx }}>
+            <div className="bible-text space-y-0" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
               {verses.map((verse) => {
                 const hlColor = highlights[verse.id]
                 const hasNote = !!notes[verse.id]
@@ -685,10 +869,7 @@ export function BibleReader({
             )}
 
             <div className="text-center">
-              <p
-                className="text-xs text-muted-foreground"
-                style={{ fontFamily: 'system-ui' }}
-              >
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                 {book.name} {chapter} &bull; {translation}
               </p>
             </div>
@@ -704,51 +885,6 @@ export function BibleReader({
               </Link>
             ) : (
               <div />
-            )}
-          </div>
-
-          {/* Chapter Commentary */}
-          <div className="mt-10 border-t border-border pt-6">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-muted/40 transition-colors text-left"
-              onClick={handleCommentaryToggle}
-              data-ui
-            >
-              <div className="flex items-center gap-2">
-                <ScrollText className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>
-                  Chapter Commentary
-                </span>
-                {!commentaryFetched.current && (
-                  <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                    Scholarly study notes
-                  </span>
-                )}
-              </div>
-              {commentaryOpen ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-
-            {commentaryOpen && (
-              <div className="mt-3 px-4 pb-6">
-                {!commentaryText && commentaryLoading ? (
-                  <div className="space-y-2 py-2">
-                    {[100, 88, 95, 78, 90, 82, 70].map((w, i) => (
-                      <div key={i} className="h-2.5 bg-muted rounded animate-pulse" style={{ width: `${w}%`, animationDelay: `${i*60}ms` }} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed text-sm [&>p]:mb-4 [&>h2]:text-base [&>h2]:font-semibold [&>h2]:mt-6 [&>h2]:mb-2 [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:mt-4 [&>h3]:mb-1.5 [&>strong]:font-semibold [&>ul]:mt-2 [&>ul]:mb-4 [&>ul>li]:mb-1">
-                    <ReactMarkdown>{commentaryText}</ReactMarkdown>
-                    {commentaryLoading && (
-                      <span className="inline-block w-0.5 h-4 bg-primary ml-0.5 animate-pulse align-middle" />
-                    )}
-                  </div>
-                )}
-              </div>
             )}
           </div>
         </div>
@@ -767,6 +903,7 @@ export function BibleReader({
           onSaveNote={(content) => handleSaveNote(selectedVerse.id, content)}
           onBookmark={() => handleBookmark(selectedVerse.id)}
           onClose={closePopup}
+          onOpenChat={() => { closePopup(); setChatOpen(true) }}
           anchor={popupAnchor}
           isAuthenticated={isAuthenticated}
         />

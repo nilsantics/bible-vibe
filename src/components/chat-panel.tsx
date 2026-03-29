@@ -40,10 +40,10 @@ const STARTER_QUESTIONS_BY_DEPTH: Record<StudyDepth, string[]> = {
   ],
 }
 
-const LOGOS_INTRO_BY_DEPTH: Record<StudyDepth, string> = {
-  simple:   "Hi! I'm Logos 👋 Ask me anything about this passage — I'll explain it in plain, everyday language.",
-  standard: "I'm Logos, your Bible study companion. Ask me anything about this passage — history, meaning, theology.",
-  scholar:  "Logos here. Ready for a deep dive — original languages, hermeneutics, tradition comparisons. What do you want to explore?",
+const EZRA_INTRO_BY_DEPTH: Record<StudyDepth, string> = {
+  simple:   "Hi! I'm Ezra 👋 Ask me anything about this passage — I'll explain it in plain, everyday language.",
+  standard: "I'm Ezra, your Bible study companion. Ask me anything about this passage — history, meaning, theology.",
+  scholar:  "Ezra here. Ready for a deep dive — original languages, hermeneutics, tradition comparisons. What do you want to explore?",
 }
 
 export function ChatPanel({
@@ -146,15 +146,15 @@ export function ChatPanel({
       <div className="px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            {/* Logos avatar */}
+            {/* Ezra avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 shadow-sm">
               <span className="text-primary-foreground font-bold text-sm" style={{ fontFamily: 'Georgia, serif' }}>
-                Λ
+                E
               </span>
             </div>
             <div>
               <p className="text-sm font-semibold leading-tight" style={{ fontFamily: 'system-ui' }}>
-                Logos
+                Ezra
               </p>
               <p className="text-xs text-muted-foreground leading-tight" style={{ fontFamily: 'system-ui' }}>
                 {currentPassage}
@@ -204,14 +204,14 @@ export function ChatPanel({
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
           <div className="space-y-4">
-            {/* Intro message from Logos */}
+            {/* Intro message from Ezra */}
             <div className="flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>Λ</span>
+                <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>E</span>
               </div>
               <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[90%]">
                 <p className="text-xs leading-relaxed text-foreground" style={{ fontFamily: 'system-ui' }}>
-                  {LOGOS_INTRO_BY_DEPTH[depth]}
+                  {EZRA_INTRO_BY_DEPTH[depth]}
                 </p>
               </div>
             </div>
@@ -239,7 +239,7 @@ export function ChatPanel({
               <div key={i} className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>Λ</span>
+                    <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>E</span>
                   </div>
                 )}
                 {msg.role === 'user' ? (
@@ -298,7 +298,7 @@ export function ChatPanel({
       <div className="border-t border-border p-3 shrink-0">
         <div className="flex gap-2">
           <Textarea
-            placeholder={`Ask Logos anything…`}
+            placeholder={`Ask Ezra anything…`}
             className="text-sm resize-none min-h-10 max-h-28 border-border bg-muted/40 rounded-xl"
             rows={1}
             value={input}

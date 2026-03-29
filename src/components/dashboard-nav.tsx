@@ -25,6 +25,9 @@ import {
   CalendarDays,
   Bookmark,
   BrainCircuit,
+  FileText,
+  Languages,
+  HelpCircle,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -101,8 +104,8 @@ export function DashboardNav({ user, streak }: Props) {
           </span>
         </Link>
 
-        {/* Nav links */}
-        <nav className="flex items-center gap-0.5" data-ui>
+        {/* Nav links — hidden on mobile (use bottom nav) */}
+        <nav className="hidden sm:flex items-center gap-0.5" data-ui>
           {navLinks.map((link) => {
             const active = pathname.startsWith(link.href.split('/').slice(0, 3).join('/'))
             return (
@@ -130,11 +133,11 @@ export function DashboardNav({ user, streak }: Props) {
             </div>
           )}
 
-          {/* Theme cycle: light → sepia → dark */}
+          {/* Theme cycle: light → sepia → dark — hidden on mobile (use More drawer) */}
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8"
+            className="hidden sm:flex w-8 h-8"
             onClick={cycleTheme}
             aria-label={`Switch theme (current: ${readingTheme})`}
             title={`Theme: ${readingTheme} — click to cycle`}
@@ -170,6 +173,18 @@ export function DashboardNav({ user, streak }: Props) {
                   </p>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/notes')}>
+                  <FileText className="w-4 h-4" />
+                  My Notes
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/quiz')}>
+                  <HelpCircle className="w-4 h-4" />
+                  Quiz
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/aleph-bet')}>
+                  <Languages className="w-4 h-4" />
+                  Hebrew Alphabet
+                </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/settings')}>
                   <Settings className="w-4 h-4" />
                   Settings

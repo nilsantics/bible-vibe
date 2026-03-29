@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { QueryProvider } from '@/components/query-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import ServiceWorkerRegister from '@/components/service-worker-register'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -38,6 +39,7 @@ export default function RootLayout({
           <QueryProvider>
             <TooltipProvider>
               {children}
+              <ServiceWorkerRegister />
               <Toaster richColors position="top-right" />
             </TooltipProvider>
           </QueryProvider>

@@ -5,9 +5,10 @@ export const anthropic = new Anthropic({
 })
 
 export const CLAUDE_MODEL = 'claude-sonnet-4-6'
+export const CLAUDE_HAIKU_MODEL = 'claude-haiku-4-5-20251001'
 
 // System prompt that powers all AI features in the app
-export const BIBLE_STUDY_SYSTEM_PROMPT = `You are Logos, a knowledgeable Bible study companion for Bible Vibe, a world-class Bible study app. Your name comes from the Greek word for "the Word" — fitting for a guide through Scripture.
+export const BIBLE_STUDY_SYSTEM_PROMPT = `You are Ezra, a knowledgeable Bible study companion for Bible Vibe, a world-class Bible study app. Your name comes from the great biblical scribe who restored the Torah — a fitting name for a guide through Scripture.
 
 Your approach:
 1. **Text first**: Always ground your answers in what the biblical text actually says
@@ -34,7 +35,7 @@ export type StudyDepth = 'simple' | 'standard' | 'scholar'
 
 export function getSystemPromptForDepth(depth: StudyDepth): string {
   if (depth === 'simple') {
-    return `You are Logos, a warm and encouraging Bible study companion. You explain the Bible in plain, everyday language — perfect for people who are new to Scripture or just want a clear, accessible answer.
+    return `You are Ezra, a warm and encouraging Bible study companion. You explain the Bible in plain, everyday language — perfect for people who are new to Scripture or just want a clear, accessible answer.
 
 Your style:
 - Use simple, everyday words. No theological jargon.
@@ -46,7 +47,7 @@ Your style:
   }
 
   if (depth === 'scholar') {
-    return `You are Logos, an expert biblical scholar and theologian. You have deep knowledge of ancient languages, textual criticism, ANE culture, and the full breadth of Christian theological tradition.
+    return `You are Ezra, an expert biblical scholar and theologian. You have deep knowledge of ancient languages, textual criticism, ANE culture, and the full breadth of Christian theological tradition.
 
 Your approach:
 - Lead with original Hebrew/Greek word analysis (use Strong's numbers when relevant)
@@ -70,7 +71,7 @@ export async function explainVerse(
   translation: string
 ): Promise<string> {
   const message = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+    model: CLAUDE_HAIKU_MODEL,
     max_tokens: 600,
     system: BIBLE_STUDY_SYSTEM_PROMPT,
     messages: [
@@ -99,7 +100,7 @@ export async function getANEContext(
   verseText: string
 ): Promise<string> {
   const message = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+    model: CLAUDE_HAIKU_MODEL,
     max_tokens: 400,
     system: BIBLE_STUDY_SYSTEM_PROMPT,
     messages: [
@@ -144,7 +145,7 @@ export async function generateQuiz(
   passageText: string
 ): Promise<QuizQuestion[]> {
   const message = await anthropic.messages.create({
-    model: CLAUDE_MODEL,
+    model: CLAUDE_HAIKU_MODEL,
     max_tokens: 800,
     system: BIBLE_STUDY_SYSTEM_PROMPT,
     messages: [
@@ -168,10 +169,12 @@ Questions should test genuine understanding, not trivia. No trick questions. Mix
   })
 
   try {
-    const text =
-      message.content[0].type === 'text' ? message.content[0].text : '[]'
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    return jsonMatch ? JSON.parse(jsonMatch[0]) : []
+    const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'
+    const stripped = raw.replace(/^```[a-z]*\r?\n?/, '').replace(/\r?\n?```$/, '').trim()
+    const start = stripped.indexOf('[')
+    const end = stripped.lastIndexOf(']')
+    if (start === -1 || end <= start) return []
+    return JSON.parse(stripped.slice(start, end + 1))
   } catch {
     return []
   }

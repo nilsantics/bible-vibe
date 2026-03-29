@@ -3,14 +3,14 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { BIBLE_BOOKS, OT_BOOKS, NT_BOOKS } from '@/lib/bible-data'
+import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { getLevelForXP, getXPToNextLevel } from '@/lib/xp'
 import { getVerseOfDay } from '@/lib/verse-of-day'
 import { BookOpen, ChevronRight, CalendarDays, Sparkles, GitBranch, Languages } from 'lucide-react'
 import { PLAN_TEMPLATES, getTodayAssignment } from '@/lib/reading-plans'
 import { DevotionalCard } from '@/components/devotional-card'
+import { ContinueReading } from '@/components/continue-reading'
 
 const QUICK_START_BOOKS = [
   { name: 'Genesis',  chapter: 1, desc: 'The beginning of everything' },
@@ -51,7 +51,6 @@ export default async function DashboardPage() {
   let totalXP = 0
   let level = { level: 1, name: 'Seeker' }
   let xpProgress = { progress: 0, xpInLevel: 0, xpNeeded: 500 }
-  let booksRead: Set<number> = new Set()
   let recentReading: { book_id: number; chapter_number: number }[] = []
   let badgeCount = 0
   let todayPlanTask: { icon: string; name: string; bookName: string; chapters: number[]; href: string } | null = null
@@ -69,10 +68,9 @@ export default async function DashboardPage() {
   const votdBook = BIBLE_BOOKS.find((b) => b.id === votd.book_id)
 
   if (user) {
-    const [streakRes, xpRes, progressRes, badgesRes, plansRes] = await Promise.all([
+    const [streakRes, xpRes, badgesRes, plansRes] = await Promise.all([
       supabase.from('streaks').select('current_streak').eq('user_id', user.id).single(),
       supabase.from('user_xp').select('total_xp, level').eq('user_id', user.id).single(),
-      supabase.from('reading_progress').select('book_id, chapter_number').eq('user_id', user.id),
       supabase.from('user_badges').select('id').eq('user_id', user.id),
       supabase.from('reading_plans').select('plan_type, name, start_date').eq('user_id', user.id).order('created_at', { ascending: false }),
     ])
@@ -82,7 +80,6 @@ export default async function DashboardPage() {
     level = getLevelForXP(totalXP)
     const xpInfo = getXPToNextLevel(totalXP)
     xpProgress = { progress: xpInfo.progress, xpInLevel: xpInfo.xpInLevel, xpNeeded: xpInfo.xpNeeded }
-    booksRead = new Set((progressRes.data ?? []).map((p) => p.book_id))
     badgeCount = badgesRes.data?.length ?? 0
 
     // Today's plan assignment (first active plan)
@@ -113,8 +110,6 @@ export default async function DashboardPage() {
     recentReading = recent ?? []
   }
 
-  const booksReadCount = booksRead.size
-  const biblePercent = Math.round((booksReadCount / 66) * 100)
   const isNewUser = user !== null && totalXP === 0 && recentReading.length === 0
 
   return (
@@ -124,7 +119,7 @@ export default async function DashboardPage() {
         <div className="mb-10">
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center mx-auto mb-4 shadow-md">
-              <span className="text-primary-foreground font-bold text-2xl" style={{ fontFamily: 'Georgia, serif' }}>Λ</span>
+              <span className="text-primary-foreground font-bold text-2xl" style={{ fontFamily: 'Georgia, serif' }}>✦</span>
             </div>
             <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
               Welcome to Bible Vibe
@@ -161,7 +156,7 @@ export default async function DashboardPage() {
             {[
               { icon: GitBranch, label: '430,000 cross-references', desc: 'Instant, free, no AI' },
               { icon: Languages, label: "Strong's Hebrew & Greek", desc: '14,000+ word entries' },
-              { icon: Sparkles, label: 'Logos study companion', desc: 'Ask anything about the passage' },
+              { icon: Sparkles, label: 'Ezra study companion', desc: 'Ask anything about the passage' },
             ].map((f) => (
               <div key={f.label} className="flex flex-col items-center gap-1 p-3 rounded-xl bg-muted/30">
                 <f.icon className="w-5 h-5 text-primary mb-1" />
@@ -203,7 +198,7 @@ export default async function DashboardPage() {
 
       {/* Verse of the Day */}
       {votdVerse && votdBook && (
-        <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}`}>
+        <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`}>
           <Card className="p-5 mb-6 border-primary/20 bg-primary/5 hover:border-primary/40 transition-colors">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -318,7 +313,10 @@ export default async function DashboardPage() {
             </Link>
           )}
 
-          {/* Continue reading */}
+          {/* Continue reading — last position from localStorage (works even without login) */}
+          <ContinueReading />
+
+          {/* Continue reading — server-side recent chapters (logged in users) */}
           {user && recentReading.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
@@ -359,7 +357,7 @@ export default async function DashboardPage() {
           {/* Quick start */}
           <div>
             <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
-              {user && recentReading.length > 0 ? 'Popular passages' : 'Start reading'}
+              {user && recentReading.length > 0 ? 'Suggested passages' : 'Start reading'}
             </h2>
             <div className="grid grid-cols-2 gap-2">
               {QUICK_START_BOOKS.map((b) => (
@@ -381,93 +379,19 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Right column — Bible progress map */}
+        {/* Right column — Browse all books */}
         <div className="space-y-5">
-          {/* Bible progress */}
-          <Card className="p-4 border-border">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>
-                Bible progress
-              </h2>
-              <Badge variant="secondary" className="text-xs">
-                {booksReadCount}/66 books
-              </Badge>
-            </div>
-
-            {/* Old Testament */}
-            <div className="mb-3">
-              <p className="text-xs text-muted-foreground mb-1.5" style={{ fontFamily: 'system-ui' }}>
-                Old Testament
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {OT_BOOKS.map((b) => (
-                  <Link
-                    key={b.id}
-                    href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}
-                    title={b.name}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded text-xs flex items-center justify-center transition-colors cursor-pointer hover:opacity-80 ${
-                        booksRead.has(b.id)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                      style={{ fontSize: '7px', fontFamily: 'system-ui' }}
-                    >
-                      {b.abbr.slice(0, 2)}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* New Testament */}
-            <div>
-              <p className="text-xs text-muted-foreground mb-1.5" style={{ fontFamily: 'system-ui' }}>
-                New Testament
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {NT_BOOKS.map((b) => (
-                  <Link
-                    key={b.id}
-                    href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}
-                    title={b.name}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded text-xs flex items-center justify-center transition-colors cursor-pointer hover:opacity-80 ${
-                        booksRead.has(b.id)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                      style={{ fontSize: '7px', fontFamily: 'system-ui' }}
-                    >
-                      {b.abbr.slice(0, 2)}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-border">
-              <Progress value={biblePercent} className="h-1.5" />
-              <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
-                {biblePercent}% of the Bible read
-              </p>
-            </div>
-          </Card>
-
-          {/* Browse all books */}
           <Card className="p-4 border-border">
             <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
               Browse all books
             </h2>
-            <div className="space-y-0.5 max-h-64 overflow-y-auto">
+            <div className="space-y-0.5 max-h-72 overflow-y-auto">
               {BIBLE_BOOKS.map((b) => (
                 <Link
                   key={b.id}
                   href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}
                 >
-                  <div className="flex items-center justify-between px-2 py-1 rounded hover:bg-muted/60 transition-colors">
+                  <div className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-muted/60 transition-colors">
                     <span className="text-xs" style={{ fontFamily: 'system-ui' }}>{b.name}</span>
                     <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                       {b.chapters}ch

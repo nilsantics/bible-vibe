@@ -218,7 +218,7 @@ export default function QuizPage() {
             className="text-xs text-muted-foreground mb-4"
             style={{ fontFamily: 'system-ui' }}
           >
-            Logos is reading the passage and crafting questions...
+            Ezra is reading the passage and crafting questions...
           </p>
           <QuizSkeleton />
         </Card>

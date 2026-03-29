@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { DashboardNav } from '@/components/dashboard-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
+import { TutorialOverlay } from '@/components/tutorial-overlay'
+import { OnboardingWizard } from '@/components/onboarding-wizard'
 
 export default async function DashboardLayout({
   children,
@@ -25,6 +27,8 @@ export default async function DashboardLayout({
       <DashboardNav user={user} streak={streak} />
       <main className="flex-1 pb-16 sm:pb-0">{children}</main>
       <MobileBottomNav />
+      <TutorialOverlay />
+      <OnboardingWizard />
     </div>
   )
 }

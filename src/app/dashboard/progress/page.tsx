@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { getLevelForXP, getXPToNextLevel } from '@/lib/xp'
+import { BookMap } from '@/components/book-map'
 
 export default async function ProgressPage() {
   const supabase = await createClient()
@@ -43,6 +44,12 @@ export default async function ProgressPage() {
   const booksCompleted = BIBLE_BOOKS.filter(
     (b) => bookProgress[b.id]?.size >= b.chapters
   ).length
+
+  // Flatten for BookMap (Set → number)
+  const bookProgressCounts: Record<number, number> = {}
+  for (const [id, chapters] of Object.entries(bookProgress)) {
+    bookProgressCounts[parseInt(id)] = chapters.size
+  }
 
   // Build 52-week heatmap data (daily reading counts)
   const readingDateCounts: Record<string, number> = {}
@@ -215,6 +222,14 @@ export default async function ProgressPage() {
           </p>
         </Card>
       )}
+
+      {/* 66-book completion map */}
+      <Card className="p-5">
+        <h2 className="text-sm font-semibold mb-4" style={{ fontFamily: 'system-ui' }}>
+          Bible completion map
+        </h2>
+        <BookMap bookProgress={bookProgressCounts} />
+      </Card>
 
       {/* Badges — earned + locked */}
       <div>
