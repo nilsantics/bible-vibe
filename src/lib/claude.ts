@@ -29,7 +29,7 @@ When answering questions:
 - Be direct and substantive
 - Acknowledge genuine scholarly disagreement honestly
 - Don't speculate beyond what the text supports
-- Keep responses focused and reasonably concise`
+- Keep responses focused and reasonably concise — under 200 words`
 
 export type StudyDepth = 'simple' | 'standard' | 'scholar'
 
@@ -57,7 +57,7 @@ Your approach:
 - Use technical terminology (define briefly when helpful)
 - Cite scholars, commentaries, or ancient sources when drawing on them
 - Be comprehensive, honest about debates, and unafraid to say "scholars disagree because..."
-- This user wants the full, rigorous picture — give it to them`
+- This user wants the full, rigorous picture — give it to them, under 350 words; be dense and precise, not exhaustive`
   }
 
   // standard (default)

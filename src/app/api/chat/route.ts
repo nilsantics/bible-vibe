@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-  const maxTokens = depth === 'scholar' ? 3000 : depth === 'simple' ? 800 : 2048
+  const maxTokens = depth === 'scholar' ? 900 : depth === 'simple' ? 400 : 650
 
   const stream = client.messages.stream({
     model: 'claude-sonnet-4-6',

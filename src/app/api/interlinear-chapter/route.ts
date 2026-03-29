@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
   const lang = isOT ? 'Hebrew' : 'Greek'
   const numPrefix = isOT ? 'H' : 'G'
 
-  // Batch into groups of 30 for very long chapters (e.g. Psalm 119)
-  const batchSize = 30
+  // Batch into groups of 8 — keeps output well under Haiku's token limit
+  const batchSize = 8
   const allWords: Record<number, TaggedWord[]> = {}
 
   for (let i = 0; i < verses.length; i += batchSize) {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 8000,
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',

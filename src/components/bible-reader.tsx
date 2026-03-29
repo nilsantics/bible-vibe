@@ -162,7 +162,19 @@ export function BibleReader({
   async function loadInterlinear() {
     if (interlinearLoading) return
     setInterlinearLoading(true)
+
+    const cacheKey = `bv_interlinear_${book.id}_${chapter}_${translation}`
+
     try {
+      // Check localStorage cache first
+      const cached = localStorage.getItem(cacheKey)
+      if (cached) {
+        const words: Record<number, TaggedWord[]> = JSON.parse(cached)
+        setInterlinearWords(words)
+        setInterlinearLoading(false)
+        return
+      }
+
       const res = await fetch('/api/interlinear-chapter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,6 +192,8 @@ export function BibleReader({
           words[parseInt(k, 10)] = v as TaggedWord[]
         }
         setInterlinearWords(words)
+        // Cache so future loads are instant
+        try { localStorage.setItem(cacheKey, JSON.stringify(words)) } catch { /* quota exceeded — skip cache */ }
       }
     } catch {
       toast.error('Could not load interlinear data')

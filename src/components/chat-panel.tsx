@@ -75,6 +75,7 @@ export function ChatPanel({
     setStreaming(true)
     setMessages([...newMessages, { role: 'assistant', content: '' }])
 
+    let assistantContent = ''
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -86,7 +87,6 @@ export function ChatPanel({
 
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
-      let assistantContent = ''
 
       while (reader) {
         const { done, value } = await reader.read()
@@ -101,28 +101,22 @@ export function ChatPanel({
       ])
     } finally {
       setStreaming(false)
-      // Generate contextual follow-up chips
-      generateFollowUps(content, depth)
+      fetchFollowUps(content, assistantContent)
     }
   }
 
-  function generateFollowUps(question: string, d: StudyDepth): void {
-    const q = question.toLowerCase()
-    const chips: string[] = []
-    if (q.includes('mean') || q.includes('explain') || q.includes('simple')) {
-      chips.push('What did this mean to the original audience?', 'How does this connect to the New Testament?')
-    } else if (q.includes('context') || q.includes('histor') || q.includes('ane')) {
-      chips.push('What archaeological evidence supports this?', 'Who wrote this and when?')
-    } else if (q.includes('greek') || q.includes('hebrew') || q.includes('word')) {
-      chips.push('How is this word used elsewhere in Scripture?', 'What other translations capture this nuance?')
-    } else if (q.includes('life') || q.includes('today') || q.includes('apply')) {
-      chips.push('How have Christians historically applied this?', 'What does this teach about prayer?')
-    } else {
-      chips.push('What does this reveal about God\'s character?', 'How does this connect to Jesus?')
+  async function fetchFollowUps(question: string, response: string): Promise<void> {
+    try {
+      const res = await fetch('/api/followups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, response: response.slice(0, 400), depth, passage: currentPassage }),
+      })
+      const data = await res.json()
+      if (data.questions?.length) setFollowUps(data.questions)
+    } catch {
+      // silently skip — follow-up chips are a nice-to-have
     }
-    if (d === 'scholar') chips.push('What do commentaries say about this passage?')
-    else chips.push('Can you give me a real-life example?')
-    setFollowUps(chips.slice(0, 3))
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
