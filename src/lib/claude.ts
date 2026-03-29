@@ -146,7 +146,7 @@ export async function generateQuiz(
 ): Promise<QuizQuestion[]> {
   const message = await anthropic.messages.create({
     model: CLAUDE_HAIKU_MODEL,
-    max_tokens: 800,
+    max_tokens: 1500,
     system: BIBLE_STUDY_SYSTEM_PROMPT,
     messages: [
       {
