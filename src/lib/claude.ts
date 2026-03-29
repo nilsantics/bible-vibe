@@ -151,7 +151,7 @@ export async function generateQuiz(
     messages: [
       {
         role: 'user',
-        content: `Create 5 comprehension questions for ${passageRef}: "${passageText}"
+        content: `Create 5 comprehension questions for ${passageRef}.${passageText ? `\n\nPassage text:\n"${passageText}"` : '\n\nUse your knowledge of the Bible to recall this passage accurately.'}
 
 Return a JSON array of objects with this exact shape:
 [

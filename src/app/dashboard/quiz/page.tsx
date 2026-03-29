@@ -1,20 +1,14 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { QuizQuestion } from '@/lib/claude'
 
-// Popular books with their IDs and chapter counts
-const POPULAR_BOOKS = [
-  { id: 1,  name: 'Genesis',  slug: 'genesis',  chapters: 50 },
-  { id: 19, name: 'Psalms',   slug: 'psalms',   chapters: 150 },
-  { id: 40, name: 'Matthew',  slug: 'matthew',  chapters: 28 },
-  { id: 43, name: 'John',     slug: 'john',     chapters: 21 },
-  { id: 45, name: 'Romans',   slug: 'romans',   chapters: 16 },
+const EXAMPLES = [
+  'Psalm 23', 'John 3:16-21', 'Genesis 1', 'The Sermon on the Mount', 'Romans 8',
 ]
 
 function getEncouragingMessage(score: number, total: number): string {
@@ -41,8 +35,7 @@ function QuizSkeleton() {
 }
 
 export default function QuizPage() {
-  const [selectedBook, setSelectedBook] = useState(POPULAR_BOOKS[3]) // John default
-  const [selectedChapter, setSelectedChapter] = useState(3)
+  const [passageInput, setPassageInput] = useState('')
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [passageRef, setPassageRef] = useState('')
@@ -54,7 +47,9 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<number[]>([])
   const [finished, setFinished] = useState(false)
 
-  const fetchQuiz = useCallback(async () => {
+  const fetchQuiz = useCallback(async (passage?: string) => {
+    const query = (passage ?? passageInput).trim()
+    if (!query) return
     setLoading(true)
     setError('')
     setQuestions([])
@@ -64,17 +59,13 @@ export default function QuizPage() {
     setFinished(false)
 
     try {
-      const res = await fetch(
-        `/api/quiz?book_id=${selectedBook.id}&chapter=${selectedChapter}`
-      )
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? `Request failed (${res.status})`)
-      }
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passage: query }),
+      })
       const data = await res.json()
-      if (!data.questions || data.questions.length === 0) {
-        throw new Error('No questions returned. Try a different passage.')
-      }
+      if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`)
       setQuestions(data.questions)
       setPassageRef(data.passageRef)
     } catch (err) {
@@ -82,7 +73,7 @@ export default function QuizPage() {
     } finally {
       setLoading(false)
     }
-  }, [selectedBook.id, selectedChapter])
+  }, [passageInput])
 
 
   function handleChoose(optionIdx: number) {
@@ -123,68 +114,46 @@ export default function QuizPage() {
         </p>
       </div>
 
-      {/* Selector */}
+      {/* Passage input */}
       <Card className="p-4 space-y-3">
         <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>
-          Choose a passage
+          What do you want to be quizzed on?
         </p>
 
-        {/* Book picker */}
-        <div className="flex flex-wrap gap-2">
-          {POPULAR_BOOKS.map((book) => (
-            <button
-              key={book.id}
-              onClick={() => {
-                setSelectedBook(book)
-                setSelectedChapter(1)
-              }}
-              className={[
-                'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors',
-                selectedBook.id === book.id
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-border bg-background hover:bg-muted',
-              ].join(' ')}
-              style={{ fontFamily: 'system-ui' }}
-            >
-              {book.name}
-            </button>
-          ))}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={passageInput}
+            onChange={(e) => setPassageInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchQuiz() }}
+            placeholder="e.g. Psalm 23, John 3:16-21, The Sermon on the Mount…"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+            style={{ fontFamily: 'system-ui' }}
+            disabled={loading}
+          />
+          <Button
+            onClick={() => fetchQuiz()}
+            disabled={loading || !passageInput.trim()}
+            size="sm"
+            style={{ fontFamily: 'system-ui' }}
+          >
+            {loading ? 'Generating…' : 'Generate Quiz'}
+          </Button>
         </div>
 
-        {/* Chapter picker */}
-        <div className="flex items-center gap-3">
-          <label
-            className="text-sm text-muted-foreground shrink-0"
-            style={{ fontFamily: 'system-ui' }}
-            htmlFor="chapter-select"
-          >
-            Chapter
-          </label>
-          <select
-            id="chapter-select"
-            value={selectedChapter}
-            onChange={(e) => setSelectedChapter(Number(e.target.value))}
-            className="border border-border rounded-md px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            style={{ fontFamily: 'system-ui' }}
-          >
-            {Array.from({ length: selectedBook.chapters }, (_, i) => i + 1).map(
-              (ch) => (
-                <option key={ch} value={ch}>
-                  {ch}
-                </option>
-              )
-            )}
-          </select>
-
-          <Button
-            onClick={fetchQuiz}
-            disabled={loading}
-            size="sm"
-            className="ml-auto"
-            style={{ fontFamily: 'system-ui' }}
-          >
-            {loading ? 'Generating...' : 'Generate Quiz'}
-          </Button>
+        {/* Quick examples */}
+        <div className="flex flex-wrap gap-1.5">
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex}
+              onClick={() => { setPassageInput(ex); fetchQuiz(ex) }}
+              className="px-2.5 py-1 rounded-full text-xs border border-border bg-muted/40 hover:bg-muted transition-colors"
+              style={{ fontFamily: 'system-ui' }}
+              disabled={loading}
+            >
+              {ex}
+            </button>
+          ))}
         </div>
       </Card>
 
@@ -198,7 +167,7 @@ export default function QuizPage() {
             variant="outline"
             size="sm"
             className="mt-3"
-            onClick={fetchQuiz}
+            onClick={() => fetchQuiz()}
             style={{ fontFamily: 'system-ui' }}
           >
             Try again
@@ -242,16 +211,12 @@ export default function QuizPage() {
           </p>
 
           <div className="flex flex-wrap gap-3 justify-center pt-2">
-            <Button onClick={fetchQuiz} style={{ fontFamily: 'system-ui' }}>
-              Try another chapter
-            </Button>
-            <Link
-              href={`/dashboard/reading/${selectedBook.slug}/${selectedChapter}`}
-              className={buttonVariants({ variant: 'outline' })}
+            <Button
+              onClick={() => { setQuestions([]); setFinished(false); setPassageInput('') }}
               style={{ fontFamily: 'system-ui' }}
             >
-              Read {selectedBook.name} {selectedChapter}
-            </Link>
+              Try another passage
+            </Button>
           </div>
 
           {/* Answer review */}

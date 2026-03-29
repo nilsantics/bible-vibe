@@ -3,6 +3,19 @@ import { createClient } from '@/lib/supabase/server'
 import { generateQuiz } from '@/lib/claude'
 import { getBookById } from '@/lib/bible-data'
 
+// POST /api/quiz  { passage: "John 3:16-21" }
+export async function POST(request: NextRequest) {
+  const { passage } = await request.json()
+  if (!passage?.trim()) {
+    return NextResponse.json({ error: 'Passage is required' }, { status: 400 })
+  }
+  const questions = await generateQuiz(passage.trim(), '')
+  if (!questions.length) {
+    return NextResponse.json({ error: 'No questions returned. Try rephrasing the passage.' }, { status: 422 })
+  }
+  return NextResponse.json({ questions, passageRef: passage.trim() })
+}
+
 // GET /api/quiz?book_id=X&chapter=Y
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
