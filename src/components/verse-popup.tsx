@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ReactMarkdown from 'react-markdown'
 import {
-  X, Sparkles, MapPin, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2,
+  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { HighlightColor } from '@/types'
@@ -56,11 +56,10 @@ const COLORS: { color: HighlightColor; hex: string }[] = [
   { color: 'purple', hex: '#c4b5fd' },
 ]
 
-type Tab = 'explain' | 'context' | 'crossref' | 'words' | 'note'
+type Tab = 'explain' | 'crossref' | 'words' | 'note'
 
 const TABS = [
   { id: 'explain'  as Tab, label: 'Explain',   shortLabel: 'Explain',  icon: Sparkles  },
-  { id: 'context'  as Tab, label: 'History',   shortLabel: 'History',  icon: MapPin    },
   { id: 'crossref' as Tab, label: 'Cross-refs', shortLabel: 'Refs',    icon: GitBranch },
   { id: 'words'    as Tab, label: "Strong's",  shortLabel: "Strong's", icon: Search    },
   { id: 'note'     as Tab, label: 'My Note',   shortLabel: 'Note',     icon: Pencil    },
@@ -125,7 +124,6 @@ export function VersePopup({
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('explain')
   const [explainTriggered, setExplainTriggered] = useState(false)
-  const [contextTriggered, setContextTriggered] = useState(false)
   const [noteText, setNoteText] = useState(currentNote)
   const [noteSaved, setNoteSaved] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -159,11 +157,6 @@ export function VersePopup({
   const { text: explanation, loading: loadingExplain } = useStreamingContent(
     explainTriggered, '/api/explain',
     { verseRef, verseText: verse.text, translation }
-  )
-
-  const { text: aneContext, loading: loadingContext } = useStreamingContent(
-    contextTriggered, '/api/context',
-    { bookName, chapter: verse.chapter_number, verseText: verse.text }
   )
 
   // Auto-load verse word tagging when Strong's tab opens
@@ -374,13 +367,11 @@ export function VersePopup({
               setExplainTriggered={setExplainTriggered}
               explanation={explanation}
               loadingExplain={loadingExplain}
-              contextTriggered={contextTriggered}
-              setContextTriggered={setContextTriggered}
-              aneContext={aneContext}
-              loadingContext={loadingContext}
+
               crossRefs={crossRefs}
               loadingCrossRefs={loadingCrossRefs}
               onClose={onClose}
+              onOpenChat={onOpenChat}
               wordQuery={wordQuery}
               setWordQuery={setWordQuery}
               wordResults={wordResults}
@@ -492,10 +483,6 @@ export function VersePopup({
             setExplainTriggered={setExplainTriggered}
             explanation={explanation}
             loadingExplain={loadingExplain}
-            contextTriggered={contextTriggered}
-            setContextTriggered={setContextTriggered}
-            aneContext={aneContext}
-            loadingContext={loadingContext}
             crossRefs={crossRefs}
             loadingCrossRefs={loadingCrossRefs}
             onClose={onClose}
@@ -533,10 +520,6 @@ interface TabContentProps {
   setExplainTriggered: (v: boolean) => void
   explanation: string
   loadingExplain: boolean
-  contextTriggered: boolean
-  setContextTriggered: (v: boolean) => void
-  aneContext: string
-  loadingContext: boolean
   crossRefs: CrossRefResult[] | null
   loadingCrossRefs: boolean
   onClose: () => void
@@ -564,7 +547,6 @@ interface TabContentProps {
 
 function TabContent({
   activeTab, explainTriggered, setExplainTriggered, explanation, loadingExplain,
-  contextTriggered, setContextTriggered, aneContext, loadingContext,
   crossRefs, loadingCrossRefs, onClose, onOpenChat,
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
@@ -588,37 +570,6 @@ function TabContent({
           <>
             <StreamingContent text={explanation} loading={loadingExplain} />
             {!loadingExplain && explanation && (
-              <div className="px-4 pb-4">
-                <button
-                  onClick={onOpenChat}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-xs font-medium text-primary"
-                  style={{ fontFamily: 'system-ui' }}
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  Got questions? Ask Ezra →
-                </button>
-              </div>
-            )}
-          </>
-        )
-      )}
-
-      {/* History */}
-      {activeTab === 'context' && (
-        !contextTriggered ? (
-          <div className="px-4 py-6 flex flex-col items-center gap-3">
-            <p className="text-xs text-muted-foreground text-center" style={{ fontFamily: 'system-ui' }}>
-              Ancient Near Eastern setting, cultural customs, and what this meant to original readers.
-            </p>
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setContextTriggered(true)}>
-              <MapPin className="w-3.5 h-3.5" />
-              Load historical context
-            </Button>
-          </div>
-        ) : (
-          <>
-            <StreamingContent text={aneContext} loading={loadingContext} />
-            {!loadingContext && aneContext && (
               <div className="px-4 pb-4">
                 <button
                   onClick={onOpenChat}
