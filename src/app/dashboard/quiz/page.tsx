@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -84,11 +84,6 @@ export default function QuizPage() {
     }
   }, [selectedBook.id, selectedChapter])
 
-  // Auto-load on initial mount
-  useEffect(() => {
-    fetchQuiz()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   function handleChoose(optionIdx: number) {
     if (chosen !== null) return // already answered
