@@ -28,6 +28,7 @@ import {
   FileText,
   Languages,
   HelpCircle,
+  Zap,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
@@ -188,6 +189,10 @@ export function DashboardNav({ user, streak }: Props) {
                 <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/settings')}>
                   <Settings className="w-4 h-4" />
                   Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/upgrade')}>
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="text-primary font-medium">Upgrade to Pro</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

@@ -1,16 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
+import { getSubscription, isActiveSub } from '@/lib/stripe'
 
 // Free tier daily limit for Sonnet (expensive) chat messages
 const CHAT_DAILY_LIMIT = 20
 
 /**
  * Check if a user is within their daily AI chat quota and increment the counter.
- * Uses the service role key to bypass RLS for an atomic read-modify-write.
- * Returns { allowed: true } or { allowed: false, message } with a user-friendly error.
+ * Pro subscribers get unlimited chat. Free users get 20/day.
  */
 export async function checkChatRateLimit(
   userId: string
 ): Promise<{ allowed: boolean; message?: string; remaining?: number }> {
+  // Pro users have no limit
+  const sub = await getSubscription(userId)
+  if (isActiveSub(sub)) return { allowed: true }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -31,7 +35,7 @@ export async function checkChatRateLimit(
   if (current >= CHAT_DAILY_LIMIT) {
     return {
       allowed: false,
-      message: `You've reached your ${CHAT_DAILY_LIMIT} daily messages with Ezra. Come back tomorrow — your streak is safe!`,
+      message: `You've used all ${CHAT_DAILY_LIMIT} free messages today. Upgrade to Pro for unlimited Ezra conversations.`,
     }
   }
 
