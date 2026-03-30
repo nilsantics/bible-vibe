@@ -55,6 +55,7 @@ interface Props {
   nextChapter: number | null
   prevBook: BookMeta | null
   nextBook: BookMeta | null
+  esvError?: string
 }
 
 interface TaggedWord {
@@ -83,6 +84,7 @@ export function BibleReader({
   nextChapter,
   prevBook,
   nextBook,
+  esvError,
 }: Props) {
   const router = useRouter()
   const [highlights, setHighlights] = useState<Record<number, string>>(initialHighlights)
@@ -439,8 +441,13 @@ export function BibleReader({
             <p className="text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
               Could not load ESV text.
             </p>
+            {esvError && (
+              <p className="text-sm text-destructive bg-muted px-2 py-1 rounded" style={{ fontFamily: 'monospace' }}>
+                {esvError}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-              Make sure <code className="bg-muted px-1 rounded">ESV_API_KEY</code> is set in your Vercel environment variables, then redeploy.
+              Make sure <code className="bg-muted px-1 rounded">ESV_API_KEY</code> is set in Vercel environment variables, then redeploy.
             </p>
           </>
         ) : (

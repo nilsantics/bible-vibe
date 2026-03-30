@@ -46,11 +46,13 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
 
   // ESV is served directly from the ESV API (not stored in Supabase)
   let verses: { id: number; book_id: number; chapter_number: number; verse_number: number; text: string }[] = []
+  let esvError: string | undefined
 
   if (translation === 'ESV') {
     try {
       verses = await fetchESVChapter(bookMeta.name, chapter, bookMeta.id)
-    } catch {
+    } catch (e) {
+      esvError = String(e)
       verses = []
     }
   } else {
@@ -112,6 +114,7 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
       initialHighlights={highlights}
       initialNotes={notes}
       translation={translation}
+      esvError={esvError}
       isAuthenticated={!!user}
       prevChapter={prevChapter}
       nextChapter={nextChapter}
