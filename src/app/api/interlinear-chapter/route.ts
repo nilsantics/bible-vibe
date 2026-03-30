@@ -11,9 +11,11 @@ export interface TaggedWord {
 }
 
 export async function POST(request: NextRequest) {
-  const { book_id, chapter, translation, testament } = await request.json()
-
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+
+  const { book_id, chapter, translation, testament } = await request.json()
 
   // Resolve translation code → id
   const { data: translationRow } = await supabase

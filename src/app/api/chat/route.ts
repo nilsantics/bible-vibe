@@ -1,16 +1,31 @@
 import { NextRequest } from 'next/server'
 import { getSystemPromptForDepth, type StudyDepth } from '@/lib/claude'
+import { createClient } from '@/lib/supabase/server'
+import { checkChatRateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'edge'
 
+function errorResponse(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 export async function POST(request: NextRequest) {
+  // Auth check
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return errorResponse('Sign in to chat with Ezra.', 401)
+
+  // Rate limit — protect Sonnet budget
+  const rate = await checkChatRateLimit(user.id)
+  if (!rate.allowed) return errorResponse(rate.message!, 429)
+
   const { messages, currentPassage, depth } = await request.json()
 
   if (!messages || !Array.isArray(messages)) {
-    return new Response(JSON.stringify({ error: 'messages array required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return errorResponse('messages array required', 400)
   }
 
   const systemPrompt = getSystemPromptForDepth(depth ?? 'standard')
@@ -30,7 +45,6 @@ export async function POST(request: NextRequest) {
     messages,
   })
 
-  // Return a ReadableStream that the client can consume
   const readable = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder()
@@ -54,6 +68,7 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-cache',
       'X-Accel-Buffering': 'no',
+      ...(rate.remaining !== undefined && { 'X-RateLimit-Remaining': String(rate.remaining) }),
     },
   })
 }

@@ -83,7 +83,14 @@ export function ChatPanel({
         body: JSON.stringify({ messages: newMessages, currentPassage, depth }),
       })
 
-      if (!res.ok) throw new Error('Chat request failed')
+      if (res.status === 401) {
+        throw new Error('Please sign in to chat with Ezra.')
+      }
+      if (res.status === 429) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "You've reached your daily limit. Come back tomorrow!")
+      }
+      if (!res.ok) throw new Error('Chat request failed — please try again.')
 
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()

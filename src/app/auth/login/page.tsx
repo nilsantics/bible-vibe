@@ -109,7 +109,16 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/auth/reset-password"
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  style={{ fontFamily: 'system-ui' }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

@@ -5,6 +5,10 @@ import { getBookById } from '@/lib/bible-data'
 
 // POST /api/quiz  { passage: "John 3:16-21" }
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Sign in to generate a quiz.' }, { status: 401 })
+
   const { passage } = await request.json()
   if (!passage?.trim()) {
     return NextResponse.json({ error: 'Passage is required' }, { status: 400 })
