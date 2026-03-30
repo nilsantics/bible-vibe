@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { BibleReader } from '@/components/bible-reader'
 import { getBookByName, BIBLE_BOOKS } from '@/lib/bible-data'
+import { fetchESVChapter } from '@/lib/esv'
 
 interface PageProps {
   params: Promise<{ book: string; chapter: string }>
@@ -41,22 +42,34 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
   const chapter = parseInt(chapterStr, 10)
   if (isNaN(chapter) || chapter < 1 || chapter > bookMeta.chapters) notFound()
 
-  // Fetch verses server-side, filtered by translation
   const supabase = await createClient()
 
-  const { data: translationRow } = await supabase
-    .from('translations')
-    .select('id')
-    .eq('code', translation)
-    .single()
+  // ESV is served directly from the ESV API (not stored in Supabase)
+  let verses: { id: number; book_id: number; chapter_number: number; verse_number: number; text: string }[] = []
 
-  const { data: verses } = await supabase
-    .from('verses')
-    .select('id, book_id, chapter_number, verse_number, text')
-    .eq('book_id', bookMeta.id)
-    .eq('chapter_number', chapter)
-    .eq('translation_id', translationRow?.id ?? 1)
-    .order('verse_number')
+  if (translation === 'ESV') {
+    try {
+      verses = await fetchESVChapter(bookMeta.name, chapter, bookMeta.id)
+    } catch {
+      verses = []
+    }
+  } else {
+    const { data: translationRow } = await supabase
+      .from('translations')
+      .select('id')
+      .eq('code', translation)
+      .single()
+
+    const { data } = await supabase
+      .from('verses')
+      .select('id, book_id, chapter_number, verse_number, text')
+      .eq('book_id', bookMeta.id)
+      .eq('chapter_number', chapter)
+      .eq('translation_id', translationRow?.id ?? 1)
+      .order('verse_number')
+
+    verses = data ?? []
+  }
 
   // Fetch user highlights/notes for this chapter (if logged in)
   const { data: { user } } = await supabase.auth.getUser()
