@@ -433,13 +433,26 @@ export function BibleReader({
 
   if (!verses || verses.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <p className="text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-          Bible text not loaded yet. Run the seed script first.
-        </p>
-        <p className="text-sm text-muted-foreground mt-2" style={{ fontFamily: 'system-ui' }}>
-          <code className="bg-muted px-1 rounded">npx ts-node scripts/seed-bible.ts</code>
-        </p>
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center space-y-2">
+        {translation === 'ESV' ? (
+          <>
+            <p className="text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              Could not load ESV text.
+            </p>
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              Make sure <code className="bg-muted px-1 rounded">ESV_API_KEY</code> is set in your Vercel environment variables, then redeploy.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              Bible text not loaded yet. Run the seed script first.
+            </p>
+            <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              <code className="bg-muted px-1 rounded">npx ts-node scripts/seed-bible.ts</code>
+            </p>
+          </>
+        )}
       </div>
     )
   }
