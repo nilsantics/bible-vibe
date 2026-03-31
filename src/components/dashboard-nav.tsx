@@ -39,6 +39,7 @@ import type { User } from '@supabase/supabase-js'
 interface Props {
   user: User | null
   streak: number
+  isPro: boolean
 }
 
 const navLinks = [
@@ -49,7 +50,7 @@ const navLinks = [
   { href: '/dashboard/progress',          label: 'Progress',  icon: BarChart2 },
 ]
 
-export function DashboardNav({ user, streak }: Props) {
+export function DashboardNav({ user, streak, isPro }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -156,7 +157,12 @@ export function DashboardNav({ user, streak }: Props) {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <Button variant="ghost" className="rounded-full w-8 h-8 p-0">
+                <Button variant="ghost" className="rounded-full h-8 p-0 gap-1.5 px-1">
+                  {isPro && (
+                    <span className="hidden sm:flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      <Zap className="w-3 h-3" /> Pro
+                    </span>
+                  )}
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">
                       {initials}
@@ -166,12 +172,14 @@ export function DashboardNav({ user, streak }: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <div className="px-2 py-1.5">
-                  <p
-                    className="text-xs text-muted-foreground truncate"
-                    style={{ fontFamily: 'system-ui' }}
-                  >
+                  <p className="text-xs text-muted-foreground truncate" style={{ fontFamily: 'system-ui' }}>
                     {user.email}
                   </p>
+                  {isPro && (
+                    <p className="text-xs font-semibold text-primary mt-0.5 flex items-center gap-1">
+                      <Zap className="w-3 h-3" /> Bible Vibe Pro
+                    </p>
+                  )}
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/notes')}>
@@ -190,10 +198,17 @@ export function DashboardNav({ user, streak }: Props) {
                   <Settings className="w-4 h-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/upgrade')}>
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-primary font-medium">Upgrade to Pro</span>
-                </DropdownMenuItem>
+                {isPro ? (
+                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/upgrade')}>
+                    <Zap className="w-4 h-4 text-primary" />
+                    <span className="text-primary font-medium">Manage Pro</span>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/upgrade')}>
+                    <Zap className="w-4 h-4 text-primary" />
+                    <span className="text-primary font-medium">Upgrade to Pro</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}

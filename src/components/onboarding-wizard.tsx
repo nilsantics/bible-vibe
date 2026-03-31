@@ -21,9 +21,10 @@ const TIMES = [
 ]
 
 const TRANSLATIONS = [
-  { code: 'WEB', label: 'World English Bible', desc: 'Modern & accurate · public domain', recommended: true },
+  { code: 'ESV', label: 'English Standard Version', desc: 'Scholarly & widely used · recommended', recommended: true },
+  { code: 'BSB', label: 'Berean Standard Bible', desc: 'Modern & accurate · free to share' },
   { code: 'KJV', label: 'King James Version', desc: 'Classic 1611 · poetic language' },
-  { code: 'ESV', label: 'English Standard Version', desc: 'Scholarly & widely used' },
+  { code: 'WEB', label: 'World English Bible', desc: 'Modern · public domain' },
 ]
 
 export function OnboardingWizard() {
@@ -31,7 +32,7 @@ export function OnboardingWizard() {
   const [step, setStep] = useState(0)
   const [goal, setGoal] = useState('')
   const [time, setTime] = useState('')
-  const [translation, setTranslation] = useState('WEB')
+  const [translation, setTranslation] = useState('ESV')
   const supabase = createClient()
   const router = useRouter()
 
@@ -95,7 +96,7 @@ export function OnboardingWizard() {
             <>
               {/* Progress bar */}
               <div className="flex items-center gap-1.5 mb-5">
-                {[1, 2, 3].map((i) => (
+                {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
                     className={`h-1 rounded-full flex-1 transition-all duration-300 ${i <= step ? 'bg-primary' : 'bg-muted'}`}
@@ -106,11 +107,13 @@ export function OnboardingWizard() {
                 {step === 1 && 'What brings you here?'}
                 {step === 2 && 'How much time per day?'}
                 {step === 3 && 'Pick your translation'}
+                {step === 4 && "Here's what's waiting for you"}
               </h2>
               <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
                 {step === 1 && "We'll suggest the right reading plan for you."}
                 {step === 2 && "We'll pace your reading to fit your schedule."}
                 {step === 3 && 'You can always switch while reading.'}
+                {step === 4 && 'Tap any verse to unlock all of these.'}
               </p>
             </>
           )}
@@ -195,8 +198,34 @@ export function OnboardingWizard() {
                   {translation === t.code && <span className="text-primary font-bold">✓</span>}
                 </button>
               ))}
+              <Button className="w-full !mt-3" onClick={() => setStep(4)}>
+                Next →
+              </Button>
+            </>
+          )}
+
+          {step === 4 && (
+            <>
+              <div className="space-y-2">
+                {[
+                  { icon: '💬', title: 'Ezra AI', desc: 'Ask any question about a verse — theology, context, original language, application.' },
+                  { icon: '🔤', title: 'Hebrew & Greek interlinear', desc: 'See every word in its original language with definitions inline.' },
+                  { icon: '🔗', title: '430,000 cross-references', desc: 'Instantly see every related passage across the entire Bible.' },
+                  { icon: '🧠', title: 'Bible quizzes', desc: 'Test your knowledge on any passage, book, or topic.' },
+                  { icon: '📅', title: 'Reading plans', desc: 'Follow guided plans — from the whole Bible to targeted studies.' },
+                  { icon: '🏆', title: 'Streaks & XP', desc: 'Build a habit with daily streaks and unlock achievement badges.' },
+                ].map((f) => (
+                  <div key={f.title} className="flex items-start gap-3 p-2.5 rounded-xl">
+                    <span className="text-xl shrink-0 mt-0.5">{f.icon}</span>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>{f.title}</p>
+                      <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <Button className="w-full !mt-3" onClick={finish}>
-                Start studying! 🙌
+                Let&apos;s go! 🙌
               </Button>
             </>
           )}

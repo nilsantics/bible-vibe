@@ -11,6 +11,7 @@ import { BookOpen, ChevronRight, CalendarDays, Sparkles, GitBranch, Languages } 
 import { PLAN_TEMPLATES, getTodayAssignment } from '@/lib/reading-plans'
 import { DevotionalCard } from '@/components/devotional-card'
 import { ContinueReading } from '@/components/continue-reading'
+import { UpgradeToast, WelcomeToast } from '@/components/upgrade-toast'
 
 const QUICK_START_BOOKS = [
   { name: 'Genesis',  chapter: 1, desc: 'The beginning of everything' },
@@ -43,7 +44,12 @@ const NEW_USER_PICKS = [
   },
 ]
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ upgraded?: string; welcome?: string }>
+}) {
+  const { upgraded, welcome } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -114,6 +120,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      {upgraded === '1' && <UpgradeToast />}
+      {welcome === '1' && <WelcomeToast />}
       {/* New-user onboarding hero */}
       {isNewUser && (
         <div className="mb-10">

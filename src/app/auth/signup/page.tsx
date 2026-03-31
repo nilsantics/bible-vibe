@@ -35,9 +35,7 @@ export default function SignupPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success('Check your email to confirm your account!')
-      router.push('/dashboard')
-      router.refresh()
+      router.push('/auth/check-email')
     }
     setLoading(false)
   }

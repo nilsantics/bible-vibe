@@ -67,9 +67,10 @@ interface TaggedWord {
 }
 
 const TRANSLATIONS = [
+  { code: 'ESV', name: 'Eng. Standard Version', recommended: true },
+  { code: 'BSB', name: 'Berean Standard Bible' },
   { code: 'WEB', name: 'World English Bible' },
   { code: 'KJV', name: 'King James Version' },
-  { code: 'ESV', name: 'Eng. Standard Version' },
 ]
 
 export function BibleReader({
@@ -523,6 +524,9 @@ export function BibleReader({
                   <SelectItem key={t.code} value={t.code}>
                     <span className="font-semibold">{t.code}</span>
                     <span className="text-muted-foreground ml-2 text-xs">{t.name}</span>
+                    {'recommended' in t && t.recommended && (
+                      <span className="ml-2 text-xs text-primary font-medium">Recommended</span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>

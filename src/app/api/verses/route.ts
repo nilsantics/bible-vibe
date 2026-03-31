@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { fetchESVChapter } from '@/lib/esv'
+import { fetchBSBChapter } from '@/lib/bsb'
 import { getBookById } from '@/lib/bible-data'
 
 // GET /api/verses?book=1&chapter=1&translation=WEB
@@ -17,12 +18,21 @@ export async function GET(request: NextRequest) {
   const bookId = parseInt(bookIdParam, 10)
   const chapter = parseInt(chapterParam, 10)
 
-  // ESV comes from the ESV API, not Supabase
+  // ESV + BSB come from external APIs, not Supabase
   if (translation === 'ESV') {
     const book = getBookById(bookId)
     if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 })
     try {
       const verses = await fetchESVChapter(book.name, chapter, bookId)
+      return NextResponse.json({ verses })
+    } catch (e) {
+      return NextResponse.json({ error: String(e) }, { status: 502 })
+    }
+  }
+
+  if (translation === 'BSB') {
+    try {
+      const verses = await fetchBSBChapter(bookId, chapter)
       return NextResponse.json({ verses })
     } catch (e) {
       return NextResponse.json({ error: String(e) }, { status: 502 })

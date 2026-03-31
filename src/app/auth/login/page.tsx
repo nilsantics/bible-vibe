@@ -25,7 +25,7 @@ export default function LoginPage() {
     if (error) {
       toast.error(error.message)
     } else {
-      router.push('/dashboard')
+      router.push('/dashboard?welcome=1')
       router.refresh()
     }
     setLoading(false)

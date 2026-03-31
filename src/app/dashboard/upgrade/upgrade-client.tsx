@@ -70,28 +70,51 @@ export function UpgradeClient({ isPro, subscription }: Props) {
     const periodEnd = subscription?.current_period_end
       ? new Date(subscription.current_period_end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       : null
+    const isYearly = subscription?.price_id?.includes(process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY ?? '') ||
+      subscription?.price_id === 'price_1TGldZ4EF2UU7U4O732cw97R'
 
     return (
-      <div className="max-w-lg mx-auto px-4 py-12 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
-          <Zap className="w-4 h-4" /> Bible Vibe Pro
+      <div className="max-w-lg mx-auto px-4 py-12 space-y-6">
+        {/* Hero */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
+            <Zap className="w-4 h-4" /> Bible Vibe Pro
+          </div>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+            You&apos;re all set.
+          </h1>
+          <p className="text-muted-foreground text-sm" style={{ fontFamily: 'system-ui' }}>
+            Full access to everything Bible Vibe has to offer.
+          </p>
         </div>
-        <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
-          You&apos;re a Pro member
-        </h1>
-        <p className="text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-          {subscription?.cancel_at_period_end
-            ? `Your subscription ends on ${periodEnd}.`
-            : `Next billing date: ${periodEnd}.`}
-        </p>
-        <div className="grid gap-2 text-left">
+
+        {/* Status card */}
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-1">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
+            {isYearly ? 'Annual plan' : 'Monthly plan'}
+          </p>
+          <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+            {subscription?.cancel_at_period_end
+              ? `Access ends ${periodEnd}. You won't be charged again.`
+              : `Renews ${periodEnd}.`}
+          </p>
+        </div>
+
+        {/* Features */}
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
+            What you have access to
+          </p>
           {PRO_FEATURES.map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-3 py-1">
-              <Check className="w-4 h-4 text-primary shrink-0" />
+            <div key={text} className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
               <span className="text-sm" style={{ fontFamily: 'system-ui' }}>{text}</span>
             </div>
           ))}
         </div>
+
         <Button
           variant="outline"
           onClick={handlePortal}
@@ -99,7 +122,7 @@ export function UpgradeClient({ isPro, subscription }: Props) {
           className="w-full"
           style={{ fontFamily: 'system-ui' }}
         >
-          {portalLoading ? 'Opening…' : 'Manage billing'}
+          {portalLoading ? 'Opening…' : 'Manage subscription & billing'}
         </Button>
       </div>
     )
@@ -132,8 +155,11 @@ export function UpgradeClient({ isPro, subscription }: Props) {
             style={{ fontFamily: 'system-ui' }}
           >
             <span>{p === 'monthly' ? '$9.99 / month' : '$89 / year'}</span>
+            <span className={`text-xs ${plan === p ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+              {p === 'monthly' ? '33¢ / day' : '24¢ / day'}
+            </span>
             {p === 'yearly' && (
-              <span className={`text-xs ${plan === 'yearly' ? 'text-primary-foreground/80' : 'text-primary'}`}>
+              <span className={`text-xs font-semibold ${plan === 'yearly' ? 'text-primary-foreground/80' : 'text-primary'}`}>
                 Save 26%
               </span>
             )}

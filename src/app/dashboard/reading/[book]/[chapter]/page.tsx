@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { BibleReader } from '@/components/bible-reader'
 import { getBookByName, BIBLE_BOOKS } from '@/lib/bible-data'
 import { fetchESVChapter } from '@/lib/esv'
+import { fetchBSBChapter } from '@/lib/bsb'
 
 interface PageProps {
   params: Promise<{ book: string; chapter: string }>
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ReadingPage({ params, searchParams }: PageProps) {
   const { book: bookSlug, chapter: chapterStr } = await params
-  const { translation = 'WEB' } = await searchParams
+  const { translation = 'ESV' } = await searchParams
 
   const bookMeta = getBookByName(bookSlug)
   if (!bookMeta) notFound()
@@ -53,6 +54,13 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
       verses = await fetchESVChapter(bookMeta.name, chapter, bookMeta.id)
     } catch (e) {
       esvError = String(e)
+      verses = []
+    }
+  } else if (translation === 'BSB') {
+    try {
+      verses = await fetchBSBChapter(bookMeta.id, chapter)
+    } catch (e) {
+      esvError = `Could not load BSB: ${String(e)}`
       verses = []
     }
   } else {
