@@ -3,6 +3,7 @@ import { DashboardNav } from '@/components/dashboard-nav'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { TutorialOverlay } from '@/components/tutorial-overlay'
 import { OnboardingWizard } from '@/components/onboarding-wizard'
+import { PwaPrompt } from '@/components/pwa-prompt'
 import { getSubscription, isActiveSub } from '@/lib/stripe'
 
 export default async function DashboardLayout({
@@ -31,6 +32,7 @@ export default async function DashboardLayout({
       <MobileBottomNav />
       <TutorialOverlay />
       <OnboardingWizard />
+      <PwaPrompt />
     </div>
   )
 }

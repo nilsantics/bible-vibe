@@ -120,6 +120,93 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* App preview */}
+      <section className="py-20 px-6 border-t border-border overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs tracking-[0.2em] uppercase text-primary/60 mb-3" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+              The reading experience
+            </p>
+            <h2 className="text-3xl md:text-4xl font-light" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              Every verse. Every tool.
+              <br />
+              <span className="text-primary font-semibold">All in one place.</span>
+            </h2>
+          </div>
+
+          {/* Mock UI */}
+          <div className="relative max-w-3xl mx-auto rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+            {/* Browser chrome */}
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/40">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-border" />
+                <div className="w-3 h-3 rounded-full bg-border" />
+                <div className="w-3 h-3 rounded-full bg-border" />
+              </div>
+              <div className="flex-1 mx-3 h-5 bg-muted rounded text-xs flex items-center px-2 text-muted-foreground/50" style={{ fontFamily: 'system-ui' }}>
+                studykairos.app/dashboard/reading/john/3
+              </div>
+            </div>
+
+            {/* App toolbar */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-background/80">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-14 rounded bg-muted/60" />
+                <div className="h-6 w-10 rounded bg-muted/40" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-6 w-16 rounded bg-muted/40" />
+                <div className="h-6 w-16 rounded bg-muted/40" />
+                <div className="h-6 w-8 rounded bg-primary/20 border border-primary/30" />
+              </div>
+            </div>
+
+            {/* Reader content */}
+            <div className="grid grid-cols-1 md:grid-cols-5">
+              {/* Bible text */}
+              <div className="md:col-span-3 p-6 border-r border-border/30">
+                <h3 className="text-2xl font-bold mb-1 text-foreground/90" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>John</h3>
+                <p className="text-xs text-muted-foreground mb-5" style={{ fontFamily: 'system-ui' }}>Chapter 3 · 36 verses</p>
+                <div className="space-y-1 text-sm leading-7 text-foreground/80" style={{ fontFamily: 'var(--font-lora), Georgia, serif' }}>
+                  <span><sup className="text-[10px] text-primary/60 mr-1 font-mono">1</sup>There was a man of the Pharisees named Nicodemus, a ruler of the Jews. </span>
+                  <span><sup className="text-[10px] text-primary/60 mr-1 font-mono">2</sup>The same came to Jesus by night, and said to him, &ldquo;Rabbi, we know that you are a teacher come from God.&rdquo; </span>
+                  <span className="bg-primary/10 ring-1 ring-primary/30 rounded px-0.5"><sup className="text-[10px] text-primary/60 mr-1 font-mono">16</sup>For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish, but have eternal life. </span>
+                  <span><sup className="text-[10px] text-primary/60 mr-1 font-mono">17</sup>For God didn&rsquo;t send his Son into the world to judge the world, but that the world should be saved through him.</span>
+                </div>
+              </div>
+
+              {/* Study panel */}
+              <div className="md:col-span-2 p-4 bg-muted/20">
+                <div className="text-xs font-semibold text-primary mb-3" style={{ fontFamily: 'system-ui' }}>John 3:16</div>
+                <div className="space-y-3">
+                  <div className="bg-card rounded-lg p-3 border border-border/50">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" style={{ fontFamily: 'system-ui' }}>Cross-references</p>
+                    <div className="space-y-1">
+                      {['Romans 5:8', 'John 1:14', '1 John 4:9'].map((ref) => (
+                        <div key={ref} className="text-xs text-primary flex items-center gap-1" style={{ fontFamily: 'system-ui' }}>
+                          <div className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                          {ref}
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>+12 more</p>
+                    </div>
+                  </div>
+                  <div className="bg-card rounded-lg p-3 border border-border/50">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" style={{ fontFamily: 'system-ui' }}>Ezra explains</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                      &ldquo;Loved&rdquo; here is <span className="text-foreground font-medium">ἠγάπησεν</span> (agapaō) — sacrificial, unconditional love. The aorist tense emphasizes a decisive historical act...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-xs text-muted-foreground mt-4" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+            Tap any verse to open the study panel
+          </p>
+        </div>
+      </section>
+
       {/* Brand verse + name meaning */}
       <section className="py-20 px-6 border-t border-border">
         <div className="max-w-2xl mx-auto text-center space-y-6">

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Play, Trash2, BookOpen, ChevronRight } from 'lucide-react'
+import { Play, Trash2, BookOpen, ChevronRight, CheckCircle2 } from 'lucide-react'
 import { PLAN_TEMPLATES, getTodayAssignment, type PlanTemplate } from '@/lib/reading-plans'
 
 interface ActivePlan {
@@ -26,6 +26,26 @@ interface Props {
 export function PlansClient({ templates, activePlans: initialPlans }: Props) {
   const [activePlans, setActivePlans] = useState<ActivePlan[]>(initialPlans)
   const [starting, setStarting] = useState<string | null>(null)
+  const [completing, setCompleting] = useState<string | null>(null)
+
+  async function markDayComplete(plan: ActivePlan) {
+    setCompleting(plan.id)
+    // Advance start_date by 1 day so tomorrow's assignment becomes today's
+    const newStart = new Date(plan.start_date)
+    newStart.setDate(newStart.getDate() - 1)
+    const res = await fetch('/api/plans', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: plan.id, start_date: newStart.toISOString().split('T')[0] }),
+    })
+    if (res.ok) {
+      setActivePlans((prev) => prev.map((p) => p.id === plan.id ? { ...p, start_date: newStart.toISOString().split('T')[0] } : p))
+      toast.success('Day marked complete!')
+    } else {
+      toast.error('Failed to mark complete')
+    }
+    setCompleting(null)
+  }
 
   async function startPlan(template: PlanTemplate) {
     setStarting(template.id)
@@ -133,18 +153,29 @@ export function PlansClient({ templates, activePlans: initialPlans }: Props) {
                   </div>
                   <Progress value={progress} className="h-1.5 mb-3" />
                   {todayTask && (
-                    <Link
-                      href={`/dashboard/reading/${todayTask.bookName.toLowerCase().replace(/\s+/g, '-')}/${todayTask.chapters[0]}`}
-                    >
-                      <div className="flex items-center gap-2 text-xs bg-primary/5 hover:bg-primary/10 rounded-lg px-3 py-2 transition-colors">
-                        <BookOpen className="w-3.5 h-3.5 text-primary" />
-                        <span style={{ fontFamily: 'system-ui' }}>
-                          <span className="font-medium">Today: </span>
-                          {todayTask.bookName} {todayTask.chapters.join(', ')}
-                        </span>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-                      </div>
-                    </Link>
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/dashboard/reading/${todayTask.bookName.toLowerCase().replace(/\s+/g, '-')}/${todayTask.chapters[0]}`}
+                        className="flex-1"
+                      >
+                        <div className="flex items-center gap-2 text-xs bg-primary/5 hover:bg-primary/10 rounded-lg px-3 py-2 transition-colors">
+                          <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <span style={{ fontFamily: 'system-ui' }}>
+                            <span className="font-medium">Today: </span>
+                            {todayTask.bookName} {todayTask.chapters.join(', ')}
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto shrink-0" />
+                        </div>
+                      </Link>
+                      <button
+                        onClick={() => markDayComplete(plan)}
+                        disabled={completing === plan.id}
+                        title="Mark today complete"
+                        className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 transition-colors shrink-0"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </Card>
               )

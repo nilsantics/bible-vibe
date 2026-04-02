@@ -601,20 +601,15 @@ export function BibleReader({
               </span>
             </Button>
 
-            {/* Interlinear toggle */}
-            <Button
-              variant={interlinearOn ? 'secondary' : 'outline'}
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 font-normal"
-              onClick={toggleInterlinear}
-              title="Interlinear view — original Hebrew/Greek under each word"
-              disabled={interlinearLoading}
+            {/* Interlinear — coming soon */}
+            <div
+              className="h-7 px-2 text-xs gap-1 font-normal flex items-center border border-border rounded-md text-muted-foreground/50 cursor-not-allowed select-none"
+              title="Interlinear coming soon"
             >
               <Languages className="w-3 h-3" />
-              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>
-                {interlinearLoading ? 'Loading…' : 'Interlinear'}
-              </span>
-            </Button>
+              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Interlinear</span>
+              <span className="hidden sm:inline text-[9px] bg-muted px-1 py-0.5 rounded ml-0.5" style={{ fontFamily: 'system-ui' }}>soon</span>
+            </div>
 
             {/* Quiz this chapter */}
             <Link
