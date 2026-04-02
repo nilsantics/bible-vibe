@@ -98,7 +98,7 @@ export default function LandingPage() {
             className="text-base md:text-lg text-muted-foreground mb-12 max-w-xl mx-auto leading-relaxed"
             style={{ fontFamily: 'var(--font-inter), system-ui' }}
           >
-            Kairos is the serious Bible study tool — built for those who want to understand Scripture in its historical and cultural context. Original languages, Ancient Near East background, 430K cross-references. All in one place.
+            Kairos is the all-in-one Bible study tool — built for those who want to understand Scripture in its historical and cultural context. Ancient Near East background, 430K cross-references, commentary. All in one place.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center" data-ui>

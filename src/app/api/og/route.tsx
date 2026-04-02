@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
               in the Word.
             </div>
             <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              {['AI Study Companion', '430K Cross-References', 'Hebrew & Greek'].map((label, i) => (
+              {['Historical Context', '430K Cross-References', 'Deep Commentary'].map((label, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {i > 0 && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(167,139,250,0.5)', display: 'flex' }} />}
                   <span style={{ fontSize: '18px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.04em' }}>{label}</span>

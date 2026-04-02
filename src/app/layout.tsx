@@ -29,22 +29,22 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: 'Kairos — Bible Study with AI & Original Languages',
+  title: 'Kairos — Deep Bible Study',
   description:
-    'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references, and commentary. Free to start.',
-  keywords: ['Bible study', 'Bible app', 'Scripture', 'Kairos', 'Hebrew Greek interlinear', 'ANE context', 'Bible commentary', 'Bible AI'],
+    'The all-in-one Bible study tool built for depth. Read any translation, explore historical and cultural context, 430K cross-references, commentary, and more. Free to start.',
+  keywords: ['Bible study', 'Bible app', 'Scripture', 'Kairos', 'ANE context', 'Bible commentary', 'historical Bible study', 'deep Bible study'],
   manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     siteName: 'Kairos',
-    title: 'Kairos — Bible Study with AI & Original Languages',
-    description: 'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references. Free to start.',
-    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — Bible Study with AI & Original Languages' }],
+    title: 'Kairos — Deep Bible Study',
+    description: 'The all-in-one Bible study tool built for depth. Historical context, 430K cross-references, commentary, and more. Free to start.',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — Deep Bible Study' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kairos — Bible Study with AI & Original Languages',
-    description: 'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references. Free to start.',
+    title: 'Kairos — Deep Bible Study',
+    description: 'The all-in-one Bible study tool built for depth. Historical context, 430K cross-references, commentary, and more. Free to start.',
     images: ['/api/og'],
   },
   appleWebApp: {
