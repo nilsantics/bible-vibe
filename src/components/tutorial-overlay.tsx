@@ -109,7 +109,7 @@ export function TutorialOverlay() {
           <div>
             <h2
               className="text-xl font-bold mb-2 leading-tight"
-              style={{ fontFamily: 'Georgia, serif' }}
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
             >
               {current.title}
             </h2>

@@ -967,8 +967,8 @@ export function BibleReader({
         />
       )}
 
-      {/* Mobile FAB — Ask Ezra (hidden on sm+, hidden when chat is open) */}
-      {!chatOpen && (
+      {/* Mobile FAB — Ask Ezra (hidden on sm+, hidden when chat or verse popup is open) */}
+      {!chatOpen && !selectedVerse && (
         <button
           onClick={() => setChatOpen(true)}
           className="fixed bottom-20 right-4 z-20 sm:hidden flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 text-sm font-medium active:scale-95 transition-transform"

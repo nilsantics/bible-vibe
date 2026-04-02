@@ -29,22 +29,22 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: 'Kairos — Deep Bible Study',
+  title: 'Kairos — Bible Study with AI & Original Languages',
   description:
-    'Your moment in the Word. Kairos is the intelligent Bible study tool — beautiful reading, AI explanations, original languages, 430K cross-references, and more.',
-  keywords: ['Bible study', 'Bible app', 'Scripture', 'Kairos', 'Bible reading', 'Greek Hebrew'],
+    'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references, and commentary. Free to start.',
+  keywords: ['Bible study', 'Bible app', 'Scripture', 'Kairos', 'Hebrew Greek interlinear', 'ANE context', 'Bible commentary', 'Bible AI'],
   manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     siteName: 'Kairos',
-    title: 'Kairos — Deep Bible Study',
-    description: 'Your moment in the Word. AI explanations, 430K cross-references, Hebrew & Greek interlinear. Free to start.',
-    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — Deep Bible Study' }],
+    title: 'Kairos — Bible Study with AI & Original Languages',
+    description: 'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references. Free to start.',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — Bible Study with AI & Original Languages' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kairos — Deep Bible Study',
-    description: 'Your moment in the Word. AI explanations, 430K cross-references, Hebrew & Greek interlinear. Free to start.',
+    title: 'Kairos — Bible Study with AI & Original Languages',
+    description: 'Study Scripture in its historical and cultural context. AI explanations, Hebrew & Greek interlinear, 430K cross-references. Free to start.',
     images: ['/api/og'],
   },
   appleWebApp: {

@@ -98,8 +98,7 @@ export default function LandingPage() {
             className="text-base md:text-lg text-muted-foreground mb-12 max-w-xl mx-auto leading-relaxed"
             style={{ fontFamily: 'var(--font-inter), system-ui' }}
           >
-            Kairos is the serious Bible study tool — built for those who want depth, not decoration.
-            Every translation, every word's origin, every cross-reference. All in one place.
+            Kairos is the serious Bible study tool — built for those who want to understand Scripture in its historical and cultural context. Original languages, Ancient Near East background, 430K cross-references. All in one place.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center" data-ui>
@@ -108,15 +107,15 @@ export default function LandingPage() {
                 BEGIN YOUR STUDY
               </Button>
             </Link>
-            <Link href="/dashboard/reading/psalms/23">
+            <Link href="/auth/login">
               <Button size="lg" variant="outline" className="h-11 px-8 text-sm tracking-wide border-border hover:bg-muted">
-                READ PSALM 23
+                SIGN IN
               </Button>
             </Link>
           </div>
 
           <p className="text-xs text-muted-foreground/60 mt-5 tracking-wide" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
-            No account required · No download · Free to start
+            Free account · No download · Cancel anytime
           </p>
         </div>
       </section>
@@ -347,8 +346,8 @@ export default function LandingPage() {
             <span className="text-primary font-semibold">starts now.</span>
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
-            No account needed to read. Create a free account to save highlights,
-            notes, track your progress, and go deeper.
+            Create a free account to start reading, save highlights and notes,
+            track your progress, and go deeper with AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2" data-ui>
             <Link href="/auth/signup">
@@ -356,9 +355,9 @@ export default function LandingPage() {
                 Start for free
               </Button>
             </Link>
-            <Link href="/dashboard/reading/john/1">
+            <Link href="/auth/login">
               <Button size="lg" variant="outline" className="h-11 px-10 text-sm tracking-wide border-border">
-                Read without account
+                Sign in
               </Button>
             </Link>
           </div>

@@ -106,41 +106,39 @@ export async function GET(req: NextRequest) {
             )}
           </>
         ) : (
-          <>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px', marginTop: '32px' }}>
             <div
               style={{
-                fontSize: '58px',
+                fontSize: '72px',
                 fontWeight: '300',
                 color: 'rgba(255,255,255,0.9)',
                 textAlign: 'center',
-                lineHeight: 1.1,
-                marginTop: '24px',
+                lineHeight: 1.05,
               }}
             >
               Your moment
             </div>
             <div
               style={{
-                fontSize: '58px',
+                fontSize: '72px',
                 fontWeight: '600',
                 color: 'rgba(167,139,250,1)',
                 textAlign: 'center',
-                lineHeight: 1.1,
-                marginBottom: '24px',
+                lineHeight: 1.05,
+                marginBottom: '36px',
               }}
             >
               in the Word.
             </div>
-            <div
-              style={{
-                fontSize: '20px',
-                color: 'rgba(255,255,255,0.5)',
-                textAlign: 'center',
-              }}
-            >
-              AI · 430K cross-references · Hebrew & Greek
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+              {['AI Study Companion', '430K Cross-References', 'Hebrew & Greek'].map((label, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {i > 0 && <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(167,139,250,0.5)', display: 'flex' }} />}
+                  <span style={{ fontSize: '18px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.04em' }}>{label}</span>
+                </div>
+              ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     ),
