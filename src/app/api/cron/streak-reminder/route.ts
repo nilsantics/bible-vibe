@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   const readToday = new Set((todayReaders ?? []).map((r) => r.user_id))
   const needsNudge = (streaks ?? []).filter((s) => !readToday.has(s.user_id))
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bible-vibe-eight.vercel.app'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studykairos.app'
   let sent = 0
 
   await Promise.allSettled(

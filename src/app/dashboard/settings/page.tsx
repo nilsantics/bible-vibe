@@ -38,7 +38,7 @@ export default async function SettingsPage() {
               {isPro ? (
                 <>
                   <Zap className="w-4 h-4 text-primary" />
-                  Bible Vibe Pro
+                  Kairos Pro
                 </>
               ) : (
                 'Free'

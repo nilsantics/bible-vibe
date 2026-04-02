@@ -142,7 +142,7 @@ export function ChatPanel({
   const depthConfig = DEPTH_OPTIONS.find((d) => d.value === depth)!
 
   return (
-    <div className="fixed right-0 top-13 bottom-0 w-full sm:w-84 bg-card border-l border-border flex flex-col z-30 shadow-xl">
+    <div className="fixed right-0 top-13 bottom-16 sm:bottom-0 w-full sm:w-84 bg-card border-l border-border flex flex-col z-30 shadow-xl">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center justify-between mb-3">

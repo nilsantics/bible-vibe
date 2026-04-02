@@ -44,13 +44,16 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2">
-            <span className="text-3xl">✦</span>
-            <span className="text-xl font-semibold" style={{ fontFamily: 'system-ui' }}>
-              Bible Vibe
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center font-bold text-primary-foreground text-base"
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              K
+            </div>
+            <span className="text-xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              Kairos
             </span>
           </Link>
-          <p className="text-muted-foreground text-sm mt-2" style={{ fontFamily: 'system-ui' }}>
+          <p className="text-muted-foreground text-sm mt-2" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
             Welcome back
           </p>
         </div>

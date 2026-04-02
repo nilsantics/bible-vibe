@@ -78,13 +78,13 @@ export function UpgradeClient({ isPro, subscription }: Props) {
         {/* Hero */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
-            <Zap className="w-4 h-4" /> Bible Vibe Pro
+            <Zap className="w-4 h-4" /> Kairos Pro
           </div>
           <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
             You&apos;re all set.
           </h1>
           <p className="text-muted-foreground text-sm" style={{ fontFamily: 'system-ui' }}>
-            Full access to everything Bible Vibe has to offer.
+            Full access to everything Kairos has to offer.
           </p>
         </div>
 

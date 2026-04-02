@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,7 +35,8 @@ function QuizSkeleton() {
   )
 }
 
-export default function QuizPage() {
+function QuizContent() {
+  const searchParams = useSearchParams()
   const [passageInput, setPassageInput] = useState('')
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
@@ -75,6 +77,17 @@ export default function QuizPage() {
     }
   }, [passageInput])
 
+  // Auto-populate + auto-start when coming from a reading page (?book=John&chapter=3)
+  useEffect(() => {
+    const book = searchParams.get('book')
+    const chapter = searchParams.get('chapter')
+    if (book && chapter) {
+      const passage = `${book} ${chapter}`
+      setPassageInput(passage)
+      fetchQuiz(passage)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleChoose(optionIdx: number) {
     if (chosen !== null) return // already answered
@@ -367,5 +380,14 @@ export default function QuizPage() {
         </Card>
       )}
     </div>
+  )
+}
+
+
+export default function QuizPage() {
+  return (
+    <Suspense>
+      <QuizContent />
+    </Suspense>
   )
 }

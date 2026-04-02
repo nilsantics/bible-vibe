@@ -15,8 +15,9 @@ export async function generateMetadata({ params }: PageProps) {
   const { book, chapter } = await params
   const bookMeta = getBookByName(book)
   if (!bookMeta) return {}
-  const title = `${bookMeta.name} ${chapter} — Bible Vibe`
+  const title = `${bookMeta.name} ${chapter} — Kairos`
   const description = `Read ${bookMeta.name} chapter ${chapter} with AI explanations, 430,000 cross-references, and Strong's Hebrew & Greek concordance.`
+  const ogImage = `/api/og?ref=${encodeURIComponent(`${bookMeta.name} ${chapter}`)}`
   return {
     title,
     description,
@@ -24,11 +25,14 @@ export async function generateMetadata({ params }: PageProps) {
       title,
       description,
       type: 'article',
+      siteName: 'Kairos',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
+      images: [ogImage],
     },
   }
 }

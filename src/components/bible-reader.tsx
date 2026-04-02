@@ -172,20 +172,24 @@ export function BibleReader({
       // Check localStorage cache first
       const cached = localStorage.getItem(cacheKey)
       if (cached) {
-        const words: Record<number, TaggedWord[]> = JSON.parse(cached)
-        setInterlinearWords(words)
-        setInterlinearLoading(false)
-        return
+        try {
+          const words: Record<number, TaggedWord[]> = JSON.parse(cached)
+          setInterlinearWords(words)
+          setInterlinearLoading(false)
+          return
+        } catch {
+          localStorage.removeItem(cacheKey) // corrupted — clear and re-fetch
+        }
       }
 
       const res = await fetch('/api/interlinear-chapter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          book_id: book.id,
-          chapter,
-          translation,
           testament: book.testament,
+          translation,
+          // Pass verse texts directly — avoids DB lookup, works with ESV/BSB/WEB/KJV
+          verses: verses.map((v) => ({ verse_number: v.verse_number, text: v.text })),
         }),
       })
       const data = await res.json()
@@ -197,6 +201,8 @@ export function BibleReader({
         setInterlinearWords(words)
         // Cache so future loads are instant
         try { localStorage.setItem(cacheKey, JSON.stringify(words)) } catch { /* quota exceeded — skip cache */ }
+      } else if (data.error) {
+        toast.error(`Interlinear: ${data.error}`)
       }
     } catch {
       toast.error('Could not load interlinear data')
@@ -603,6 +609,20 @@ export function BibleReader({
               </span>
             </Button>
 
+            {/* Quiz this chapter */}
+            <Link
+              href={`/dashboard/quiz?book=${encodeURIComponent(book.name)}&chapter=${chapter}`}
+              title="Quiz yourself on this chapter"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1 font-normal"
+              >
+                <span style={{ fontFamily: 'system-ui' }}>Quiz</span>
+              </Button>
+            </Link>
+
             {/* Ask Ezra */}
             <Button
               variant={chatOpen ? 'secondary' : 'outline'}
@@ -945,6 +965,19 @@ export function BibleReader({
           anchor={popupAnchor}
           isAuthenticated={isAuthenticated}
         />
+      )}
+
+      {/* Mobile FAB — Ask Ezra (hidden on sm+, hidden when chat is open) */}
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-20 right-4 z-20 sm:hidden flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 text-sm font-medium active:scale-95 transition-transform"
+          style={{ fontFamily: 'system-ui' }}
+          aria-label="Ask Ezra"
+        >
+          <MessageSquare className="w-4 h-4 shrink-0" />
+          Ask Ezra
+        </button>
       )}
 
       {/* Chat panel */}

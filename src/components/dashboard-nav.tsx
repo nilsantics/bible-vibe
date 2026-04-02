@@ -96,13 +96,16 @@ export function DashboardNav({ user, streak, isPro }: Props) {
     >
       <div className="max-w-5xl mx-auto px-4 h-13 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-          <span className="text-xl">✦</span>
+        <Link href="/dashboard" className="flex items-center gap-2.5 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center font-bold text-primary-foreground text-sm shrink-0"
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+            K
+          </div>
           <span
-            className="font-semibold text-base tracking-tight hidden sm:block"
-            style={{ fontFamily: 'system-ui' }}
+            className="font-bold text-base tracking-tight hidden sm:block"
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
-            Bible Vibe
+            Kairos
           </span>
         </Link>
 
@@ -177,7 +180,7 @@ export function DashboardNav({ user, streak, isPro }: Props) {
                   </p>
                   {isPro && (
                     <p className="text-xs font-semibold text-primary mt-0.5 flex items-center gap-1">
-                      <Zap className="w-3 h-3" /> Bible Vibe Pro
+                      <Zap className="w-3 h-3" /> Kairos Pro
                     </p>
                   )}
                 </div>

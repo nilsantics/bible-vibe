@@ -74,6 +74,38 @@ export function PlansClient({ templates, activePlans: initialPlans }: Props) {
               const progress = Math.min(100, Math.round((elapsed / total) * 100))
               const todayTask = template ? getTodayAssignment(template, plan.start_date) : null
 
+              const isCompleted = elapsed >= total
+
+              if (isCompleted) {
+                return (
+                  <Card key={plan.id} className="p-5 border-emerald-500/30 bg-gradient-to-br from-emerald-50/60 to-emerald-100/40 dark:from-emerald-950/30 dark:to-emerald-900/20">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <span className="text-3xl">🎉</span>
+                        <div>
+                          <p className="font-semibold text-sm text-emerald-700 dark:text-emerald-400" style={{ fontFamily: 'system-ui' }}>
+                            Plan complete!
+                          </p>
+                          <p className="font-medium text-sm mt-0.5" style={{ fontFamily: 'system-ui' }}>{plan.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
+                            Finished in {total} days — well done.
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => stopPlan(plan.id, plan.name)}
+                        title="Remove"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </Card>
+                )
+              }
+
               return (
                 <Card key={plan.id} className="p-4 border-primary/20">
                   <div className="flex items-start justify-between gap-3 mb-3">

@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 export function UpgradeToast() {
   const router = useRouter()
   useEffect(() => {
-    toast.success('Welcome to Bible Vibe Pro! Full access is now unlocked.', { duration: 6000 })
+    toast.success('Welcome to Kairos Pro! Full access is now unlocked.', { duration: 6000 })
     router.replace('/dashboard', { scroll: false })
   }, [router])
   return null

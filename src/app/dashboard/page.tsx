@@ -12,6 +12,7 @@ import { PLAN_TEMPLATES, getTodayAssignment } from '@/lib/reading-plans'
 import { DevotionalCard } from '@/components/devotional-card'
 import { ContinueReading } from '@/components/continue-reading'
 import { UpgradeToast, WelcomeToast } from '@/components/upgrade-toast'
+import { PushPrompt } from '@/components/push-prompt'
 
 const QUICK_START_BOOKS = [
   { name: 'Genesis',  chapter: 1, desc: 'The beginning of everything' },
@@ -122,15 +123,16 @@ export default async function DashboardPage({
     <div className="max-w-5xl mx-auto px-4 py-8">
       {upgraded === '1' && <UpgradeToast />}
       {welcome === '1' && <WelcomeToast />}
+      {user && <PushPrompt streak={streak} />}
       {/* New-user onboarding hero */}
       {isNewUser && (
         <div className="mb-10">
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center mx-auto mb-4 shadow-md">
-              <span className="text-primary-foreground font-bold text-2xl" style={{ fontFamily: 'Georgia, serif' }}>✦</span>
+              <span className="text-primary-foreground font-bold text-2xl" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>✦</span>
             </div>
-            <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-              Welcome to Bible Vibe
+            <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              Welcome to Kairos
             </h1>
             <p className="text-muted-foreground max-w-md mx-auto" style={{ fontFamily: 'system-ui' }}>
               Your journey through Scripture starts here. Pick a passage below and tap any verse — you&apos;ll get instant cross-references, original language tools, and deep explanations.
@@ -183,16 +185,18 @@ export default async function DashboardPage({
         <div className="mb-8">
           {user ? (
             <div>
-              <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 Welcome back
               </h1>
               <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: 'system-ui' }}>
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {' · '}
+                <span className="italic">Your kairos moment.</span>
               </p>
             </div>
           ) : (
             <div>
-              <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 Start studying the Bible
               </h1>
               <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: 'system-ui' }}>
@@ -374,7 +378,7 @@ export default async function DashboardPage({
                   href={`/dashboard/reading/${b.name.toLowerCase()}/${b.chapter}`}
                 >
                   <Card className="p-3 border-border hover:border-primary/40 transition-colors h-full">
-                    <p className="text-sm font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                    <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                       {b.name} {b.chapter}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>

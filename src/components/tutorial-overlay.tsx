@@ -7,7 +7,7 @@ import { X, BookOpen, MousePointerClick, MessageSquare, Highlighter, Trophy, Che
 const STEPS = [
   {
     icon: BookOpen,
-    title: 'Welcome to Bible Vibe',
+    title: 'Welcome to Kairos',
     desc: "You've got the entire Bible at your fingertips — WEB, KJV, and ESV translations. Start with any book and chapter. Use the sidebar or search to navigate.",
     tip: 'Try: Dashboard → Read → pick any book',
     color: 'from-blue-500/20 to-primary/20',

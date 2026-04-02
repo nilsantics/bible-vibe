@@ -86,7 +86,7 @@ export function OnboardingWizard() {
             <div className="text-center py-6">
               <div className="text-5xl mb-5">✦</div>
               <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
-                Welcome to Bible Vibe
+                Welcome to Kairos
               </h1>
               <p className="text-muted-foreground text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>
                 Let&apos;s personalize your study experience in 30 seconds. You can always update these in settings.

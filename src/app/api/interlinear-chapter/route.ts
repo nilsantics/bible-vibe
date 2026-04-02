@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { CLAUDE_HAIKU_MODEL } from '@/lib/claude'
 
 export interface TaggedWord {
   word: string
@@ -15,29 +16,16 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
-  const { book_id, chapter, translation, testament } = await request.json()
-
-  // Resolve translation code → id
-  const { data: translationRow } = await supabase
-    .from('translations')
-    .select('id')
-    .eq('code', translation)
-    .single()
-
-  if (!translationRow) {
-    return NextResponse.json({ error: 'Unknown translation' }, { status: 404 })
+  // Client passes verse texts directly — no DB lookup needed.
+  // This works with ESV, BSB, WEB, KJV regardless of what's in Supabase.
+  const { testament, translation, verses: clientVerses } = await request.json() as {
+    testament: string
+    translation: string
+    verses: { verse_number: number; text: string }[]
   }
 
-  const { data: verses } = await supabase
-    .from('verses')
-    .select('verse_number, text')
-    .eq('book_id', book_id)
-    .eq('chapter_number', chapter)
-    .eq('translation_id', translationRow.id)
-    .order('verse_number')
-
-  if (!verses?.length) {
-    return NextResponse.json({ error: 'No verses found' }, { status: 404 })
+  if (!clientVerses?.length) {
+    return NextResponse.json({ error: 'No verses provided' }, { status: 400 })
   }
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -49,12 +37,12 @@ export async function POST(request: NextRequest) {
   const batchSize = 8
   const allWords: Record<number, TaggedWord[]> = {}
 
-  for (let i = 0; i < verses.length; i += batchSize) {
-    const batch = verses.slice(i, i + batchSize)
+  for (let i = 0; i < clientVerses.length; i += batchSize) {
+    const batch = clientVerses.slice(i, i + batchSize)
     const verseList = batch.map((v) => `${v.verse_number}: ${v.text}`).join('\n')
 
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: CLAUDE_HAIKU_MODEL,
       max_tokens: 2000,
       messages: [
         {
@@ -76,7 +64,6 @@ Rules:
     })
 
     const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '{}'
-    // Strip any markdown code fences Claude may wrap the JSON in
     const clean = raw
       .replace(/^```[a-z]*\r?\n?/, '')
       .replace(/\r?\n?```$/, '')
@@ -84,7 +71,6 @@ Rules:
 
     try {
       const parsed = JSON.parse(clean)
-      // Accept either { "1": [...], "2": [...] } or fallback array
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         for (const [k, v] of Object.entries(parsed)) {
           const num = parseInt(k, 10)
@@ -94,7 +80,7 @@ Rules:
         }
       }
     } catch {
-      // Skip failed batch; those verses will fall back to plain text
+      // Skip failed batch; those verses fall back to plain text
     }
   }
 

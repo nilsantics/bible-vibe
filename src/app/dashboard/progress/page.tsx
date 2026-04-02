@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { getLevelForXP, getXPToNextLevel } from '@/lib/xp'
@@ -296,12 +297,16 @@ export default async function ProgressPage() {
             )
           })}
           {Object.keys(bookProgress).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8" style={{ fontFamily: 'system-ui' }}>
-              Start reading to track your progress here.{' '}
-              <Link href="/dashboard/reading/genesis/1" className="text-primary hover:underline">
-                Start with Genesis 1
+            <div className="text-center py-12 space-y-3">
+              <p className="text-3xl">📖</p>
+              <p className="font-medium" style={{ fontFamily: 'system-ui' }}>No chapters read yet</p>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto" style={{ fontFamily: 'system-ui' }}>
+                Every chapter you read gets tracked here. Start with John 1 — it takes about 5 minutes.
+              </p>
+              <Link href="/dashboard/reading/john/1">
+                <Button size="sm" className="mt-2">Start reading</Button>
               </Link>
-            </p>
+            </div>
           )}
         </div>
       </div>

@@ -38,10 +38,13 @@ export default function UpdatePasswordPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2">
-            <span className="text-3xl">✦</span>
-            <span className="text-xl font-semibold" style={{ fontFamily: 'system-ui' }}>
-              Bible Vibe
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center font-bold text-primary-foreground text-base"
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              K
+            </div>
+            <span className="text-xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              Kairos
             </span>
           </Link>
         </div>

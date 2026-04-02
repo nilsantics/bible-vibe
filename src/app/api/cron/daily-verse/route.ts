@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const ref = `${book.name} ${votd.chapter}:${votd.verse}`
   const url = `/dashboard/reading/${book.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bible-vibe-eight.vercel.app'}/api/push-send`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://studykairos.app'}/api/push-send`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     },
     body: JSON.stringify({
       title: `📖 Verse of the Day — ${ref}`,
-      body: 'Open Bible Vibe to read today\'s verse.',
+      body: 'Open Kairos to read today\'s verse.',
       url,
     }),
   })

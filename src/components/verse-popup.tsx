@@ -247,11 +247,12 @@ export function VersePopup({
 
   function shareVerse() {
     const text = `"${verse.text}" — ${verseRef} (${translation})`
+    const url = `${window.location.origin}/dashboard/reading/${bookName.toLowerCase().replace(/\s+/g, '-')}/${verse.chapter_number}#v${verse.verse_number}`
     if (navigator.share) {
-      navigator.share({ text })
+      navigator.share({ text, url, title: `${verseRef} — Kairos` })
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(text).then(() => {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       })

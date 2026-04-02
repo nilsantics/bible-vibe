@@ -209,7 +209,7 @@ export default function MemorizePage() {
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
           Memorize
         </h1>
         {totalDue > 0 && !done && (
@@ -254,7 +254,7 @@ export default function MemorizePage() {
                 </p>
                 <p
                   className="text-3xl font-bold text-foreground"
-                  style={{ fontFamily: 'Georgia, serif' }}
+                  style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
                 >
                   {verseRef(currentCard.verses)}
                 </p>
@@ -276,7 +276,7 @@ export default function MemorizePage() {
                 </p>
                 <p
                   className="text-lg leading-relaxed text-foreground"
-                  style={{ fontFamily: 'Georgia, serif' }}
+                  style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
                 >
                   {currentCard.verses.text}
                 </p>
@@ -333,7 +333,7 @@ export default function MemorizePage() {
           <p className="text-5xl">🎉</p>
           <h2
             className="text-2xl font-bold"
-            style={{ fontFamily: 'Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
             {reviewed > 0 ? 'Session complete!' : 'You\'re all caught up!'}
           </h2>
@@ -441,7 +441,7 @@ export default function MemorizePage() {
                     </p>
                     <p
                       className="text-sm leading-relaxed text-foreground line-clamp-3"
-                      style={{ fontFamily: 'Georgia, serif' }}
+                      style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
                     >
                       {v.text}
                     </p>
