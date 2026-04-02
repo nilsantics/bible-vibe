@@ -723,7 +723,7 @@ export function BibleReader({
                     {selectedInterlinearWord.number}
                   </span>
                 )}
-                <span className="text-sm font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                   {selectedInterlinearWord.word.replace(/[.,;:!?'"()[\]]/g, '')}
                 </span>
               </div>
@@ -738,7 +738,7 @@ export function BibleReader({
         <div className="max-w-3xl mx-auto px-4 py-10 pb-32" ref={readerRef}>
           {/* Chapter header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'Georgia, serif' }}>
+            <h1 className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {book.name}
             </h1>
             <p className="text-muted-foreground mt-1 text-base" style={{ fontFamily: 'system-ui' }}>

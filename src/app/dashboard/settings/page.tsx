@@ -40,7 +40,7 @@ export default async function SettingsPage() {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
               Current plan
             </p>
-            <p className="text-lg font-bold mt-0.5 flex items-center gap-2" style={{ fontFamily: 'Georgia, serif' }}>
+            <p className="text-lg font-bold mt-0.5 flex items-center gap-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {isPro ? (
                 <>
                   <Zap className="w-4 h-4 text-primary" />

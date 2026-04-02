@@ -378,7 +378,7 @@ function DetailPanel({ letter, onClose }: { letter: HebrewLetter; onClose: () =>
               </div>
               <SpeakButton hebrew={letter.hebrewName} phonetic={letter.name} />
             </div>
-            <h2 className="text-2xl font-bold mt-2" style={{ fontFamily: 'Georgia, serif' }}>{letter.name}</h2>
+            <h2 className="text-2xl font-bold mt-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>{letter.name}</h2>
             <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{letter.transliteration}</p>
           </div>
           <Badge variant="outline" className="text-lg px-3 py-1 shrink-0" style={{ fontFamily: 'system-ui' }}>{letter.numericValue}</Badge>
@@ -558,7 +558,7 @@ function FlashcardMode() {
             <>
               <div className="text-6xl font-bold leading-none" style={{ fontFamily: 'serif' }} dir="rtl">{card.letter}</div>
               <div>
-                <p className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>{card.name}</p>
+                <p className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>{card.name}</p>
                 <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>{card.transliteration} · {card.sound}</p>
               </div>
               <div className="flex items-center gap-3">
@@ -587,7 +587,7 @@ function FlashcardMode() {
 
       {known.size === deck.length && deck.length > 0 && (
         <Card className="p-4 text-center border-green-500/40 bg-green-500/5">
-          <p className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif' }}>All {deck.length} letters reviewed!</p>
+          <p className="text-lg font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>All {deck.length} letters reviewed!</p>
           <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>Shalom! You know the whole aleph-bet.</p>
           <Button size="sm" className="mt-3" onClick={() => { setKnown(new Set()); setIdx(0); shuffle() }}>
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Start over
@@ -624,8 +624,8 @@ function QuizMode() {
     const pct = Math.round((score / letters.length) * 100)
     return (
       <div className="max-w-md mx-auto text-center space-y-4">
-        <div className="text-5xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>{score}/{letters.length}</div>
-        <p className="text-xl font-semibold" style={{ fontFamily: 'Georgia, serif' }}>
+        <div className="text-5xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>{score}/{letters.length}</div>
+        <p className="text-xl font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
           {pct === 100 ? 'Perfect! You know the aleph-bet!' : pct >= 80 ? 'Great work!' : pct >= 60 ? 'Good progress!' : 'Keep practicing!'}
         </p>
         <Badge variant={pct >= 80 ? 'default' : 'secondary'} className="text-sm px-3 py-1">{pct}%</Badge>
@@ -683,7 +683,7 @@ export default function AlephBetPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>Hebrew Alphabet & Vowels</h1>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Hebrew Alphabet & Vowels</h1>
         <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
           22 consonants · 14 vowel signs · tap <Volume2 className="inline w-3 h-3" /> to hear any word spoken in Hebrew
         </p>

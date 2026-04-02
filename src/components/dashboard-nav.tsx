@@ -58,7 +58,7 @@ export function DashboardNav({ user, streak, isPro }: Props) {
   const [readingTheme, setReadingTheme] = useState<ReadingTheme>('light')
 
   useEffect(() => {
-    const saved = (localStorage.getItem('bv_reading_theme') ?? 'light') as ReadingTheme
+    const saved = (localStorage.getItem('kairos_reading_theme') ?? 'light') as ReadingTheme
     setReadingTheme(saved)
     applyReadingTheme(saved)
   }, [])
@@ -77,7 +77,7 @@ export function DashboardNav({ user, streak, isPro }: Props) {
     const order: ReadingTheme[] = ['light', 'sepia', 'dark']
     const next = order[(order.indexOf(readingTheme) + 1) % order.length]
     setReadingTheme(next)
-    localStorage.setItem('bv_reading_theme', next)
+    localStorage.setItem('kairos_reading_theme', next)
     applyReadingTheme(next)
   }
 

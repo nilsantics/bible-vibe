@@ -80,7 +80,7 @@ export function UpgradeClient({ isPro, subscription }: Props) {
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
             <Zap className="w-4 h-4" /> Kairos Pro
           </div>
-          <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
             You&apos;re all set.
           </h1>
           <p className="text-muted-foreground text-sm" style={{ fontFamily: 'system-ui' }}>
@@ -135,7 +135,7 @@ export function UpgradeClient({ isPro, subscription }: Props) {
         <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold mb-2">
           <Zap className="w-4 h-4" /> Upgrade to Pro
         </div>
-        <h1 className="text-3xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+        <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
           Go deeper into Scripture
         </h1>
         <p className="text-muted-foreground text-sm" style={{ fontFamily: 'system-ui' }}>

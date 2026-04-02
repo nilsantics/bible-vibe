@@ -149,7 +149,7 @@ export function ChatPanel({
           <div className="flex items-center gap-2.5">
             {/* Ezra avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 shadow-sm">
-              <span className="text-primary-foreground font-bold text-sm" style={{ fontFamily: 'Georgia, serif' }}>
+              <span className="text-primary-foreground font-bold text-sm" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 E
               </span>
             </div>
@@ -208,7 +208,7 @@ export function ChatPanel({
             {/* Intro message from Ezra */}
             <div className="flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 mt-0.5">
-                <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>E</span>
+                <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>E</span>
               </div>
               <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[90%]">
                 <p className="text-xs leading-relaxed text-foreground" style={{ fontFamily: 'system-ui' }}>
@@ -240,7 +240,7 @@ export function ChatPanel({
               <div key={i} className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'Georgia, serif' }}>E</span>
+                    <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>E</span>
                   </div>
                 )}
                 {msg.role === 'user' ? (

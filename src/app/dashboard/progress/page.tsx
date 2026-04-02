@@ -106,7 +106,7 @@ export default async function ProgressPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+      <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
         Your Progress
       </h1>
 

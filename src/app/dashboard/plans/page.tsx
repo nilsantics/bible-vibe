@@ -16,7 +16,7 @@ export default async function PlansPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+      <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
         Reading Plans
       </h1>
       <p className="text-sm text-muted-foreground mb-8" style={{ fontFamily: 'system-ui' }}>

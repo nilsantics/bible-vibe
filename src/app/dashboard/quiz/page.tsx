@@ -115,7 +115,7 @@ function QuizContent() {
       <div>
         <h1
           className="text-2xl font-bold mb-1"
-          style={{ fontFamily: 'Georgia, serif' }}
+          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
         >
           Bible Quiz
         </h1>
@@ -204,10 +204,10 @@ function QuizContent() {
       {/* Score screen */}
       {!loading && finished && questions.length > 0 && (
         <Card className="p-6 space-y-4 text-center">
-          <div className="text-5xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+          <div className="text-5xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
             {score}/{questions.length}
           </div>
-          <p className="text-lg font-semibold" style={{ fontFamily: 'Georgia, serif' }}>
+          <p className="text-lg font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
             {passageRef}
           </p>
           <Badge
@@ -320,7 +320,7 @@ function QuizContent() {
           {/* Question */}
           <p
             className="text-base font-semibold leading-snug"
-            style={{ fontFamily: 'Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
             {currentQ.question}
           </p>

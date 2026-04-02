@@ -53,14 +53,14 @@ export default function UpdatePasswordPage() {
           {done ? (
             <div className="text-center space-y-3 py-2">
               <div className="text-4xl">✅</div>
-              <p className="font-semibold" style={{ fontFamily: 'Georgia, serif' }}>Password updated!</p>
+              <p className="font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Password updated!</p>
               <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                 Redirecting you to your dashboard…
               </p>
             </div>
           ) : (
             <>
-              <h1 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-lg font-semibold mb-1" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 Set a new password
               </h1>
               <p className="text-sm text-muted-foreground mb-5" style={{ fontFamily: 'system-ui' }}>

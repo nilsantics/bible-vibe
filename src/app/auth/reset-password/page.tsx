@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
           {sent ? (
             <div className="text-center space-y-3 py-2">
               <div className="text-4xl">📬</div>
-              <p className="font-semibold" style={{ fontFamily: 'Georgia, serif' }}>Check your email</p>
+              <p className="font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Check your email</p>
               <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                 We sent a reset link to <strong>{email}</strong>. Click it to set a new password.
               </p>
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-lg font-semibold mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-lg font-semibold mb-1" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 Reset your password
               </h1>
               <p className="text-sm text-muted-foreground mb-5" style={{ fontFamily: 'system-ui' }}>
