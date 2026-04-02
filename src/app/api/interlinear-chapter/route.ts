@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
   const lang = isOT ? 'Hebrew' : 'Greek'
   const numPrefix = isOT ? 'H' : 'G'
 
-  // Batch into groups of 8 — keeps output well under Haiku's token limit
-  const batchSize = 8
+  // Batch into groups of 5 — each verse ~15 words × 5 fields ≈ 400 tokens, so 5 = ~2000 tokens
+  const batchSize = 5
   const allWords: Record<number, TaggedWord[]> = {}
 
   for (let i = 0; i < clientVerses.length; i += batchSize) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     const response = await anthropic.messages.create({
       model: CLAUDE_HAIKU_MODEL,
-      max_tokens: 2000,
+      max_tokens: 4096,
       messages: [
         {
           role: 'user',
@@ -64,10 +64,10 @@ Rules:
     })
 
     const raw = response.content[0].type === 'text' ? response.content[0].text.trim() : '{}'
-    const clean = raw
-      .replace(/^```[a-z]*\r?\n?/, '')
-      .replace(/\r?\n?```$/, '')
-      .trim()
+    // Extract outermost JSON object — handles markdown fences and preamble text
+    const start = raw.indexOf('{')
+    const end = raw.lastIndexOf('}')
+    const clean = start !== -1 && end > start ? raw.slice(start, end + 1) : raw
 
     try {
       const parsed = JSON.parse(clean)

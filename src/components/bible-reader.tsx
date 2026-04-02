@@ -786,7 +786,7 @@ export function BibleReader({
 
           {/* ── INTERLINEAR VIEW ── */}
           {interlinearOn && Object.keys(interlinearWords).length > 0 ? (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {verses.map((verse) => {
                 const words = interlinearWords[verse.verse_number] ?? []
                 const hlColor = highlights[verse.id]
@@ -797,43 +797,47 @@ export function BibleReader({
                     id={`verse-${verse.verse_number}`}
                     className={`${hlClass} transition-colors`}
                   >
-                    <div className="flex gap-2 items-start">
-                      {/* Verse number — click to open popup */}
-                      <sup
-                        className="verse-number shrink-0 mt-2 cursor-pointer hover:text-primary transition-colors"
-                        onClick={(e) => {
-                          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-                          setSelectedVerse(verse)
-                          setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
-                          history.replaceState(null, '', `#v${verse.verse_number}`)
-                        }}
-                        title={`Tap to study ${book.name} ${chapter}:${verse.verse_number}`}
-                      >
-                        {verse.verse_number}
-                      </sup>
+                    {/* Desktop: side-by-side | Mobile: stacked */}
+                    <div className="flex flex-col sm:flex-row sm:gap-6">
 
-                      {/* Word grid */}
-                      <div className="flex flex-wrap gap-x-2 gap-y-2 leading-none">
+                      {/* Left: readable verse text */}
+                      <div className="sm:w-2/5 flex gap-2 items-start mb-3 sm:mb-0">
+                        <sup
+                          className="verse-number shrink-0 mt-1 cursor-pointer hover:text-primary transition-colors"
+                          onClick={(e) => {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                            setSelectedVerse(verse)
+                            setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
+                            history.replaceState(null, '', `#v${verse.verse_number}`)
+                          }}
+                        >
+                          {verse.verse_number}
+                        </sup>
+                        <p style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }} className="leading-relaxed text-foreground/80">
+                          {verse.text}
+                        </p>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="hidden sm:block w-px bg-border shrink-0" />
+
+                      {/* Right (desktop) / Below (mobile): word-by-word grid */}
+                      <div className="sm:flex-1 flex flex-wrap gap-x-2 gap-y-3 leading-none pl-0 sm:pl-2 border-t border-border/40 pt-3 sm:border-0 sm:pt-0">
                         {words.length > 0 ? words.map((w, i) => (
                           <button
                             key={i}
                             onClick={() => w.number ? setSelectedInterlinearWord(w) : undefined}
-                            className={`flex flex-col items-center text-center rounded px-0.5 py-0.5 transition-colors ${
+                            className={`flex flex-col items-center text-center rounded px-1 py-1 transition-colors ${
                               w.number ? 'hover:bg-primary/10 cursor-pointer' : 'cursor-default'
                             }`}
                             title={w.number ? `${w.number} — ${w.brief}` : undefined}
                           >
-                            <span style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                            <span className="text-sm" style={{ fontFamily: fontFamilyCss }}>
                               {w.word}
                             </span>
-                            {w.transliteration && (
-                              <span className="text-[9px] text-muted-foreground/60 font-mono leading-none mt-0.5">
-                                {w.transliteration}
-                              </span>
-                            )}
                             {w.original && (
                               <span
-                                className={`text-[11px] font-semibold leading-none mt-0.5 ${
+                                className={`text-[12px] font-semibold leading-none mt-1 ${
                                   w.number?.startsWith('H')
                                     ? 'text-amber-600 dark:text-amber-400'
                                     : 'text-blue-600 dark:text-blue-400'
@@ -843,10 +847,14 @@ export function BibleReader({
                                 {w.original}
                               </span>
                             )}
+                            {w.transliteration && (
+                              <span className="text-[9px] text-muted-foreground/50 font-mono leading-none mt-0.5">
+                                {w.transliteration}
+                              </span>
+                            )}
                           </button>
                         )) : (
-                          // Fallback: no tagged words yet for this verse
-                          <span style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                          <span className="text-sm text-muted-foreground italic" style={{ fontFamily: 'system-ui' }}>
                             {verse.text}
                           </span>
                         )}
