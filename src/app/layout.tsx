@@ -29,22 +29,22 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: 'Kairos — Deep Bible Study',
+  title: 'Kairos — The All-in-One Deep Bible Study Tool',
   description:
-    'The all-in-one Bible study tool built for depth. Read any translation, explore historical and cultural context, 430K cross-references, commentary, and more. Free to start.',
+    'Study Scripture in historical context. 430K cross-references, commentary, reading plans, and more. The serious Bible study tool. Free to start.',
   keywords: ['Bible study', 'Bible app', 'Scripture', 'Kairos', 'ANE context', 'Bible commentary', 'historical Bible study', 'deep Bible study'],
   manifest: '/manifest.json',
   openGraph: {
     type: 'website',
     siteName: 'Kairos',
-    title: 'Kairos — Deep Bible Study',
-    description: 'The all-in-one Bible study tool built for depth. Historical context, 430K cross-references, commentary, and more. Free to start.',
-    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — Deep Bible Study' }],
+    title: 'Kairos — The All-in-One Deep Bible Study Tool',
+    description: 'Study Scripture in historical context. 430K cross-references, commentary, reading plans, and more. The serious Bible study tool. Free to start.',
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'Kairos — The All-in-One Deep Bible Study Tool' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kairos — Deep Bible Study',
-    description: 'The all-in-one Bible study tool built for depth. Historical context, 430K cross-references, commentary, and more. Free to start.',
+    title: 'Kairos — The All-in-One Deep Bible Study Tool',
+    description: 'Study Scripture in historical context. 430K cross-references, commentary, reading plans, and more. The serious Bible study tool. Free to start.',
     images: ['/api/og'],
   },
   appleWebApp: {
