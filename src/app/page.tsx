@@ -313,7 +313,7 @@ export default function LandingPage() {
               </div>
               <div className="h-px bg-background/10" />
               <ul className="space-y-2.5">
-                {['Everything in Free', 'Unlimited Ezra conversations', 'Scholar mode — deep theology', 'Interlinear Hebrew & Greek view', 'Priority response speed', 'Sermon prep tools (coming soon)'].map(f => (
+                {['Everything in Free', 'Unlimited Ezra conversations', 'Scholar mode — deep theology', 'Hebrew & Greek interlinear', 'Chapter commentary', 'Priority response speed'].map(f => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-background/80" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
                     <Zap className="w-3 h-3 text-primary shrink-0" />
                     {f}
@@ -365,10 +365,23 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-6" data-ui>
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <KairosWordmark />
-          <p className="text-xs text-muted-foreground/50 text-center sm:text-right" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+      <footer className="border-t border-border py-10 px-6" data-ui>
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <KairosWordmark />
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {[
+                { label: 'Privacy', href: '/privacy' },
+                { label: 'Terms', href: '/terms' },
+                { label: 'Contact', href: 'mailto:hi@studykairos.app' },
+              ].map(({ label, href }) => (
+                <Link key={label} href={href} className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground/40 text-center sm:text-left" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
             WEB & KJV are public domain · ESV used with permission · Strong&apos;s via Open Scriptures CC-BY-SA
           </p>
         </div>

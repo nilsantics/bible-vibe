@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SettingsForm } from '@/components/settings-form'
 import { getSubscription, isActiveSub } from '@/lib/stripe'
 import { Zap } from 'lucide-react'
+import { SignOutButton } from '@/components/sign-out-button'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -23,9 +24,14 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
-        Settings
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+          Settings
+        </h1>
+        <a href="mailto:hi@studykairos.app" className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'system-ui' }}>
+          hi@studykairos.app
+        </a>
+      </div>
 
       {/* Plan card */}
       <div className={`rounded-2xl border p-5 space-y-3 ${isPro ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'}`}>
@@ -70,6 +76,14 @@ export default async function SettingsPage() {
       </div>
 
       <SettingsForm user={user} profile={profile} />
+
+      <div className="flex items-center justify-between pt-2 pb-8">
+        <div className="flex gap-4">
+          <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'system-ui' }}>Privacy</Link>
+          <Link href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'system-ui' }}>Terms</Link>
+        </div>
+        <SignOutButton />
+      </div>
     </div>
   )
 }

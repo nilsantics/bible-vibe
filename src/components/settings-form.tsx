@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,10 +34,13 @@ export function SettingsForm({
   profile: Profile | null
 }) {
   const supabase = createClient()
+  const router = useRouter()
   const { setTheme } = useTheme()
   const [username, setUsername] = useState(profile?.username ?? '')
   const [translation, setTranslation] = useState(profile?.preferred_translation ?? 'WEB')
   const [saving, setSaving] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const [notifStatus, setNotifStatus] = useState<'unknown' | 'granted' | 'denied' | 'enabling'>('unknown')
   const [readingGoal, setReadingGoal] = useState('')
   const [dailyMinutes, setDailyMinutes] = useState('')
@@ -74,6 +78,19 @@ export function SettingsForm({
     }
     setNotifStatus('unknown')
     toast.success('Notifications disabled.')
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirm !== 'delete my account') return
+    setDeleting(true)
+    const res = await fetch('/api/delete-account', { method: 'DELETE' })
+    if (res.ok) {
+      await supabase.auth.signOut()
+      router.push('/?deleted=1')
+    } else {
+      toast.error('Failed to delete account. Please try again.')
+      setDeleting(false)
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -231,11 +248,30 @@ export function SettingsForm({
           Danger zone
         </h2>
         <p className="text-sm text-muted-foreground mb-3" style={{ fontFamily: 'system-ui' }}>
-          Deleting your account will permanently remove all your highlights, notes, progress, and badges.
+          Deleting your account permanently removes all your highlights, notes, progress, and badges. This cannot be undone.
         </p>
-        <Button variant="destructive" size="sm" disabled>
-          Delete account (coming soon)
-        </Button>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="delete-confirm" className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+              Type <span className="font-mono text-foreground">delete my account</span> to confirm
+            </Label>
+            <Input
+              id="delete-confirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="delete my account"
+              className="max-w-xs"
+            />
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={deleteConfirm !== 'delete my account' || deleting}
+            onClick={handleDeleteAccount}
+          >
+            {deleting ? 'Deleting…' : 'Delete my account'}
+          </Button>
+        </div>
       </Card>
     </div>
   )
