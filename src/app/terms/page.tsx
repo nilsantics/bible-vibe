@@ -58,7 +58,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold">4. Pro subscription</h2>
             <p className="text-muted-foreground leading-relaxed">
               Kairos Pro is a recurring subscription billed monthly or annually. You may cancel at any time; your Pro access continues until the end of the current billing period. Refunds are handled on a case-by-case basis — contact us at{' '}
-              <a href="mailto:hi@studykairos.app" className="text-primary hover:underline">hi@studykairos.app</a> within 7 days of a charge if you believe there was an error.
+              <a href="mailto:nils@biblemate.io" className="text-primary hover:underline">nils@biblemate.io</a> within 7 days of a charge if you believe there was an error.
             </p>
           </section>
 
@@ -94,7 +94,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold">Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               Questions? Email us at{' '}
-              <a href="mailto:hi@studykairos.app" className="text-primary hover:underline">hi@studykairos.app</a>.
+              <a href="mailto:nils@biblemate.io" className="text-primary hover:underline">nils@biblemate.io</a>.
             </p>
           </section>
         </div>

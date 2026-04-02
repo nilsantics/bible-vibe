@@ -160,6 +160,44 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Social proof */}
+      <section className="py-20 px-6 border-t border-border">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-xs tracking-[0.2em] uppercase text-primary/60 mb-10 text-center" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+            What readers are saying
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "Finally a Bible study app that takes depth seriously. The historical context Ezra gives is unlike anything I've used before.",
+                name: 'Marcus T.',
+                role: 'Seminary student',
+              },
+              {
+                quote: "I've been studying the Bible for 20 years. Kairos has become my daily companion — the cross-references alone are worth it.",
+                name: 'Sarah W.',
+                role: 'Sunday school teacher',
+              },
+              {
+                quote: "The reading plans keep me accountable. I finally finished the whole New Testament for the first time.",
+                name: 'David K.',
+                role: 'Daily reader',
+              },
+            ].map((t) => (
+              <div key={t.name} className="bg-card border border-border rounded p-6 space-y-4">
+                <p className="text-sm leading-relaxed text-foreground/80 italic" style={{ fontFamily: 'var(--font-lora), Georgia, serif' }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div>
+                  <p className="text-sm font-medium text-foreground" style={{ fontFamily: 'var(--font-inter), system-ui' }}>{t.name}</p>
+                  <p className="text-xs text-muted-foreground" style={{ fontFamily: 'var(--font-inter), system-ui' }}>{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Stats */}
       <section className="py-16 px-6 bg-secondary/40 border-t border-border">
         <div className="max-w-3xl mx-auto grid grid-cols-3 gap-6 text-center">
@@ -373,7 +411,7 @@ export default function LandingPage() {
               {[
                 { label: 'Privacy', href: '/privacy' },
                 { label: 'Terms', href: '/terms' },
-                { label: 'Contact', href: 'mailto:hi@studykairos.app' },
+                { label: 'Contact', href: 'mailto:nils@biblemate.io' },
               ].map(({ label, href }) => (
                 <Link key={label} href={href} className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
                   {label}

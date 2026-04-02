@@ -107,6 +107,7 @@ export function BibleReader({
   const [interlinearOn, setInterlinearOn] = useState(false)
   const [interlinearWords, setInterlinearWords] = useState<Record<number, TaggedWord[]>>({})
   const [interlinearLoading, setInterlinearLoading] = useState(false)
+  const [interlinearFailed, setInterlinearFailed] = useState(false)
   const [selectedInterlinearWord, setSelectedInterlinearWord] = useState<TaggedWord | null>(null)
 
   // Word count → reading time (~200 wpm)
@@ -165,6 +166,7 @@ export function BibleReader({
   async function loadInterlinear() {
     if (interlinearLoading) return
     setInterlinearLoading(true)
+    setInterlinearFailed(false)
 
     const cacheKey = `bv_interlinear_${book.id}_${chapter}_${translation}`
 
@@ -205,6 +207,7 @@ export function BibleReader({
         toast.error(`Interlinear: ${data.error}`)
       }
     } catch {
+      setInterlinearFailed(true)
       toast.error('Could not load interlinear data')
     } finally {
       setInterlinearLoading(false)
@@ -765,8 +768,19 @@ export function BibleReader({
           {/* Interlinear loading indicator */}
           {interlinearLoading && (
             <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              Loading original {isOT ? 'Hebrew' : 'Greek'} words…
+              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+              <span>Tagging {isOT ? 'Hebrew' : 'Greek'} words — this takes 10–20 seconds…</span>
+            </div>
+          )}
+          {interlinearFailed && !interlinearLoading && Object.keys(interlinearWords).length === 0 && (
+            <div className="flex items-center gap-3 mb-6 text-sm" style={{ fontFamily: 'system-ui' }}>
+              <span className="text-muted-foreground">Interlinear failed to load.</span>
+              <button
+                onClick={loadInterlinear}
+                className="text-primary hover:underline font-medium"
+              >
+                Retry
+              </button>
             </div>
           )}
 

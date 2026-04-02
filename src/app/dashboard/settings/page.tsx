@@ -28,8 +28,8 @@ export default async function SettingsPage() {
         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
           Settings
         </h1>
-        <a href="mailto:hi@studykairos.app" className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'system-ui' }}>
-          hi@studykairos.app
+        <a href="mailto:nils@biblemate.io" className="text-xs text-muted-foreground hover:text-foreground transition-colors" style={{ fontFamily: 'system-ui' }}>
+          nils@biblemate.io
         </a>
       </div>
 

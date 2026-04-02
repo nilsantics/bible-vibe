@@ -121,7 +121,7 @@ export default function SearchPage() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
           Search the Bible
         </h1>
         <p className="text-muted-foreground text-sm mt-1" style={{ fontFamily: 'system-ui' }}>
@@ -270,7 +270,7 @@ export default function SearchPage() {
               Search by exact words or phrases
             </p>
             <p className="text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-              Searches the full text of all 31,102 verses in the World English Bible.
+              Full-text search across all 31,102 verses.
               Use the filters above to narrow to a specific book or testament.
             </p>
           </div>

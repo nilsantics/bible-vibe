@@ -85,7 +85,7 @@ export function OnboardingWizard() {
           {step === 0 ? (
             <div className="text-center py-6">
               <div className="text-5xl mb-5">✦</div>
-              <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 Welcome to Kairos
               </h1>
               <p className="text-muted-foreground text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>
@@ -103,7 +103,7 @@ export function OnboardingWizard() {
                   />
                 ))}
               </div>
-              <h2 className="text-xl font-bold" style={{ fontFamily: 'Georgia, serif' }}>
+              <h2 className="text-xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 {step === 1 && 'What brings you here?'}
                 {step === 2 && 'How much time per day?'}
                 {step === 3 && 'Pick your translation'}

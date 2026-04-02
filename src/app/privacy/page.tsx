@@ -77,7 +77,7 @@ export default function PrivacyPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               You can request a copy of your data or ask any privacy-related questions by emailing us at{' '}
-              <a href="mailto:hi@studykairos.app" className="text-primary hover:underline">hi@studykairos.app</a>.
+              <a href="mailto:nils@biblemate.io" className="text-primary hover:underline">nils@biblemate.io</a>.
             </p>
           </section>
 
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold">Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               Questions? Email us at{' '}
-              <a href="mailto:hi@studykairos.app" className="text-primary hover:underline">hi@studykairos.app</a>.
+              <a href="mailto:nils@biblemate.io" className="text-primary hover:underline">nils@biblemate.io</a>.
             </p>
           </section>
         </div>
