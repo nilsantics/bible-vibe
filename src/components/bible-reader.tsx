@@ -195,16 +195,20 @@ export function BibleReader({
         }),
       })
       const data = await res.json()
-      if (data.verses) {
+      if (!res.ok) {
+        setInterlinearFailed(true)
+        toast.error(`Interlinear: ${data.error ?? res.statusText}`)
+      } else if (data.verses && Object.keys(data.verses).length > 0) {
         const words: Record<number, TaggedWord[]> = {}
         for (const [k, v] of Object.entries(data.verses)) {
           words[parseInt(k, 10)] = v as TaggedWord[]
         }
         setInterlinearWords(words)
-        // Cache so future loads are instant
-        try { localStorage.setItem(cacheKey, JSON.stringify(words)) } catch { /* quota exceeded — skip cache */ }
-      } else if (data.error) {
-        toast.error(`Interlinear: ${data.error}`)
+        try { localStorage.setItem(cacheKey, JSON.stringify(words)) } catch { /* quota exceeded */ }
+      } else {
+        // API returned ok but empty verses — parsing failed server-side
+        setInterlinearFailed(true)
+        toast.error('Interlinear data could not be parsed. Try again.')
       }
     } catch {
       setInterlinearFailed(true)
@@ -765,21 +769,22 @@ export function BibleReader({
             </div>
           )}
 
-          {/* Interlinear loading indicator */}
+          {/* Interlinear loading / error banner */}
           {interlinearLoading && (
-            <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-              <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
-              <span>Tagging {isOT ? 'Hebrew' : 'Greek'} words — this takes 10–20 seconds…</span>
+            <div className="flex items-center gap-3 mb-6 px-4 py-3 bg-primary/8 border border-primary/20 rounded-xl text-sm" style={{ fontFamily: 'system-ui' }}>
+              <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+              <span className="font-medium text-foreground">Loading {isOT ? 'Hebrew' : 'Greek'} interlinear</span>
+              <span className="text-muted-foreground">— takes 20–30 seconds…</span>
             </div>
           )}
           {interlinearFailed && !interlinearLoading && Object.keys(interlinearWords).length === 0 && (
-            <div className="flex items-center gap-3 mb-6 text-sm" style={{ fontFamily: 'system-ui' }}>
+            <div className="flex items-center justify-between gap-3 mb-6 px-4 py-3 bg-destructive/8 border border-destructive/20 rounded-xl text-sm" style={{ fontFamily: 'system-ui' }}>
               <span className="text-muted-foreground">Interlinear failed to load.</span>
               <button
                 onClick={loadInterlinear}
-                className="text-primary hover:underline font-medium"
+                className="text-primary hover:underline font-medium shrink-0"
               >
-                Retry
+                Try again
               </button>
             </div>
           )}
