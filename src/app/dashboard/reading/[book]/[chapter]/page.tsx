@@ -5,6 +5,7 @@ import { BibleReader } from '@/components/bible-reader'
 import { getBookByName, BIBLE_BOOKS } from '@/lib/bible-data'
 import { fetchESVChapter } from '@/lib/esv'
 import { fetchBSBChapter } from '@/lib/bsb'
+import { getSubscription, isActiveSub } from '@/lib/stripe'
 
 interface PageProps {
   params: Promise<{ book: string; chapter: string }>
@@ -88,6 +89,12 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
   // Fetch user highlights/notes for this chapter (if logged in)
   const { data: { user } } = await supabase.auth.getUser()
 
+  let isPro = false
+  if (user) {
+    const sub = await getSubscription(user.id)
+    isPro = isActiveSub(sub)
+  }
+
   let highlights: Record<number, string> = {}
   let notes: Record<number, { id: string; content: string }> = {}
 
@@ -128,6 +135,7 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
       translation={translation}
       esvError={esvError}
       isAuthenticated={!!user}
+      isPro={isPro}
       prevChapter={prevChapter}
       nextChapter={nextChapter}
       prevBook={prevBook ?? null}

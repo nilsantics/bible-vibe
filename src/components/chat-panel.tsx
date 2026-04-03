@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Skeleton } from '@/components/ui/skeleton'
 import ReactMarkdown from 'react-markdown'
-import { X, Send, RotateCcw } from 'lucide-react'
+import { X, Send, RotateCcw, Lock, Zap } from 'lucide-react'
 import type { StudyDepth } from '@/lib/claude'
 
 interface Message {
@@ -13,10 +13,10 @@ interface Message {
   content: string
 }
 
-const DEPTH_OPTIONS: { value: StudyDepth; label: string; emoji: string; hint: string }[] = [
-  { value: 'simple',   label: 'Simple',   emoji: '🌱', hint: 'Plain English, no jargon' },
-  { value: 'standard', label: 'Standard', emoji: '📖', hint: 'Context + meaning' },
-  { value: 'scholar',  label: 'Scholar',  emoji: '🎓', hint: 'Deep dive, original languages' },
+const DEPTH_OPTIONS: { value: StudyDepth; label: string; emoji: string; hint: string; pro: boolean }[] = [
+  { value: 'simple',   label: 'Simple',   emoji: '🌱', hint: 'Plain English, no jargon',              pro: false },
+  { value: 'standard', label: 'Standard', emoji: '📖', hint: 'Context + meaning',                     pro: false },
+  { value: 'scholar',  label: 'Scholar',  emoji: '🎓', hint: 'Deep dive, original languages',         pro: true  },
 ]
 
 const STARTER_QUESTIONS_BY_DEPTH: Record<StudyDepth, string[]> = {
@@ -46,18 +46,25 @@ const EZRA_INTRO_BY_DEPTH: Record<StudyDepth, string> = {
   scholar:  "Ezra here. Ready for a deep dive — original languages, hermeneutics, tradition comparisons. What do you want to explore?",
 }
 
+const FREE_DAILY_LIMIT = 20
+
 export function ChatPanel({
   currentPassage,
   onClose,
+  isPro = false,
 }: {
   currentPassage: string
   onClose: () => void
+  isPro?: boolean
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [depth, setDepth] = useState<StudyDepth>('standard')
   const [followUps, setFollowUps] = useState<string[]>([])
+  const [remaining, setRemaining] = useState<number | null>(null)
+  const [showScholarGate, setShowScholarGate] = useState(false)
+  const [rateLimitHit, setRateLimitHit] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export function ChatPanel({
     setMessages(newMessages)
     setInput('')
     setStreaming(true)
+    setRateLimitHit(false)
     setMessages([...newMessages, { role: 'assistant', content: '' }])
 
     let assistantContent = ''
@@ -87,10 +95,16 @@ export function ChatPanel({
         throw new Error('Please sign in to chat with Ezra.')
       }
       if (res.status === 429) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? "You've reached your daily limit. Come back tomorrow!")
+        setRateLimitHit(true)
+        setMessages(newMessages) // remove empty assistant bubble
+        setStreaming(false)
+        return
       }
       if (!res.ok) throw new Error('Chat request failed — please try again.')
+
+      // Track remaining from header
+      const rem = res.headers.get('X-RateLimit-Remaining')
+      if (rem !== null) setRemaining(parseInt(rem, 10))
 
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
@@ -101,14 +115,15 @@ export function ChatPanel({
         assistantContent += decoder.decode(value, { stream: true })
         setMessages([...newMessages, { role: 'assistant', content: assistantContent }])
       }
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Sorry, something went wrong. Please try again.'
       setMessages([
         ...newMessages,
-        { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' },
+        { role: 'assistant', content: msg },
       ])
     } finally {
       setStreaming(false)
-      fetchFollowUps(content, assistantContent)
+      if (assistantContent) fetchFollowUps(content, assistantContent)
     }
   }
 
@@ -134,9 +149,16 @@ export function ChatPanel({
   }
 
   function handleDepthChange(d: StudyDepth) {
+    const opt = DEPTH_OPTIONS.find((o) => o.value === d)!
+    if (opt.pro && !isPro) {
+      setShowScholarGate(true)
+      return
+    }
+    setShowScholarGate(false)
     setDepth(d)
     setMessages([])
     setFollowUps([])
+    setRateLimitHit(false)
   }
 
   const depthConfig = DEPTH_OPTIONS.find((d) => d.value === depth)!
@@ -163,12 +185,17 @@ export function ChatPanel({
             </div>
           </div>
           <div className="flex items-center gap-1">
+            {!isPro && remaining !== null && (
+              <span className="text-[10px] text-muted-foreground mr-1" style={{ fontFamily: 'system-ui' }}>
+                {remaining}/{FREE_DAILY_LIMIT} left
+              </span>
+            )}
             {messages.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="w-7 h-7"
-                onClick={() => setMessages([])}
+                onClick={() => { setMessages([]); setFollowUps([]); setRateLimitHit(false) }}
                 title="Clear chat"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -186,7 +213,7 @@ export function ChatPanel({
             <button
               key={opt.value}
               onClick={() => handleDepthChange(opt.value)}
-              title={opt.hint}
+              title={opt.pro && !isPro ? 'Pro feature' : opt.hint}
               className={`flex-1 flex items-center justify-center gap-1 text-xs py-1 px-2 rounded-lg border transition-colors ${
                 depth === opt.value
                   ? 'bg-primary text-primary-foreground border-primary font-medium'
@@ -196,10 +223,64 @@ export function ChatPanel({
             >
               <span>{opt.emoji}</span>
               <span>{opt.label}</span>
+              {opt.pro && !isPro && <Lock className="w-2.5 h-2.5 shrink-0" />}
             </button>
           ))}
         </div>
       </div>
+
+      {/* Scholar gate prompt */}
+      {showScholarGate && (
+        <div className="mx-4 mt-3 bg-primary/5 border border-primary/20 rounded-xl p-3 shrink-0">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Zap className="w-3 h-3 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>
+                Scholar mode is Pro
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2" style={{ fontFamily: 'system-ui' }}>
+                Deep dives into original languages, theology, and ANE context.
+              </p>
+              <Link href="/dashboard/upgrade">
+                <Button size="sm" className="h-6 text-[11px] px-3 gap-1">
+                  <Zap className="w-3 h-3" />
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+            <button onClick={() => setShowScholarGate(false)} className="text-muted-foreground hover:text-foreground shrink-0">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rate limit hit banner */}
+      {rateLimitHit && (
+        <div className="mx-4 mt-3 bg-amber-500/10 border border-amber-500/25 rounded-xl p-3 shrink-0">
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
+              <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>
+                Daily limit reached
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mb-2" style={{ fontFamily: 'system-ui' }}>
+                You&apos;ve used all {FREE_DAILY_LIMIT} free messages today. Upgrade for unlimited conversations.
+              </p>
+              <Link href="/dashboard/upgrade">
+                <Button size="sm" className="h-6 text-[11px] px-3 gap-1">
+                  <Zap className="w-3 h-3" />
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -305,13 +386,13 @@ export function ChatPanel({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={streaming}
+            disabled={streaming || rateLimitHit}
           />
           <Button
             size="icon"
             className="shrink-0 h-10 w-10 rounded-xl"
             onClick={() => sendMessage()}
-            disabled={!input.trim() || streaming}
+            disabled={!input.trim() || streaming || rateLimitHit}
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -321,6 +402,9 @@ export function ChatPanel({
           style={{ fontFamily: 'system-ui' }}
         >
           {depthConfig.emoji} {depthConfig.hint}
+          {!isPro && remaining !== null && remaining <= 5 && remaining > 0 && (
+            <span className="text-amber-600 dark:text-amber-400 ml-2">· {remaining} msg{remaining === 1 ? '' : 's'} left today</span>
+          )}
         </p>
       </div>
     </div>

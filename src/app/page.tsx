@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { EmailCapture } from '@/components/email-capture'
 import {
   BookOpen, Sparkles, GitBranch, MessageSquare,
   Trophy, Search, Languages, ScrollText, Columns2, ArrowRight, Zap,
@@ -452,6 +453,22 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Email capture */}
+      <section className="py-16 px-6 border-t border-border">
+        <div className="max-w-xl mx-auto text-center space-y-4">
+          <p className="text-xs tracking-[0.2em] uppercase text-primary/60" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+            Not ready yet?
+          </p>
+          <h2 className="text-2xl md:text-3xl font-light" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+            Stay in the loop.
+          </h2>
+          <p className="text-sm text-muted-foreground" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
+            We&apos;ll let you know when new features — interlinear, sermon prep, study guides — go live.
+          </p>
+          <EmailCapture />
         </div>
       </section>
 

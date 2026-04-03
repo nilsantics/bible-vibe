@@ -19,11 +19,13 @@ import {
   X,
   Type,
   Languages,
+  ScrollText,
 } from 'lucide-react'
 import { VersePopup } from '@/components/verse-popup'
 import { ChatPanel } from '@/components/chat-panel'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { toast } from 'sonner'
+import ReactMarkdown from 'react-markdown'
 import type { HighlightColor } from '@/types'
 
 interface Verse {
@@ -51,6 +53,7 @@ interface Props {
   initialNotes: Record<number, { id: string; content: string }>
   translation: string
   isAuthenticated: boolean
+  isPro?: boolean
   prevChapter: number | null
   nextChapter: number | null
   prevBook: BookMeta | null
@@ -81,6 +84,7 @@ export function BibleReader({
   initialNotes,
   translation,
   isAuthenticated,
+  isPro = false,
   prevChapter,
   nextChapter,
   prevBook,
@@ -102,6 +106,11 @@ export function BibleReader({
   const readerRef = useRef<HTMLDivElement>(null)
   const [showVerseHint, setShowVerseHint] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
+
+  // Commentary state
+  const [commentaryOpen, setCommentaryOpen] = useState(false)
+  const [commentaryContent, setCommentaryContent] = useState('')
+  const [commentaryLoading, setCommentaryLoading] = useState(false)
 
   // Interlinear state
   const [interlinearOn, setInterlinearOn] = useState(false)
@@ -159,6 +168,33 @@ export function BibleReader({
   function dismissVerseHint() {
     setShowVerseHint(false)
     localStorage.setItem('bv_verse_hint_seen', '1')
+  }
+
+  // ── Commentary ───────────────────────────────────────────────────────────────
+
+  async function openCommentary() {
+    if (commentaryOpen) { setCommentaryOpen(false); return }
+    setCommentaryOpen(true)
+    if (commentaryContent) return // cached for this chapter
+    setCommentaryLoading(true)
+    setCommentaryContent('')
+    try {
+      const res = await fetch(`/api/commentary?book_id=${book.id}&chapter=${chapter}`)
+      if (!res.ok) throw new Error('Failed to load commentary')
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      let text = ''
+      while (reader) {
+        const { done, value } = await reader.read()
+        if (done) break
+        text += decoder.decode(value, { stream: true })
+        setCommentaryContent(text)
+      }
+    } catch {
+      setCommentaryContent('_Commentary could not be loaded. Please try again._')
+    } finally {
+      setCommentaryLoading(false)
+    }
   }
 
   // ── Interlinear functions ────────────────────────────────────────────────────
@@ -611,6 +647,18 @@ export function BibleReader({
               <span className="hidden sm:inline text-[9px] bg-muted px-1 py-0.5 rounded ml-0.5" style={{ fontFamily: 'system-ui' }}>soon</span>
             </div>
 
+            {/* Commentary */}
+            <Button
+              variant={commentaryOpen ? 'secondary' : 'outline'}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 font-normal"
+              onClick={openCommentary}
+              title="Chapter commentary"
+            >
+              <ScrollText className="w-3 h-3" />
+              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Commentary</span>
+            </Button>
+
             {/* Quiz this chapter */}
             <Link
               href={`/dashboard/quiz?book=${encodeURIComponent(book.name)}&chapter=${chapter}`}
@@ -677,6 +725,46 @@ export function BibleReader({
               <p className="text-xs text-muted-foreground mt-4 text-center" style={{ fontFamily: 'system-ui' }}>
                 Press <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> to close
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Commentary panel */}
+        {commentaryOpen && (
+          <div className="border-b border-border bg-secondary/30">
+            <div className="max-w-3xl mx-auto px-4 py-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ScrollText className="w-4 h-4 text-primary shrink-0" />
+                  <h2 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '1rem' }}>
+                    {book.name} {chapter} — Commentary
+                  </h2>
+                </div>
+                <button onClick={() => setCommentaryOpen(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {commentaryLoading && !commentaryContent && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground py-4" style={{ fontFamily: 'system-ui' }}>
+                  <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                  Generating commentary…
+                </div>
+              )}
+
+              {commentaryContent && (
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed
+                    [&>h2]:text-base [&>h2]:font-semibold [&>h2]:mt-4 [&>h2]:mb-1
+                    [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1
+                    [&>p]:mb-3 [&>p]:text-foreground/80
+                    [&>ul]:mb-3 [&>ul>li]:text-foreground/80
+                    [&>strong]:text-foreground"
+                  style={{ fontFamily: 'system-ui' }}
+                >
+                  <ReactMarkdown>{commentaryContent}</ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1007,6 +1095,7 @@ export function BibleReader({
         <ChatPanel
           currentPassage={`${book.name} ${chapter} (${translation})`}
           onClose={() => setChatOpen(false)}
+          isPro={isPro}
         />
       )}
     </div>
