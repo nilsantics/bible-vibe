@@ -27,6 +27,14 @@ const TRANSLATIONS = [
   { code: 'WEB', label: 'World English Bible', desc: 'Modern · public domain' },
 ]
 
+// First chapters to suggest based on goal
+const GOAL_START: Record<string, string> = {
+  'full-bible':  '/dashboard/reading/genesis/1',
+  'devotional':  '/dashboard/reading/psalms/23',
+  'deep-study':  '/dashboard/reading/john/1',
+  'explore':     '/dashboard/reading/john/3',
+}
+
 export function OnboardingWizard() {
   const [show, setShow] = useState(false)
   const [step, setStep] = useState(0)
@@ -37,7 +45,7 @@ export function OnboardingWizard() {
   const router = useRouter()
 
   useEffect(() => {
-    const done = localStorage.getItem('bv_onboarding_done')
+    const done = localStorage.getItem('kairos_onboarding_done')
     if (!done) {
       const t = setTimeout(() => setShow(true), 1200)
       return () => clearTimeout(t)
@@ -45,9 +53,9 @@ export function OnboardingWizard() {
   }, [])
 
   async function finish() {
-    localStorage.setItem('bv_onboarding_done', '1')
-    if (goal) localStorage.setItem('bv_reading_goal', goal)
-    if (time) localStorage.setItem('bv_daily_minutes', time)
+    localStorage.setItem('kairos_onboarding_done', '1')
+    if (goal) localStorage.setItem('kairos_reading_goal', goal)
+    if (time) localStorage.setItem('kairos_daily_minutes', time)
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
@@ -56,14 +64,20 @@ export function OnboardingWizard() {
         { onConflict: 'id' }
       )
     }
+
     setShow(false)
+
+    // Route to the right first chapter based on their goal
     if (goal === 'full-bible' || goal === 'devotional') {
       router.push('/dashboard/plans')
+    } else {
+      const startHref = GOAL_START[goal] ?? '/dashboard/reading/john/3'
+      router.push(`${startHref}?translation=${translation}`)
     }
   }
 
   function dismiss() {
-    localStorage.setItem('bv_onboarding_done', '1')
+    localStorage.setItem('kairos_onboarding_done', '1')
     setShow(false)
   }
 
@@ -89,14 +103,14 @@ export function OnboardingWizard() {
                 Welcome to Kairos
               </h1>
               <p className="text-muted-foreground text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>
-                Let&apos;s personalize your study experience in 30 seconds. You can always update these in settings.
+                Let&apos;s personalize your study experience in 30 seconds.
               </p>
             </div>
           ) : (
             <>
               {/* Progress bar */}
               <div className="flex items-center gap-1.5 mb-5">
-                {[1, 2, 3, 4].map((i) => (
+                {[1, 2, 3].map((i) => (
                   <div
                     key={i}
                     className={`h-1 rounded-full flex-1 transition-all duration-300 ${i <= step ? 'bg-primary' : 'bg-muted'}`}
@@ -107,13 +121,11 @@ export function OnboardingWizard() {
                 {step === 1 && 'What brings you here?'}
                 {step === 2 && 'How much time per day?'}
                 {step === 3 && 'Pick your translation'}
-                {step === 4 && "Here's what's waiting for you"}
               </h2>
               <p className="text-sm text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
-                {step === 1 && "We'll suggest the right reading plan for you."}
+                {step === 1 && "We'll suggest the right starting point."}
                 {step === 2 && "We'll pace your reading to fit your schedule."}
                 {step === 3 && 'You can always switch while reading.'}
-                {step === 4 && 'Tap any verse to unlock all of these.'}
               </p>
             </>
           )}
@@ -198,34 +210,8 @@ export function OnboardingWizard() {
                   {translation === t.code && <span className="text-primary font-bold">✓</span>}
                 </button>
               ))}
-              <Button className="w-full !mt-3" onClick={() => setStep(4)}>
-                Next →
-              </Button>
-            </>
-          )}
-
-          {step === 4 && (
-            <>
-              <div className="space-y-2">
-                {[
-                  { icon: '💬', title: 'Ezra AI', desc: 'Ask any question about a verse — theology, context, original language, application.' },
-                  { icon: '🔤', title: 'Hebrew & Greek interlinear', desc: 'See every word in its original language with definitions inline.' },
-                  { icon: '🔗', title: '430,000 cross-references', desc: 'Instantly see every related passage across the entire Bible.' },
-                  { icon: '🧠', title: 'Bible quizzes', desc: 'Test your knowledge on any passage, book, or topic.' },
-                  { icon: '📅', title: 'Reading plans', desc: 'Follow guided plans — from the whole Bible to targeted studies.' },
-                  { icon: '🏆', title: 'Streaks & XP', desc: 'Build a habit with daily streaks and unlock achievement badges.' },
-                ].map((f) => (
-                  <div key={f.title} className="flex items-start gap-3 p-2.5 rounded-xl">
-                    <span className="text-xl shrink-0 mt-0.5">{f.icon}</span>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>{f.title}</p>
-                      <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{f.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
               <Button className="w-full !mt-3" onClick={finish}>
-                Let&apos;s go! 🙌
+                Start reading →
               </Button>
             </>
           )}

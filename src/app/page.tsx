@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { EmailCapture } from '@/components/email-capture'
+import { ProCheckoutButton } from '@/components/pro-checkout-button'
 import {
   BookOpen, Sparkles, GitBranch, MessageSquare,
   Trophy, Search, Languages, ScrollText, Columns2, ArrowRight, Zap,
@@ -203,7 +204,10 @@ export default function LandingPage() {
             </div>
           </div>
           <p className="text-center text-xs text-muted-foreground mt-4" style={{ fontFamily: 'var(--font-inter), system-ui' }}>
-            Tap any verse to open the study panel
+            Tap any verse to open the study panel ·{' '}
+            <Link href="/bible/john/3" className="text-primary/70 hover:text-primary underline underline-offset-2">
+              Preview John 3
+            </Link>
           </p>
         </div>
       </section>
@@ -446,11 +450,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/auth/signup">
-                <Button className="w-full text-xs tracking-widest uppercase h-10 bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Begin Pro — 33¢ / day
-                </Button>
-              </Link>
+              <ProCheckoutButton />
             </div>
           </div>
         </div>
