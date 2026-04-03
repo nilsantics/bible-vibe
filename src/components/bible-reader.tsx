@@ -19,13 +19,12 @@ import {
   X,
   Type,
   Languages,
-  ScrollText,
+
 } from 'lucide-react'
 import { VersePopup } from '@/components/verse-popup'
 import { ChatPanel } from '@/components/chat-panel'
-import { BIBLE_BOOKS } from '@/lib/bible-data'
+import { PassageSearch } from '@/components/passage-search'
 import { toast } from 'sonner'
-import ReactMarkdown from 'react-markdown'
 import { track } from '@vercel/analytics'
 import type { HighlightColor } from '@/types'
 
@@ -108,11 +107,6 @@ export function BibleReader({
   const [showVerseHint, setShowVerseHint] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
 
-  // Commentary state
-  const [commentaryOpen, setCommentaryOpen] = useState(false)
-  const [commentaryContent, setCommentaryContent] = useState('')
-  const [commentaryLoading, setCommentaryLoading] = useState(false)
-
   // Interlinear state
   const [interlinearOn] = useState(false)
   const [interlinearWords, setInterlinearWords] = useState<Record<number, TaggedWord[]>>({})
@@ -169,34 +163,6 @@ export function BibleReader({
   function dismissVerseHint() {
     setShowVerseHint(false)
     localStorage.setItem('bv_verse_hint_seen', '1')
-  }
-
-  // ── Commentary ───────────────────────────────────────────────────────────────
-
-  async function openCommentary() {
-    if (commentaryOpen) { setCommentaryOpen(false); return }
-    setCommentaryOpen(true)
-    track('commentary_opened', { book: book.name, chapter })
-    if (commentaryContent) return // cached for this chapter
-    setCommentaryLoading(true)
-    setCommentaryContent('')
-    try {
-      const res = await fetch(`/api/commentary?book_id=${book.id}&chapter=${chapter}`)
-      if (!res.ok) throw new Error('Failed to load commentary')
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      let text = ''
-      while (reader) {
-        const { done, value } = await reader.read()
-        if (done) break
-        text += decoder.decode(value, { stream: true })
-        setCommentaryContent(text)
-      }
-    } catch {
-      setCommentaryContent('_Commentary could not be loaded. Please try again._')
-    } finally {
-      setCommentaryLoading(false)
-    }
   }
 
   // ── Interlinear functions ────────────────────────────────────────────────────
@@ -520,41 +486,13 @@ export function BibleReader({
           {/* Scroll progress bar */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
 
-          {/* Row 1: Book / Chapter navigation */}
+          {/* Row 1: Passage search */}
           <div className="max-w-3xl mx-auto px-4 pt-2 pb-1 flex items-center gap-1">
-            <Select
-              value={book.name}
-              onValueChange={(b) => {
-                if (!b) return
-                router.push(`/dashboard/reading/${b.toLowerCase().replace(/\s+/g, '-')}/1?translation=${translation}`)
-              }}
-            >
-              <SelectTrigger className="h-8 text-sm border-0 bg-transparent font-semibold px-1 w-auto gap-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-80">
-                {BIBLE_BOOKS.map((b) => (
-                  <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <span className="text-muted-foreground text-sm">·</span>
-
-            <Select
-              value={String(chapter)}
-              onValueChange={(ch) => router.push(`/dashboard/reading/${book.name.toLowerCase().replace(/\s+/g, '-')}/${ch}?translation=${translation}`)}
-            >
-              <SelectTrigger className="h-8 text-sm border-0 bg-transparent px-1 w-auto gap-1">
-                <span className="text-muted-foreground text-xs mr-0.5">Ch</span>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                {Array.from({ length: book.chapters }, (_, i) => i + 1).map((ch) => (
-                  <SelectItem key={ch} value={String(ch)}>Chapter {ch}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PassageSearch
+              currentBook={book}
+              currentChapter={chapter}
+              translation={translation}
+            />
           </div>
 
           {/* Row 2: Tool controls */}
@@ -643,18 +581,6 @@ export function BibleReader({
               <span className="hidden sm:inline text-[9px] bg-muted px-1 py-0.5 rounded ml-0.5" style={{ fontFamily: 'system-ui' }}>soon</span>
             </div>
 
-            {/* Commentary */}
-            <Button
-              variant={commentaryOpen ? 'secondary' : 'outline'}
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 font-normal"
-              onClick={openCommentary}
-              title="Chapter commentary"
-            >
-              <ScrollText className="w-3 h-3" />
-              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Commentary</span>
-            </Button>
-
             {/* Quiz this chapter */}
             <Link
               href={`/dashboard/quiz?book=${encodeURIComponent(book.name)}&chapter=${chapter}`}
@@ -721,46 +647,6 @@ export function BibleReader({
               <p className="text-xs text-muted-foreground mt-4 text-center" style={{ fontFamily: 'system-ui' }}>
                 Press <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> to close
               </p>
-            </div>
-          </div>
-        )}
-
-        {/* Commentary panel */}
-        {commentaryOpen && (
-          <div className="border-b border-border bg-secondary/30">
-            <div className="max-w-3xl mx-auto px-4 py-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <ScrollText className="w-4 h-4 text-primary shrink-0" />
-                  <h2 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '1rem' }}>
-                    {book.name} {chapter} — Commentary
-                  </h2>
-                </div>
-                <button onClick={() => setCommentaryOpen(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {commentaryLoading && !commentaryContent && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground py-4" style={{ fontFamily: 'system-ui' }}>
-                  <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
-                  Generating commentary…
-                </div>
-              )}
-
-              {commentaryContent && (
-                <div
-                  className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed
-                    [&>h2]:text-base [&>h2]:font-semibold [&>h2]:mt-4 [&>h2]:mb-1
-                    [&>h3]:text-sm [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1
-                    [&>p]:mb-3 [&>p]:text-foreground/80
-                    [&>ul]:mb-3 [&>ul>li]:text-foreground/80
-                    [&>strong]:text-foreground"
-                  style={{ fontFamily: 'system-ui' }}
-                >
-                  <ReactMarkdown>{commentaryContent}</ReactMarkdown>
-                </div>
-              )}
             </div>
           </div>
         )}
