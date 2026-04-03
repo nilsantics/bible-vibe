@@ -35,7 +35,7 @@ function parseQuery(q: string): { bookQuery: string; chapter: number | null } {
 }
 
 function matchBooks(query: string): BookMeta[] {
-  if (!query) return BIBLE_BOOKS
+  if (!query) return [...BIBLE_BOOKS]
   const q = query.toLowerCase().replace(/\s+/g, '')
   return BIBLE_BOOKS.filter((b) => {
     const name = b.name.toLowerCase().replace(/\s+/g, '')
@@ -189,7 +189,7 @@ export function PassageSearch({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a book or passage — e.g. "John 3" or "Rom 8""
+                placeholder={'Type a book or passage — e.g. \u201cJohn 3\u201d or \u201cRom 8\u201d'}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
                 style={{ fontFamily: 'system-ui' }}
               />
