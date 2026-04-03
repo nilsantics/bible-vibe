@@ -26,6 +26,7 @@ import { ChatPanel } from '@/components/chat-panel'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
+import { track } from '@vercel/analytics'
 import type { HighlightColor } from '@/types'
 
 interface Verse {
@@ -113,7 +114,7 @@ export function BibleReader({
   const [commentaryLoading, setCommentaryLoading] = useState(false)
 
   // Interlinear state
-  const [interlinearOn, setInterlinearOn] = useState(false)
+  const [interlinearOn] = useState(false)
   const [interlinearWords, setInterlinearWords] = useState<Record<number, TaggedWord[]>>({})
   const [interlinearLoading, setInterlinearLoading] = useState(false)
   const [interlinearFailed, setInterlinearFailed] = useState(false)
@@ -175,6 +176,7 @@ export function BibleReader({
   async function openCommentary() {
     if (commentaryOpen) { setCommentaryOpen(false); return }
     setCommentaryOpen(true)
+    track('commentary_opened', { book: book.name, chapter })
     if (commentaryContent) return // cached for this chapter
     setCommentaryLoading(true)
     setCommentaryContent('')
@@ -254,18 +256,6 @@ export function BibleReader({
     }
   }
 
-  function toggleInterlinear() {
-    if (interlinearOn) {
-      setInterlinearOn(false)
-      setSelectedInterlinearWord(null)
-      return
-    }
-    setInterlinearOn(true)
-    if (Object.keys(interlinearWords).length === 0) {
-      loadInterlinear()
-    }
-  }
-
   // ── Data loading effects ─────────────────────────────────────────────────────
 
   // Load bookmarks for this chapter on mount
@@ -298,6 +288,11 @@ export function BibleReader({
       toast.success('Verse bookmarked!')
     }
   }
+
+  // Analytics: track chapter opens for all visitors
+  useEffect(() => {
+    track('chapter_opened', { book: book.name, chapter, translation })
+  }, [book.name, chapter, translation])
 
   // Award XP + track progress when chapter loads (once per chapter)
   useEffect(() => {
@@ -345,6 +340,7 @@ export function BibleReader({
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
     setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
     history.replaceState(null, '', `#v${verse.verse_number}`)
+    track('verse_popup_opened', { book: book.name, chapter, verse: verse.verse_number })
   }
 
   // Scroll to verse from URL hash on mount
@@ -678,7 +674,7 @@ export function BibleReader({
               variant={chatOpen ? 'secondary' : 'outline'}
               size="sm"
               className="h-7 px-2 text-xs gap-1 font-normal ml-auto"
-              onClick={() => setChatOpen((o) => !o)}
+              onClick={() => { if (!chatOpen) track('chat_opened', { book: book.name, chapter }); setChatOpen((o) => !o) }}
             >
               <MessageSquare className="w-3 h-3" />
               <span style={{ fontFamily: 'system-ui' }}>Ask Ezra</span>
@@ -1074,6 +1070,7 @@ export function BibleReader({
           onOpenChat={() => { closePopup(); setChatOpen(true) }}
           anchor={popupAnchor}
           isAuthenticated={isAuthenticated}
+          isPro={isPro}
         />
       )}
 

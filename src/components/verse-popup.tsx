@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ReactMarkdown from 'react-markdown'
 import {
-  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare,
+  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { HighlightColor } from '@/types'
@@ -46,6 +46,7 @@ interface Props {
   onOpenChat: () => void
   anchor: { x: number; y: number }
   isAuthenticated: boolean
+  isPro?: boolean
 }
 
 const COLORS: { color: HighlightColor; hex: string }[] = [
@@ -121,6 +122,7 @@ export function VersePopup({
   onOpenChat,
   anchor,
   isAuthenticated,
+  isPro = false,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('explain')
   const [explainTriggered, setExplainTriggered] = useState(false)
@@ -347,7 +349,7 @@ export function VersePopup({
             {TABS.map(({ id, shortLabel, icon: Icon }) => (
               <button
                 key={id}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors ${
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors relative ${
                   activeTab === id
                     ? 'text-primary border-b-2 border-primary font-medium bg-primary/5'
                     : 'text-muted-foreground'
@@ -356,6 +358,11 @@ export function VersePopup({
               >
                 <Icon className="w-4 h-4" />
                 <span style={{ fontFamily: 'system-ui', fontSize: '10px' }}>{shortLabel}</span>
+                {id === 'words' && !isPro && (
+                  <span className="absolute top-1 right-1 flex items-center">
+                    <Zap className="w-2 h-2 text-primary" />
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -462,7 +469,7 @@ export function VersePopup({
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs transition-colors shrink-0 ${
+              className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs transition-colors shrink-0 relative ${
                 activeTab === id
                   ? 'text-primary border-b-2 border-primary font-medium bg-primary/5'
                   : 'text-muted-foreground hover:text-foreground'
@@ -472,6 +479,9 @@ export function VersePopup({
             >
               <Icon className="w-3 h-3" />
               {label}
+              {id === 'words' && !isPro && (
+                <Zap className="w-2.5 h-2.5 text-primary ml-0.5" />
+              )}
             </button>
           ))}
         </div>

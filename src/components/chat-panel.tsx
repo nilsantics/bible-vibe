@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { track } from '@vercel/analytics'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -98,6 +99,7 @@ export function ChatPanel({
         setRateLimitHit(true)
         setMessages(newMessages) // remove empty assistant bubble
         setStreaming(false)
+        track('rate_limit_hit', { passage: currentPassage })
         return
       }
       if (!res.ok) throw new Error('Chat request failed — please try again.')
@@ -152,6 +154,7 @@ export function ChatPanel({
     const opt = DEPTH_OPTIONS.find((o) => o.value === d)!
     if (opt.pro && !isPro) {
       setShowScholarGate(true)
+      track('scholar_gate_shown', { passage: currentPassage })
       return
     }
     setShowScholarGate(false)
