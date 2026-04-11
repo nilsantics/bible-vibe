@@ -5,6 +5,7 @@ import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { Card } from '@/components/ui/card'
 import { ChevronRight, BookOpen, User, Calendar, Users, Target, Sparkles } from 'lucide-react'
 import { generateBookOverview } from '@/lib/claude'
+import { BookSidebar } from '@/components/book-sidebar'
 
 interface Props {
   params: Promise<{ book: string }>
@@ -56,7 +57,11 @@ export default async function BookOverviewPage({ params }: Props) {
   const themes: string[] = overview?.key_themes ?? []
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 53px)' }}>
+      <BookSidebar activeBookId={bookMeta.id} />
+
+      <div className="flex-1 overflow-y-auto min-w-0">
+      <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Back */}
       <Link
         href={`/dashboard/reading/${bookSlug}/1`}
@@ -224,6 +229,8 @@ export default async function BookOverviewPage({ params }: Props) {
           </Link>
         </div>
       )}
+    </div>
+    </div>
     </div>
   )
 }
