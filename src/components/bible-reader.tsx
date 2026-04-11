@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -106,9 +107,14 @@ export function BibleReader({
   const [compareVerses, setCompareVerses] = useState<Verse[]>([])
   const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif')
   const readerRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const [showVerseHint, setShowVerseHint] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [chapterOverviewOpen, setChapterOverviewOpen] = useState(false)
+
+  interface OtNtConnection { id: number; type: string; note: string | null; ref: string; book_name: string; chapter: number; verse: number; direction: string }
+  const [connections, setConnections] = useState<OtNtConnection[]>([])
+  const [connectionsLoading, setConnectionsLoading] = useState(false)
 
   // Interlinear state
   const [interlinearOn] = useState(false)
@@ -145,18 +151,7 @@ export function BibleReader({
     }))
   }, [book.name, chapter, translation, isAuthenticated])
 
-  useEffect(() => {
-    function onScroll() {
-      const el = readerRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const totalHeight = el.scrollHeight - window.innerHeight
-      const scrolled = Math.max(0, -rect.top)
-      setScrollProgress(totalHeight > 0 ? Math.min(100, (scrolled / totalHeight) * 100) : 0)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  // Scroll progress is tracked via onScroll on the center column div
 
   useEffect(() => {
     const seen = localStorage.getItem('bv_verse_hint_seen')
@@ -293,6 +288,17 @@ export function BibleReader({
       .then((d) => setCompareVerses(d.verses ?? []))
       .catch(() => setCompareVerses([]))
   }, [compareTranslation, book.id, chapter])
+
+  // Fetch OT/NT connections for selected verse
+  useEffect(() => {
+    if (!selectedVerse) { setConnections([]); return }
+    setConnectionsLoading(true)
+    fetch(`/api/ot-nt-connections?book_id=${selectedVerse.book_id}&chapter=${selectedVerse.chapter_number}&verse=${selectedVerse.verse_number}`)
+      .then((r) => r.json())
+      .then((d) => setConnections(d.connections ?? []))
+      .catch(() => setConnections([]))
+      .finally(() => setConnectionsLoading(false))
+  }, [selectedVerse])
 
   // ── Derived values ───────────────────────────────────────────────────────────
 
@@ -480,26 +486,133 @@ export function BibleReader({
   }
 
   return (
-    <div className="flex min-h-screen">
-      {/* Main reading area */}
-      <div className={`flex-1 transition-all ${chatOpen ? 'sm:mr-80' : ''} ${chatOpen ? 'hidden sm:block' : ''}`}>
+    <>
+    {/* ── Keyboard shortcuts overlay ── */}
+    {shortcutsOpen && (
+      <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShortcutsOpen(false)}>
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold" style={{ fontFamily: 'system-ui' }}>Keyboard shortcuts</h2>
+            <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setShortcutsOpen(false)}>
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {[
+              { key: 'j / →', desc: 'Next chapter' },
+              { key: 'k / ←', desc: 'Previous chapter' },
+              { key: '/', desc: 'Open Ezra chat' },
+              { key: 'f', desc: 'Cycle font size' },
+              { key: '?', desc: 'Show shortcuts' },
+              { key: 'Esc', desc: 'Close popup / chat' },
+            ].map(({ key, desc }) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{desc}</span>
+                <kbd className="text-xs bg-muted border border-border rounded px-2 py-0.5 font-mono">{key}</kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
 
+    {/* ── Interlinear word popup ── */}
+    {selectedInterlinearWord && (
+      <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/20" onClick={() => setSelectedInterlinearWord(null)}>
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-5 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="text-3xl font-bold leading-none" dir={isOT ? 'rtl' : 'ltr'} style={{ fontFamily: isOT ? 'serif' : 'system-ui' }}>
+                {selectedInterlinearWord.original || '—'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 font-mono">{selectedInterlinearWord.transliteration}</p>
+            </div>
+            <button onClick={() => setSelectedInterlinearWord(null)} className="text-muted-foreground hover:text-foreground mt-1"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            {selectedInterlinearWord.number && (
+              <span className={`text-xs font-mono px-2 py-0.5 rounded-full font-semibold ${selectedInterlinearWord.number.startsWith('H') ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
+                {selectedInterlinearWord.number}
+              </span>
+            )}
+            <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              {selectedInterlinearWord.word.replace(/[.,;:!?'"()[\]]/g, '')}
+            </span>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>{selectedInterlinearWord.brief}</p>
+        </div>
+      </div>
+    )}
+
+    {/* ── THREE-COLUMN LAYOUT ── */}
+    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 53px)' }}>
+
+      {/* ── LEFT: Book + Chapter sidebar ── */}
+      <aside className="hidden lg:flex flex-col w-44 shrink-0 border-r border-border overflow-y-auto bg-background">
+        <nav className="px-1.5 py-3">
+          <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-2 pb-1" style={{ fontFamily: 'system-ui' }}>Old Testament</p>
+          {BIBLE_BOOKS.filter((b) => b.id <= 39).map((b) => (
+            <div key={b.id}>
+              <Link href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1?translation=${translation}`}>
+                <div className={`px-2 py-0.5 rounded text-[11.5px] leading-snug transition-colors ${b.id === book.id ? 'text-primary font-semibold' : 'text-foreground/55 hover:text-foreground hover:bg-muted/50'}`} style={{ fontFamily: 'system-ui' }}>
+                  {b.name}
+                </div>
+              </Link>
+              {b.id === book.id && (
+                <div className="grid grid-cols-5 gap-px my-1.5 px-1">
+                  {Array.from({ length: b.chapters }, (_, i) => i + 1).map((ch) => (
+                    <Link key={ch} href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/${ch}?translation=${translation}`}>
+                      <div className={`text-[10px] text-center py-0.5 rounded cursor-pointer transition-colors ${ch === chapter ? 'bg-primary text-primary-foreground font-bold' : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'}`} style={{ fontFamily: 'system-ui' }}>
+                        {ch}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+          <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest px-2 pt-3 pb-1" style={{ fontFamily: 'system-ui' }}>New Testament</p>
+          {BIBLE_BOOKS.filter((b) => b.id >= 40).map((b) => (
+            <div key={b.id}>
+              <Link href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1?translation=${translation}`}>
+                <div className={`px-2 py-0.5 rounded text-[11.5px] leading-snug transition-colors ${b.id === book.id ? 'text-primary font-semibold' : 'text-foreground/55 hover:text-foreground hover:bg-muted/50'}`} style={{ fontFamily: 'system-ui' }}>
+                  {b.name}
+                </div>
+              </Link>
+              {b.id === book.id && (
+                <div className="grid grid-cols-5 gap-px my-1.5 px-1">
+                  {Array.from({ length: b.chapters }, (_, i) => i + 1).map((ch) => (
+                    <Link key={ch} href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/${ch}?translation=${translation}`}>
+                      <div className={`text-[10px] text-center py-0.5 rounded cursor-pointer transition-colors ${ch === chapter ? 'bg-primary text-primary-foreground font-bold' : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'}`} style={{ fontFamily: 'system-ui' }}>
+                        {ch}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      </aside>
+
+      {/* ── CENTER: Toolbar + Text ── */}
+      <div
+        ref={scrollRef}
+        className={`flex-1 overflow-y-auto min-w-0 ${chatOpen ? 'hidden sm:block' : ''}`}
+        onScroll={(e) => {
+          const el = e.currentTarget
+          const total = el.scrollHeight - el.clientHeight
+          setScrollProgress(total > 0 ? Math.min(100, (el.scrollTop / total) * 100) : 0)
+        }}
+      >
         {/* Reading toolbar */}
-        <div className="sticky top-13 z-30 bg-background/95 backdrop-blur-sm border-b border-border" data-ui>
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border" data-ui>
           {/* Scroll progress bar */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
 
-          {/* Row 1: Passage search */}
-          <div className="max-w-3xl mx-auto px-4 pt-2 pb-1 flex items-center gap-1">
-            <PassageSearch
-              currentBook={book}
-              currentChapter={chapter}
-              translation={translation}
-            />
-          </div>
-
-          {/* Row 2: Tool controls */}
-          <div className="max-w-3xl mx-auto px-4 pb-2 flex items-center gap-1 flex-wrap">
+          <div className="px-4 py-2 flex items-center gap-1.5 flex-wrap">
+            <PassageSearch currentBook={book} currentChapter={chapter} translation={translation} />
+            <div className="ml-auto flex items-center gap-1.5">
             {/* Translation */}
             <Select value={translation} onValueChange={handleTranslationChange}>
               <SelectTrigger className="h-7 border border-border rounded-lg px-2 text-xs font-semibold bg-transparent w-auto gap-1 focus:ring-0">
@@ -597,102 +710,23 @@ export function BibleReader({
             </Button>
           </div>
         </div>
-
-        {/* Keyboard shortcuts overlay */}
-        {shortcutsOpen && (
-          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShortcutsOpen(false)}>
-            <div className="bg-card border border-border rounded-2xl shadow-xl p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold" style={{ fontFamily: 'system-ui' }}>Keyboard shortcuts</h2>
-                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setShortcutsOpen(false)}>
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { key: 'j / →', desc: 'Next chapter' },
-                  { key: 'k / ←', desc: 'Previous chapter' },
-                  { key: '/', desc: 'Open Ezra chat' },
-                  { key: 'f', desc: 'Cycle font size' },
-                  { key: '?', desc: 'Show shortcuts' },
-                  { key: 'Esc', desc: 'Close popup / chat' },
-                ].map(({ key, desc }) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{desc}</span>
-                    <kbd className="text-xs bg-muted border border-border rounded px-2 py-0.5 font-mono">{key}</kbd>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-4 text-center" style={{ fontFamily: 'system-ui' }}>
-                Press <kbd className="font-mono bg-muted px-1 rounded">Esc</kbd> to close
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Interlinear word detail popup */}
-        {selectedInterlinearWord && (
-          <div
-            className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/20"
-            onClick={() => setSelectedInterlinearWord(null)}
-          >
-            <div
-              className="bg-card border border-border rounded-2xl shadow-xl p-5 w-full max-w-xs"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p
-                    className="text-3xl font-bold leading-none"
-                    dir={isOT ? 'rtl' : 'ltr'}
-                    style={{ fontFamily: isOT ? 'serif' : 'system-ui' }}
-                  >
-                    {selectedInterlinearWord.original || '—'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1 font-mono" style={{ fontFamily: 'system-ui' }}>
-                    {selectedInterlinearWord.transliteration}
-                  </p>
-                </div>
-                <button onClick={() => setSelectedInterlinearWord(null)} className="text-muted-foreground hover:text-foreground mt-1">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2 mb-3">
-                {selectedInterlinearWord.number && (
-                  <span className={`text-xs font-mono px-2 py-0.5 rounded-full font-semibold ${
-                    selectedInterlinearWord.number.startsWith('H')
-                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                      : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                  }`}>
-                    {selectedInterlinearWord.number}
-                  </span>
-                )}
-                <span className="text-sm font-medium" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-                  {selectedInterlinearWord.word.replace(/[.,;:!?'"()[\]]/g, '')}
-                </span>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
-                {selectedInterlinearWord.brief}
-              </p>
-            </div>
-          </div>
-        )}
+        </div>{/* end sticky toolbar */}
 
         {/* Bible text */}
-        <div className="max-w-3xl mx-auto px-4 py-10 pb-32" ref={readerRef}>
+        <div className="max-w-2xl mx-auto px-6 py-10 pb-32" ref={readerRef}>
           {/* Chapter header */}
-          <div className="mb-8 text-center">
+          <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {book.name}
             </h1>
-            <p className="text-lg text-muted-foreground mt-1 font-light" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-              Chapter {chapter}
+            <p className="text-2xl text-muted-foreground/50 mt-0.5 font-light" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+              {chapter}
             </p>
-            <div className="flex items-center justify-center gap-3 mt-2.5">
-              <span className="text-xs text-muted-foreground/50" style={{ fontFamily: 'system-ui' }}>
+            <div className="flex items-center justify-center gap-3 mt-2">
+              <span className="text-xs text-muted-foreground/40" style={{ fontFamily: 'system-ui' }}>
                 {verses.length} verses · ~{readingMinutes} min
               </span>
-              <span className="text-muted-foreground/30 text-xs">·</span>
+              <span className="text-muted-foreground/20 text-xs">·</span>
               <Link
                 href={`/dashboard/reading/${book.name.toLowerCase().replace(/\s+/g, '-')}/overview`}
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-primary transition-colors"
@@ -917,44 +951,35 @@ export function BibleReader({
               </div>
             </div>
 
-          /* ── NORMAL VIEW ── */
+          /* ── NORMAL VIEW: flowing inline text ── */
           ) : (
-            <div className="space-y-0.5 -mx-3">
+            <p className="leading-[1.9] text-foreground" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
               {verses.map((verse) => {
                 const hlColor = highlights[verse.id]
                 const hasNote = !!notes[verse.id]
-                const hlClass = hlColor ? `hl-${hlColor}` : ''
                 return (
-                  <div
-                    key={verse.id}
-                    id={`verse-${verse.verse_number}`}
-                    className={`flex gap-3 cursor-pointer rounded-xl px-3 py-2 transition-colors ${hlClass} ${
-                      selectedVerse?.id === verse.id
-                        ? 'bg-primary/8 ring-1 ring-inset ring-primary/20'
-                        : 'hover:bg-primary/5'
-                    }`}
-                    onClick={(e) => handleVerseClick(verse, e)}
-                    title={`${book.name} ${chapter}:${verse.verse_number}`}
-                  >
-                    <span
-                      className="shrink-0 w-6 text-right select-none leading-relaxed"
-                      style={{ fontSize: '0.62rem', fontFamily: 'system-ui', fontWeight: 700, opacity: 0.3, paddingTop: '0.2em' }}
+                  <span key={verse.id} id={`verse-${verse.verse_number}`}>
+                    <sup
+                      className="select-none cursor-pointer hover:text-primary transition-colors"
+                      style={{ fontSize: '0.58rem', fontWeight: 700, fontFamily: 'system-ui', opacity: 0.35, marginRight: '0.15em' }}
+                      onClick={(e) => handleVerseClick(verse, e as unknown as React.MouseEvent)}
                     >
                       {verse.verse_number}
-                    </span>
-                    <p className="flex-1 leading-relaxed" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                    </sup>
+                    <span
+                      className={`cursor-pointer transition-colors rounded ${hlColor ? `hl-${hlColor}` : ''} ${
+                        selectedVerse?.id === verse.id ? 'bg-primary/10' : 'hover:bg-primary/5'
+                      }`}
+                      onClick={(e) => handleVerseClick(verse, e as unknown as React.MouseEvent)}
+                    >
                       {verse.text}
-                      {hasNote && (
-                        <span
-                          className="inline-block w-1.5 h-1.5 bg-accent rounded-full ml-0.5 mb-0.5 align-middle"
-                          title="You have a note on this verse"
-                        />
-                      )}
-                    </p>
-                  </div>
+                    </span>
+                    {hasNote && <span className="inline-block w-1.5 h-1.5 bg-accent rounded-full ml-0.5 mb-0.5 align-middle" title="You have a note on this verse" />}
+                    {' '}
+                  </span>
                 )
               })}
-            </div>
+            </p>
           )}
 
           {/* Chapter navigation */}
@@ -994,40 +1019,83 @@ export function BibleReader({
         </div>
       </div>
 
-      {/* Verse popup */}
-      {selectedVerse && popupAnchor && (
-        <VersePopup
-          verse={selectedVerse}
-          bookName={book.name}
-          translation={translation}
-          currentHighlight={(highlights[selectedVerse.id] as HighlightColor) ?? null}
-          currentNote={notes[selectedVerse.id]?.content ?? ''}
-          isBookmarked={bookmarks.has(selectedVerse.id)}
-          onHighlight={(color) => handleHighlight(selectedVerse.id, color)}
-          onSaveNote={(content) => handleSaveNote(selectedVerse.id, content)}
-          onBookmark={() => handleBookmark(selectedVerse.id)}
-          onClose={closePopup}
-          onOpenChat={() => { closePopup(); setChatOpen(true) }}
-          anchor={popupAnchor}
-          isAuthenticated={isAuthenticated}
-          isPro={isPro}
-        />
+      {/* ── RIGHT: Connections panel ── */}
+      {!chatOpen && (
+        <aside className="hidden xl:flex flex-col w-72 shrink-0 border-l border-border overflow-y-auto bg-background">
+          <div className="px-4 py-5">
+            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-4" style={{ fontFamily: 'system-ui' }}>
+              Connections
+            </p>
+            {selectedVerse ? (
+              <div>
+                <p className="text-sm font-semibold mb-1.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                  {book.name} {chapter}:{selectedVerse.verse_number}
+                </p>
+                <p className="text-xs text-muted-foreground italic mb-4 leading-relaxed" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                  &ldquo;{selectedVerse.text.length > 130 ? selectedVerse.text.slice(0, 130) + '…' : selectedVerse.text}&rdquo;
+                </p>
+                {connectionsLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                    <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                    Loading…
+                  </div>
+                ) : connections.length > 0 ? (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2" style={{ fontFamily: 'system-ui' }}>
+                      {isOT ? 'New Testament Connections' : 'Old Testament Sources'}
+                    </p>
+                    <div className="space-y-1.5">
+                      {connections.map((c) => (
+                        <Link key={c.id} href={`/dashboard/reading/${c.book_name.toLowerCase().replace(/\s+/g, '-')}/${c.chapter}?translation=${translation}`}>
+                          <div className="px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors">
+                            <p className="text-xs font-semibold text-primary" style={{ fontFamily: 'system-ui' }}>{c.ref}</p>
+                            <p className="text-[10px] text-muted-foreground/60 capitalize mt-0.5" style={{ fontFamily: 'system-ui' }}>{c.type}</p>
+                            {c.note && <p className="text-[11px] mt-1 leading-relaxed text-foreground/70" style={{ fontFamily: 'system-ui' }}>{c.note}</p>}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>No connections found for this verse.</p>
+                )}
+              </div>
+            ) : (
+              <div>
+                {chapterOverview?.summary ? (
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-2" style={{ fontFamily: 'system-ui' }}>
+                      Chapter Overview
+                    </p>
+                    <p className="text-xs leading-relaxed text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                      {chapterOverview.summary}
+                    </p>
+                    {chapterOverview.key_ideas && chapterOverview.key_ideas.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1.5" style={{ fontFamily: 'system-ui' }}>Key Ideas</p>
+                        <ul className="space-y-1">
+                          {chapterOverview.key_ideas.slice(0, 5).map((idea, i) => (
+                            <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                              <span className="text-primary shrink-0 mt-0.5">·</span>
+                              <span style={{ fontFamily: 'system-ui' }}>{idea}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                    Tap any verse to see cross-references and connections.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </aside>
       )}
 
-      {/* Mobile FAB — Ask Ezra (hidden on sm+, hidden when chat or verse popup is open) */}
-      {!chatOpen && !selectedVerse && (
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-20 right-4 z-20 sm:hidden flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 text-sm font-medium active:scale-95 transition-transform"
-          style={{ fontFamily: 'system-ui' }}
-          aria-label="Ask Ezra"
-        >
-          <MessageSquare className="w-4 h-4 shrink-0" />
-          Ask Ezra
-        </button>
-      )}
-
-      {/* Chat panel */}
+      {/* Chat panel inside the 3-col row */}
       {chatOpen && (
         <ChatPanel
           currentPassage={`${book.name} ${chapter} (${translation})`}
@@ -1035,6 +1103,40 @@ export function BibleReader({
           isPro={isPro}
         />
       )}
-    </div>
+    </div>{/* end 3-col layout */}
+
+    {/* Verse popup — fixed overlay, outside the height-constrained layout */}
+    {selectedVerse && popupAnchor && (
+      <VersePopup
+        verse={selectedVerse}
+        bookName={book.name}
+        translation={translation}
+        currentHighlight={(highlights[selectedVerse.id] as HighlightColor) ?? null}
+        currentNote={notes[selectedVerse.id]?.content ?? ''}
+        isBookmarked={bookmarks.has(selectedVerse.id)}
+        onHighlight={(color) => handleHighlight(selectedVerse.id, color)}
+        onSaveNote={(content) => handleSaveNote(selectedVerse.id, content)}
+        onBookmark={() => handleBookmark(selectedVerse.id)}
+        onClose={closePopup}
+        onOpenChat={() => { closePopup(); setChatOpen(true) }}
+        anchor={popupAnchor}
+        isAuthenticated={isAuthenticated}
+        isPro={isPro}
+      />
+    )}
+
+    {/* Mobile FAB */}
+    {!chatOpen && !selectedVerse && (
+      <button
+        onClick={() => setChatOpen(true)}
+        className="fixed bottom-20 right-4 z-20 sm:hidden flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 text-sm font-medium active:scale-95 transition-transform"
+        style={{ fontFamily: 'system-ui' }}
+        aria-label="Ask Ezra"
+      >
+        <MessageSquare className="w-4 h-4 shrink-0" />
+        Ask Ezra
+      </button>
+    )}
+  </>
   )
 }
