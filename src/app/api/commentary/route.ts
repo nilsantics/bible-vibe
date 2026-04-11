@@ -68,12 +68,19 @@ export async function POST(request: NextRequest) {
 
   const traditionSuffix = tradition ? getTraditionPrompt(tradition as TraditionId) : ''
 
+  const SOURCE_LABELS: Record<string, string> = {
+    'matthew-henry': 'Matthew Henry Concise Commentary',
+    'john-gill':     "John Gill's Exposition of the Bible",
+    'john-wesley':   "John Wesley's Explanatory Notes",
+    'adam-clarke':   "Adam Clarke's Commentary",
+  }
+
   const sourceBlock =
     allChunks.length > 0
       ? allChunks
           .map(
             (c, i) =>
-              `[Source ${i + 1} — ${c.source === 'matthew-henry' ? 'Matthew Henry Concise Commentary' : c.source}]\n${c.content}`,
+              `[Source ${i + 1} — ${SOURCE_LABELS[c.source] ?? c.source}]\n${c.content}`,
           )
           .join('\n\n')
       : 'No commentary sources found in library.'
