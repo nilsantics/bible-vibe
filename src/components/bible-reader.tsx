@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BIBLE_BOOKS, OT_CATEGORIES, NT_CATEGORIES } from '@/lib/bible-data'
+import { BIBLE_BOOKS, OT_CATEGORIES, NT_CATEGORIES, APOC_BOOKS, APOC_CATEGORIES } from '@/lib/bible-data'
 import { isRedLetter } from '@/lib/red-letter-verses'
 import { Button } from '@/components/ui/button'
 import {
@@ -665,12 +665,29 @@ export function BibleReader({
             )
           })}
 
-          {sidebarTab === 'Apoc' && (
-            <div className="px-2 py-6 text-center">
-              <p className="text-sm text-muted-foreground/60" style={{ fontFamily: 'system-ui' }}>Apocrypha</p>
-              <p className="text-xs text-muted-foreground/40 mt-1" style={{ fontFamily: 'system-ui' }}>Coming soon</p>
-            </div>
-          )}
+          {sidebarTab === 'Apoc' && APOC_CATEGORIES.map((cat) => {
+            const books = APOC_BOOKS.filter((b) => (cat.ids as readonly number[]).includes(b.id))
+            return (
+              <div key={cat.label} className="mb-3">
+                <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest px-2 py-1" style={{ fontFamily: 'system-ui' }}>
+                  {cat.label}
+                </p>
+                {books.map((b) => (
+                  <a
+                    key={b.id}
+                    href={b.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="px-2 py-1 rounded-md text-sm leading-snug transition-colors text-foreground/70 hover:text-foreground hover:bg-muted/50 flex items-center justify-between" style={{ fontFamily: 'system-ui' }}>
+                      <span>{b.name}</span>
+                      <span className="text-[9px] text-muted-foreground/30 font-mono">{b.chapters}ch</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )
+          })}
         </nav>
       </aside>
 

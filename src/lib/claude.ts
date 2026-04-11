@@ -186,3 +186,63 @@ export interface QuizQuestion {
   correct: number
   explanation: string
 }
+
+export interface BookOverview {
+  author: string
+  date_written: string
+  audience: string
+  purpose: string
+  key_themes: string[]
+  outline: { range: string; title: string }[]
+  key_verses: { ref: string; text: string }[]
+  summary: string
+}
+
+// Generate a scholarly book overview for any Bible book
+export async function generateBookOverview(bookName: string, testament: string): Promise<BookOverview | null> {
+  try {
+    const message = await anthropic.messages.create({
+      model: CLAUDE_MODEL,
+      max_tokens: 2000,
+      system: BIBLE_STUDY_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate a scholarly overview of the biblical book of ${bookName} (${testament} Testament).
+
+Return ONLY a valid JSON object with this exact shape:
+{
+  "author": "Traditional/likely author and brief note on authorship debates",
+  "date_written": "Date range and era (e.g. 'c. 960–930 BC, Solomon's reign')",
+  "audience": "Original recipients and their situation",
+  "purpose": "One sentence: why was this book written?",
+  "key_themes": ["Theme 1", "Theme 2", "Theme 3", "Theme 4", "Theme 5"],
+  "outline": [
+    { "range": "1:1–2:3", "title": "Section title" },
+    { "range": "2:4–5:32", "title": "Section title" }
+  ],
+  "key_verses": [
+    { "ref": "chapter:verse", "text": "The actual verse text (WEB translation)" },
+    { "ref": "chapter:verse", "text": "Another key verse" }
+  ],
+  "summary": "2-3 sentence overview of the book's content and theological significance"
+}
+
+Rules:
+- outline: 4-8 sections covering the whole book
+- key_verses: 3-5 of the most important/famous verses
+- key_themes: exactly 5 themes
+- Return ONLY the JSON, no markdown, no explanation`,
+        },
+      ],
+    })
+
+    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const start = raw.indexOf('{')
+    const end = raw.lastIndexOf('}')
+    if (start === -1 || end <= start) return null
+    return JSON.parse(raw.slice(start, end + 1)) as BookOverview
+  } catch {
+    return null
+  }
+}

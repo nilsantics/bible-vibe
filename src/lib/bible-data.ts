@@ -74,6 +74,26 @@ export const BIBLE_BOOKS = [
 
 export type BookName = (typeof BIBLE_BOOKS)[number]['name']
 
+// Deuterocanonical / Apocryphal books — metadata only
+// Verse text for these is not loaded in the main DB; they link to external resources
+export const APOC_BOOKS = [
+  { id: 70,  name: 'Tobit',                    abbr: 'Tob',   tradition: 'Catholic/Orthodox', chapters: 14,  externalUrl: 'https://www.biblegateway.com/passage/?search=Tobit+1&version=NABRE' },
+  { id: 71,  name: 'Judith',                   abbr: 'Jdt',   tradition: 'Catholic/Orthodox', chapters: 16,  externalUrl: 'https://www.biblegateway.com/passage/?search=Judith+1&version=NABRE' },
+  { id: 72,  name: 'Wisdom of Solomon',         abbr: 'Wis',   tradition: 'Catholic/Orthodox', chapters: 19,  externalUrl: 'https://www.biblegateway.com/passage/?search=Wisdom+1&version=NABRE' },
+  { id: 73,  name: 'Sirach',                   abbr: 'Sir',   tradition: 'Catholic/Orthodox', chapters: 51,  externalUrl: 'https://www.biblegateway.com/passage/?search=Sirach+1&version=NABRE' },
+  { id: 74,  name: 'Baruch',                   abbr: 'Bar',   tradition: 'Catholic/Orthodox', chapters: 6,   externalUrl: 'https://www.biblegateway.com/passage/?search=Baruch+1&version=NABRE' },
+  { id: 75,  name: '1 Maccabees',              abbr: '1Mac',  tradition: 'Catholic/Orthodox', chapters: 16,  externalUrl: 'https://www.biblegateway.com/passage/?search=1+Maccabees+1&version=NABRE' },
+  { id: 76,  name: '2 Maccabees',              abbr: '2Mac',  tradition: 'Catholic/Orthodox', chapters: 15,  externalUrl: 'https://www.biblegateway.com/passage/?search=2+Maccabees+1&version=NABRE' },
+  { id: 77,  name: '1 Esdras',                 abbr: '1Esd',  tradition: 'Orthodox',          chapters: 9,   externalUrl: 'https://ccel.org/bible/nasb/nasb.1Esd.1.html' },
+  { id: 78,  name: '3 Maccabees',              abbr: '3Mac',  tradition: 'Orthodox',          chapters: 7,   externalUrl: 'https://ccel.org/bible/nasb/nasb.3Mac.1.html' },
+  { id: 79,  name: 'Prayer of Manasseh',       abbr: 'PrMan', tradition: 'Orthodox',          chapters: 1,   externalUrl: 'https://ccel.org/bible/nasb/nasb.PrMan.1.html' },
+] as const
+
+export const APOC_CATEGORIES = [
+  { label: 'Catholic Deuterocanon', ids: [70, 71, 72, 73, 74, 75, 76] },
+  { label: 'Orthodox Additions',    ids: [77, 78, 79] },
+] as const
+
 // Book category groupings for the sidebar
 export const OT_CATEGORIES = [
   { label: 'Pentateuch',      ids: [1, 2, 3, 4, 5] },

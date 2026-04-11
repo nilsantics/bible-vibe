@@ -139,12 +139,12 @@ export default async function StudyHistoryPage({
                   >
                     <Card className="p-4 border-border hover:border-primary/40 transition-colors">
                       <div className="flex items-start gap-3">
-                        <div className={`w-3 h-3 rounded-full shrink-0 mt-1 ${COLOR_DOT[h.color] ?? 'bg-yellow-400'}`} />
+                        <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${COLOR_DOT[h.color] ?? 'bg-yellow-400'}`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-primary mb-1" style={{ fontFamily: 'system-ui' }}>
+                          <p className="text-sm font-semibold text-primary mb-1.5" style={{ fontFamily: 'system-ui' }}>
                             {bookRef(v.book_id, v.chapter_number, v.verse_number)}
                           </p>
-                          <p className={`text-sm leading-relaxed italic px-2 py-1 rounded ${HIGHLIGHT_COLORS[h.color] ?? 'bg-yellow-200/80'}`}
+                          <p className={`text-base leading-relaxed italic px-3 py-1.5 rounded ${HIGHLIGHT_COLORS[h.color] ?? 'bg-yellow-200/80'}`}
                             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                             &ldquo;{v.text}&rdquo;
                           </p>
@@ -179,17 +179,17 @@ export default async function StudyHistoryPage({
                     href={`${bookHref(v.book_id, v.chapter_number)}#v${v.verse_number}`}
                   >
                     <Card className="p-4 border-border hover:border-primary/40 transition-colors">
-                      <p className="text-xs font-semibold text-primary mb-1.5" style={{ fontFamily: 'system-ui' }}>
+                      <p className="text-sm font-semibold text-primary mb-1.5" style={{ fontFamily: 'system-ui' }}>
                         {bookRef(v.book_id, v.chapter_number, v.verse_number)}
                       </p>
-                      <p className="text-xs text-muted-foreground italic mb-2 leading-relaxed"
+                      <p className="text-sm text-muted-foreground italic mb-2.5 leading-relaxed"
                         style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-                        &ldquo;{v.text?.slice(0, 100)}{(v.text?.length ?? 0) > 100 ? '…' : ''}&rdquo;
+                        &ldquo;{v.text?.slice(0, 120)}{(v.text?.length ?? 0) > 120 ? '…' : ''}&rdquo;
                       </p>
-                      <p className="text-sm leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                      <p className="text-base leading-relaxed" style={{ fontFamily: 'system-ui' }}>
                         {n.content}
                       </p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-2" style={{ fontFamily: 'system-ui' }}>
+                      <p className="text-xs text-muted-foreground/60 mt-2" style={{ fontFamily: 'system-ui' }}>
                         {new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </Card>
@@ -223,12 +223,12 @@ export default async function StudyHistoryPage({
                     <Card className="p-4 border-border hover:border-primary/40 transition-colors flex items-center gap-3">
                       <Bookmark className="w-4 h-4 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>
+                        <p className="text-base font-medium" style={{ fontFamily: 'system-ui' }}>
                           {bookRef(v.book_id, v.chapter_number, v.verse_number)}
                         </p>
-                        <p className="text-xs text-muted-foreground italic truncate"
+                        <p className="text-sm text-muted-foreground italic truncate"
                           style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-                          {v.text?.slice(0, 80)}…
+                          {v.text?.slice(0, 100)}…
                         </p>
                       </div>
                     </Card>

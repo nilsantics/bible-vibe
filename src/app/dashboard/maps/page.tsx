@@ -1,68 +1,83 @@
 'use client'
 
-import { useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { Map } from 'lucide-react'
+import { Map, ExternalLink } from 'lucide-react'
 
 const MAP_CATEGORIES = [
   {
     label: 'Old Testament',
     maps: [
       {
-        id: 'ancient-near-east',
         title: 'Ancient Near East',
         desc: 'The world of the patriarchs — Mesopotamia, Canaan, Egypt',
         era: 'c. 2000–1500 BC',
         emoji: '🏛️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Map_of_fertile_crescent.svg/1200px-Map_of_fertile_crescent.svg.png',
+        gradient: 'from-amber-800 to-amber-950',
+        url: 'https://en.wikipedia.org/wiki/Ancient_Near_East#/media/File:Map_of_fertile_crescent.svg',
+        wikiTitle: 'Fertile Crescent',
       },
       {
-        id: 'exodus-route',
         title: 'The Exodus Route',
-        desc: 'Israel\'s journey from Egypt to the Promised Land',
+        desc: "Israel's journey from Egypt to the Promised Land",
         era: 'c. 1446 BC',
         emoji: '🏕️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Exodus_route_possibilities.jpg/1200px-Exodus_route_possibilities.jpg',
+        gradient: 'from-orange-700 to-red-900',
+        url: 'https://en.wikipedia.org/wiki/The_Exodus#Route_of_the_Exodus',
+        wikiTitle: 'Exodus Route',
       },
       {
-        id: 'tribes-of-israel',
         title: 'Twelve Tribes of Israel',
         desc: 'The division of Canaan among the twelve tribes',
         era: 'c. 1400–1050 BC',
         emoji: '🗺️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Twelve_tribes_of_Israel_Map.svg/800px-Twelve_tribes_of_Israel_Map.svg.png',
+        gradient: 'from-green-700 to-emerald-900',
+        url: 'https://en.wikipedia.org/wiki/Israelite_tribes#Territorial_claims',
+        wikiTitle: 'Twelve Tribes',
       },
       {
-        id: 'kingdom-israel',
         title: 'United Kingdom of Israel',
         desc: 'The kingdom under Saul, David, and Solomon',
         era: 'c. 1050–930 BC',
         emoji: '👑',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Kingdom_of_Israel_%28United_Monarchy%29.svg/600px-Kingdom_of_Israel_%28United_Monarchy%29.svg.png',
+        gradient: 'from-yellow-700 to-amber-900',
+        url: 'https://en.wikipedia.org/wiki/United_monarchy',
+        wikiTitle: 'United Monarchy',
       },
       {
-        id: 'divided-kingdom',
         title: 'Divided Kingdom',
         desc: 'Israel (North) and Judah (South) after the split',
         era: 'c. 930–722 BC',
         emoji: '⚔️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Kingdoms_of_Israel_and_Judah_map_830.svg/600px-Kingdoms_of_Israel_and_Judah_map_830.svg.png',
+        gradient: 'from-slate-700 to-slate-900',
+        url: 'https://en.wikipedia.org/wiki/Kingdom_of_Israel_(Samaria)',
+        wikiTitle: 'Divided Kingdom',
       },
       {
-        id: 'babylonian-empire',
+        title: 'Assyrian Empire',
+        desc: 'The empire that conquered the Northern Kingdom',
+        era: 'c. 722 BC',
+        emoji: '🦁',
+        gradient: 'from-red-800 to-red-950',
+        url: 'https://en.wikipedia.org/wiki/Neo-Assyrian_Empire',
+        wikiTitle: 'Assyrian Empire',
+      },
+      {
         title: 'Babylonian Empire',
         desc: 'The empire that conquered Judah and exiled Israel',
         era: 'c. 605–539 BC',
         emoji: '🏰',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Babylonian_empire.svg/1200px-Babylonian_empire.svg.png',
+        gradient: 'from-violet-800 to-purple-950',
+        url: 'https://en.wikipedia.org/wiki/Neo-Babylonian_Empire',
+        wikiTitle: 'Babylonian Empire',
       },
       {
-        id: 'persian-empire',
         title: 'Persian Empire',
         desc: 'The empire under which Ezra, Nehemiah, and Esther lived',
         era: 'c. 550–330 BC',
-        emoji: '🦁',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Achaemenid_Empire.svg/1200px-Achaemenid_Empire.svg.png',
+        emoji: '🌙',
+        gradient: 'from-indigo-700 to-indigo-900',
+        url: 'https://en.wikipedia.org/wiki/Achaemenid_Empire',
+        wikiTitle: 'Persian (Achaemenid) Empire',
       },
     ],
   },
@@ -70,44 +85,67 @@ const MAP_CATEGORIES = [
     label: 'New Testament',
     maps: [
       {
-        id: 'judea-1st-century',
         title: 'Judea in the 1st Century',
         desc: 'The land of Jesus — Galilee, Samaria, Judea',
         era: 'c. 6 BC – 30 AD',
         emoji: '✝️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Map_of_Judea_Samaria_and_Galilee.jpg/800px-Map_of_Judea_Samaria_and_Galilee.jpg',
+        gradient: 'from-sky-700 to-blue-900',
+        url: 'https://en.wikipedia.org/wiki/Judea_(Roman_province)',
+        wikiTitle: 'Roman Judea',
       },
       {
-        id: 'ministry-of-jesus',
         title: 'Ministry of Jesus',
-        desc: 'Key locations of Jesus\'s earthly ministry',
+        desc: "Key locations of Jesus's earthly ministry",
         era: 'c. 27–30 AD',
         emoji: '🕊️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Ministry_Jesus_map.svg/800px-Ministry_Jesus_map.svg.png',
+        gradient: 'from-blue-600 to-sky-900',
+        url: 'https://en.wikipedia.org/wiki/Ministry_of_Jesus',
+        wikiTitle: 'Ministry of Jesus',
       },
       {
-        id: 'pauls-journeys',
-        title: "Paul's Missionary Journeys",
-        desc: 'Three journeys across the Mediterranean world',
-        era: 'c. 46–57 AD',
+        title: "Paul's First Journey",
+        desc: 'Cyprus, Pisidian Antioch, Iconium, Lystra, Derbe',
+        era: 'c. 46–48 AD',
         emoji: '⛵',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Pauls_Journeys.svg/1200px-Pauls_Journeys.svg.png',
+        gradient: 'from-teal-700 to-teal-900',
+        url: 'https://en.wikipedia.org/wiki/Missionary_journeys_of_Paul_the_Apostle',
+        wikiTitle: "Paul's Journeys",
       },
       {
-        id: 'seven-churches',
+        title: "Paul's Second Journey",
+        desc: 'Macedonia, Athens, Corinth — the gospel enters Europe',
+        era: 'c. 49–52 AD',
+        emoji: '🌊',
+        gradient: 'from-cyan-700 to-cyan-900',
+        url: 'https://en.wikipedia.org/wiki/Missionary_journeys_of_Paul_the_Apostle#Second_missionary_journey',
+        wikiTitle: "Paul's Second Journey",
+      },
+      {
+        title: "Paul's Third Journey",
+        desc: 'Ephesus, Macedonia, Greece — strengthening the churches',
+        era: 'c. 53–57 AD',
+        emoji: '📜',
+        gradient: 'from-blue-700 to-indigo-900',
+        url: 'https://en.wikipedia.org/wiki/Missionary_journeys_of_Paul_the_Apostle#Third_missionary_journey',
+        wikiTitle: "Paul's Third Journey",
+      },
+      {
         title: 'Seven Churches of Revelation',
         desc: 'Ephesus, Smyrna, Pergamum, Thyatira, Sardis, Philadelphia, Laodicea',
         era: 'c. 95 AD',
-        emoji: '📜',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Seven_churches_of_asia.svg/1200px-Seven_churches_of_asia.svg.png',
+        emoji: '🕯️',
+        gradient: 'from-rose-700 to-rose-900',
+        url: 'https://en.wikipedia.org/wiki/Seven_churches_of_Asia',
+        wikiTitle: 'Seven Churches of Asia',
       },
       {
-        id: 'roman-empire',
         title: 'Roman Empire',
         desc: 'The world into which the early church was born',
         era: 'c. 100 AD',
         emoji: '🦅',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Roman_Empire_Trajan_117AD.png/1200px-Roman_Empire_Trajan_117AD.png',
+        gradient: 'from-red-700 to-red-900',
+        url: 'https://en.wikipedia.org/wiki/Roman_Empire',
+        wikiTitle: 'Roman Empire',
       },
     ],
   },
@@ -115,35 +153,85 @@ const MAP_CATEGORIES = [
     label: 'Jerusalem',
     maps: [
       {
-        id: 'jerusalem-david',
         title: "Jerusalem in David's Time",
         desc: "The City of David and the Ark's resting place",
         era: 'c. 1000 BC',
         emoji: '🏙️',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Jerusalem_solomon_temple.png/800px-Jerusalem_solomon_temple.png',
+        gradient: 'from-stone-600 to-stone-900',
+        url: 'https://en.wikipedia.org/wiki/City_of_David',
+        wikiTitle: 'City of David',
       },
       {
-        id: 'jerusalem-nt',
-        title: 'Jerusalem in Jesus\'s Time',
+        title: "Solomon's Temple",
+        desc: "The first Temple — the dwelling place of God's glory",
+        era: 'c. 957 BC',
+        emoji: '🏛️',
+        gradient: 'from-yellow-600 to-amber-900',
+        url: 'https://en.wikipedia.org/wiki/Solomon%27s_Temple',
+        wikiTitle: "Solomon's Temple",
+      },
+      {
+        title: "Jerusalem in Jesus's Time",
         desc: 'The Temple Mount, Golgotha, the Upper Room',
         era: 'c. 30 AD',
         emoji: '🕌',
-        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Jerusalem_30_AD_orthographic2.jpg/1200px-Jerusalem_30_AD_orthographic2.jpg',
+        gradient: 'from-amber-700 to-orange-900',
+        url: 'https://en.wikipedia.org/wiki/Jerusalem_in_the_time_of_Jesus',
+        wikiTitle: 'Jerusalem (1st century)',
+      },
+      {
+        title: 'Via Dolorosa',
+        desc: "The path Jesus walked carrying the cross",
+        era: 'c. 30 AD',
+        emoji: '†',
+        gradient: 'from-purple-800 to-purple-950',
+        url: 'https://en.wikipedia.org/wiki/Via_Dolorosa',
+        wikiTitle: 'Via Dolorosa',
+      },
+    ],
+  },
+  {
+    label: 'Interactive Resources',
+    maps: [
+      {
+        title: 'Bible Map (OpenBible)',
+        desc: 'Search for any person, place, or event from the Bible',
+        era: 'All eras',
+        emoji: '🔍',
+        gradient: 'from-primary/70 to-primary',
+        url: 'https://www.openbible.info/geo/',
+        wikiTitle: 'Open in OpenBible.info',
+      },
+      {
+        title: 'BibleMapper Atlas',
+        desc: 'High-resolution printable Bible atlas maps',
+        era: 'All eras',
+        emoji: '🗺️',
+        gradient: 'from-emerald-700 to-green-900',
+        url: 'https://biblemapper.com/blog/index.php/maps/',
+        wikiTitle: 'Open BibleMapper',
+      },
+      {
+        title: 'Bible History Maps',
+        desc: 'Extensive collection of Bible geography maps',
+        era: 'All eras',
+        emoji: '📍',
+        gradient: 'from-blue-700 to-blue-900',
+        url: 'https://www.bible-history.com/geography/',
+        wikiTitle: 'Open Bible-history.com',
       },
     ],
   },
 ]
 
 export default function MapsPage() {
-  const [activeMap, setActiveMap] = useState<{ url: string; title: string; desc: string; era: string } | null>(null)
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Map className="w-4.5 h-4.5 text-primary" />
+            <Map className="w-5 h-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
             Biblical Maps
@@ -154,48 +242,6 @@ export default function MapsPage() {
         </p>
       </div>
 
-      {/* Map viewer modal */}
-      {activeMap && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setActiveMap(null)}
-        >
-          <div
-            className="bg-card rounded-2xl overflow-hidden shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
-              <div>
-                <h2 className="font-semibold" style={{ fontFamily: 'system-ui' }}>{activeMap.title}</h2>
-                <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>
-                  {activeMap.desc} · {activeMap.era}
-                </p>
-              </div>
-              <button
-                onClick={() => setActiveMap(null)}
-                className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none ml-4 shrink-0"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto bg-muted/20 flex items-center justify-center p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={activeMap.url}
-                alt={activeMap.title}
-                className="max-w-full max-h-full object-contain rounded-lg"
-                style={{ fontFamily: 'system-ui' }}
-              />
-            </div>
-            <div className="px-5 py-3 border-t border-border shrink-0">
-              <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                Map images via Wikimedia Commons — public domain.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Map grid by category */}
       <div className="space-y-8">
         {MAP_CATEGORIES.map((cat) => (
@@ -205,26 +251,37 @@ export default function MapsPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {cat.maps.map((m) => (
-                <Card
-                  key={m.id}
-                  className="p-4 cursor-pointer hover:border-primary/40 transition-colors group"
-                  onClick={() => setActiveMap(m)}
+                <a
+                  key={m.title}
+                  href={m.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl shrink-0 mt-0.5">{m.emoji}</span>
-                    <div className="min-w-0">
+                  <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer">
+                    {/* Gradient banner */}
+                    <div className={`h-16 bg-gradient-to-br ${m.gradient} flex items-center justify-center relative`}>
+                      <span className="text-3xl">{m.emoji}</span>
+                      <div className="absolute inset-0 opacity-10"
+                        style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+                      />
+                      <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="w-3.5 h-3.5 text-white/70" />
+                      </span>
+                    </div>
+                    {/* Body */}
+                    <div className="p-3">
                       <p className="font-semibold text-sm group-hover:text-primary transition-colors" style={{ fontFamily: 'system-ui' }}>
                         {m.title}
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed" style={{ fontFamily: 'system-ui' }}>
                         {m.desc}
                       </p>
-                      <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
+                      <p className="text-[10px] text-muted-foreground/40 mt-1.5 font-mono">
                         {m.era}
                       </p>
                     </div>
-                  </div>
-                </Card>
+                  </Card>
+                </a>
               ))}
             </div>
           </div>
