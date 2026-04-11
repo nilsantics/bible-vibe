@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ReactMarkdown from 'react-markdown'
 import {
-  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap,
+  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap, Tag,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { HighlightColor } from '@/types'
@@ -58,13 +58,14 @@ const COLORS: { color: HighlightColor; hex: string }[] = [
   { color: 'purple', hex: '#c4b5fd' },
 ]
 
-type Tab = 'explain' | 'crossref' | 'words' | 'note'
+type Tab = 'explain' | 'crossref' | 'words' | 'note' | 'tags'
 
 const TABS = [
   { id: 'explain'  as Tab, label: 'Explain',   shortLabel: 'Explain',  icon: Sparkles  },
   { id: 'crossref' as Tab, label: 'Cross-refs', shortLabel: 'Refs',    icon: GitBranch },
   { id: 'words'    as Tab, label: "Strong's",  shortLabel: "Strong's", icon: Search    },
   { id: 'note'     as Tab, label: 'My Note',   shortLabel: 'Note',     icon: Pencil    },
+  { id: 'tags'     as Tab, label: 'Tags',      shortLabel: 'Tags',     icon: Tag       },
 ] as const
 
 function useStreamingContent(
@@ -157,6 +158,10 @@ export function VersePopup({
   const [chipEntry, setChipEntry] = useState<StrongsEntry | null>(null)
   const [chipEntryLoading, setChipEntryLoading] = useState(false)
 
+  const [tags, setTags] = useState<{ id: string; tag_name: string }[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [tagsLoaded, setTagsLoaded] = useState(false)
+
   const popupRef = useRef<HTMLDivElement>(null)
   const verseRef = `${bookName} ${verse.chapter_number}:${verse.verse_number}`
 
@@ -211,6 +216,34 @@ export function VersePopup({
         .catch(() => setOtNtConns([]))
     }
   }, [activeTab, verse.book_id, verse.chapter_number, verse.verse_number])
+
+  // Load tags when 'tags' tab opens
+  useEffect(() => {
+    if (activeTab !== 'tags' || tagsLoaded || !isAuthenticated) return
+    setTagsLoaded(true)
+    fetch(`/api/tags?verse_id=${verse.id}`)
+      .then((r) => r.json())
+      .then((d) => setTags(d.tags ?? []))
+      .catch(() => {})
+  }, [activeTab, tagsLoaded, isAuthenticated, verse.id])
+
+  async function addTag() {
+    const name = tagInput.trim().toLowerCase()
+    if (!name || !isAuthenticated) return
+    setTagInput('')
+    const res = await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verse_id: verse.id, tag_name: name }),
+    })
+    const d = await res.json()
+    if (d.tag) setTags((prev) => [...prev.filter((t) => t.id !== d.tag.id), d.tag])
+  }
+
+  async function removeTag(id: string) {
+    setTags((prev) => prev.filter((t) => t.id !== id))
+    await fetch(`/api/tags?id=${id}`, { method: 'DELETE' })
+  }
 
   // Close on outside click (desktop only — mobile has backdrop)
   useEffect(() => {
@@ -411,6 +444,11 @@ export function VersePopup({
               noteSaved={noteSaved}
               handleSaveNote={handleSaveNote}
               isAuthenticated={isAuthenticated}
+              tags={tags}
+              tagInput={tagInput}
+              setTagInput={setTagInput}
+              addTag={addTag}
+              removeTag={removeTag}
             />
           </div>
         </div>
@@ -529,6 +567,11 @@ export function VersePopup({
             noteSaved={noteSaved}
             handleSaveNote={handleSaveNote}
             isAuthenticated={isAuthenticated}
+            tags={tags}
+            tagInput={tagInput}
+            setTagInput={setTagInput}
+            addTag={addTag}
+            removeTag={removeTag}
           />
         </div>
       </div>
@@ -567,6 +610,11 @@ interface TabContentProps {
   noteSaved: boolean
   handleSaveNote: () => void
   isAuthenticated: boolean
+  tags: { id: string; tag_name: string }[]
+  tagInput: string
+  setTagInput: (v: string) => void
+  addTag: () => void
+  removeTag: (id: string) => void
 }
 
 function TabContent({
@@ -575,6 +623,7 @@ function TabContent({
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
   noteText, setNoteText, noteSaved, handleSaveNote, isAuthenticated,
+  tags, tagInput, setTagInput, addTag, removeTag,
 }: TabContentProps) {
   return (
     <>
@@ -875,6 +924,65 @@ function TabContent({
             <p className="text-xs text-muted-foreground text-center" style={{ fontFamily: 'system-ui' }}>
               <a href="/auth/login" className="text-primary hover:underline">Sign in</a> to save notes
             </p>
+          )}
+        </div>
+      )}
+
+      {/* Tags */}
+      {activeTab === 'tags' && (
+        <div className="px-4 py-3 space-y-3">
+          {!isAuthenticated ? (
+            <p className="text-xs text-muted-foreground text-center py-4" style={{ fontFamily: 'system-ui' }}>
+              <a href="/auth/login" className="text-primary hover:underline">Sign in</a> to tag verses
+            </p>
+          ) : (
+            <>
+              {/* Existing tags */}
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((t) => (
+                    <span
+                      key={t.id}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                      style={{ fontFamily: 'system-ui' }}
+                    >
+                      #{t.tag_name}
+                      <button
+                        onClick={() => removeTag(t.id)}
+                        className="ml-0.5 text-primary/60 hover:text-primary transition-colors"
+                        aria-label={`Remove tag ${t.tag_name}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                  No tags yet. Add one below.
+                </p>
+              )}
+
+              {/* Add tag input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="faith, promise, prayer…"
+                  className="h-8 text-xs"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }}
+                  style={{ fontFamily: 'system-ui' }}
+                  maxLength={40}
+                />
+                <Button size="sm" className="h-8 px-3 shrink-0 text-xs gap-1" onClick={addTag} disabled={!tagInput.trim()}>
+                  <Tag className="w-3 h-3" />
+                  Add
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                Tags help you find related verses across your study.
+              </p>
+            </>
           )}
         </div>
       )}

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BIBLE_BOOKS, OT_CATEGORIES, NT_CATEGORIES } from '@/lib/bible-data'
+import { isRedLetter } from '@/lib/red-letter-verses'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -109,6 +110,7 @@ export function BibleReader({
   const [lineSpacing, setLineSpacing] = useState<'tight' | 'normal' | 'relaxed' | 'loose'>('relaxed')
   const [viewMode, setViewMode] = useState<'paragraph' | 'verse'>('paragraph')
   const [typographyOpen, setTypographyOpen] = useState(false)
+  const [showRedLetter, setShowRedLetter] = useState(true)
   const readerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showVerseHint, setShowVerseHint] = useState(false)
@@ -139,10 +141,12 @@ export function BibleReader({
     const fs = localStorage.getItem('bv_font_size') as 'sm' | 'md' | 'lg' | null
     const sp = localStorage.getItem('bv_line_spacing') as 'tight' | 'normal' | 'relaxed' | 'loose' | null
     const vm = localStorage.getItem('bv_view_mode') as 'paragraph' | 'verse' | null
+    const rl = localStorage.getItem('bv_red_letter')
     if (ff) setFontFamily(ff)
     if (fs) setFontSize(fs)
     if (sp) setLineSpacing(sp)
     if (vm) setViewMode(vm)
+    if (rl !== null) setShowRedLetter(rl === '1')
   }, [])
 
   // Save last reading position
@@ -829,6 +833,20 @@ export function BibleReader({
                       ))}
                     </div>
                   </div>
+
+                  {/* RED LETTER */}
+                  <div className="flex items-center justify-between pt-1 border-t border-border">
+                    <div>
+                      <p className="text-xs font-medium">Red letter</p>
+                      <p className="text-[10px] text-muted-foreground">Words of Jesus in red</p>
+                    </div>
+                    <button
+                      onClick={() => { const v = !showRedLetter; setShowRedLetter(v); localStorage.setItem('bv_red_letter', v ? '1' : '0') }}
+                      className={`w-9 h-5 rounded-full transition-colors shrink-0 ${showRedLetter ? 'bg-primary' : 'bg-muted'}`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform mx-0.5 ${showRedLetter ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1097,6 +1115,7 @@ export function BibleReader({
                 const hlColor = highlights[verse.id]
                 const hasNote = !!notes[verse.id]
                 const hlClass = hlColor ? `hl-${hlColor}` : ''
+                const redLetter = showRedLetter && isRedLetter(verse.book_id, verse.chapter_number, verse.verse_number)
                 return (
                   <div
                     key={verse.id}
@@ -1107,7 +1126,7 @@ export function BibleReader({
                     <span className="shrink-0 w-5 text-right select-none" style={{ fontSize: '0.6rem', fontFamily: 'system-ui', fontWeight: 700, opacity: 0.3, paddingTop: '0.25em' }}>
                       {verse.verse_number}
                     </span>
-                    <p className="flex-1" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>
+                    <p className={`flex-1 ${redLetter ? 'text-red-600 dark:text-red-400' : ''}`} style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>
                       {verse.text}
                       {hasNote && <span className="inline-block w-1.5 h-1.5 bg-accent rounded-full ml-0.5 mb-0.5 align-middle" title="You have a note on this verse" />}
                     </p>
@@ -1122,6 +1141,7 @@ export function BibleReader({
               {verses.map((verse) => {
                 const hlColor = highlights[verse.id]
                 const hasNote = !!notes[verse.id]
+                const redLetter = showRedLetter && isRedLetter(verse.book_id, verse.chapter_number, verse.verse_number)
                 return (
                   <span key={verse.id} id={`verse-${verse.verse_number}`}>
                     <sup
@@ -1134,7 +1154,7 @@ export function BibleReader({
                     <span
                       className={`cursor-pointer transition-colors rounded ${hlColor ? `hl-${hlColor}` : ''} ${
                         selectedVerse?.id === verse.id ? 'bg-primary/10' : 'hover:bg-primary/5'
-                      }`}
+                      } ${redLetter ? 'text-red-600 dark:text-red-400' : ''}`}
                       onClick={(e) => handleVerseClick(verse, e as unknown as React.MouseEvent)}
                     >
                       {verse.text}
