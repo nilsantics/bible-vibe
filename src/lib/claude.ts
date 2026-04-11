@@ -212,10 +212,10 @@ export async function generateBookOverview(bookName: string, testament: string):
 
 Return ONLY a valid JSON object with this exact shape:
 {
-  "author": "Traditional/likely author and brief note on authorship debates",
-  "date_written": "Date range and era (e.g. 'c. 960–930 BC, Solomon's reign')",
-  "audience": "Original recipients and their situation",
-  "purpose": "One sentence: why was this book written?",
+  "author": "Name only + brief tradition note, max 8 words (e.g. 'Moses, traditionally; some dispute Deuteronomy')",
+  "date_written": "Short date + era, max 8 words (e.g. 'c. 960–930 BC, Solomon's reign')",
+  "audience": "Brief phrase only, max 8 words (e.g. 'Post-exilic Jews returning to Jerusalem')",
+  "purpose": "One concise sentence, max 20 words",
   "key_themes": ["Theme 1", "Theme 2", "Theme 3", "Theme 4", "Theme 5"],
   "outline": [
     { "range": "1:1–2:3", "title": "Section title" },
@@ -225,13 +225,14 @@ Return ONLY a valid JSON object with this exact shape:
     { "ref": "chapter:verse", "text": "The actual verse text (WEB translation)" },
     { "ref": "chapter:verse", "text": "Another key verse" }
   ],
-  "summary": "2-3 sentence overview of the book's content and theological significance"
+  "summary": "2 sentences max — what the book is about and why it matters theologically"
 }
 
 Rules:
+- author / date_written / audience: SHORT phrases, not full sentences
 - outline: 4-8 sections covering the whole book
 - key_verses: 3-5 of the most important/famous verses
-- key_themes: exactly 5 themes
+- key_themes: exactly 5 themes, 2-4 words each
 - Return ONLY the JSON, no markdown, no explanation`,
         },
       ],
