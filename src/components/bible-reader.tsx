@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { BookSidebar } from '@/components/book-sidebar'
+import { MobileBookDrawer } from '@/components/mobile-book-drawer'
 import { isRedLetter } from '@/lib/red-letter-verses'
 import { Button } from '@/components/ui/button'
 import {
@@ -594,6 +595,9 @@ export function BibleReader({
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
 
           <div className="px-4 py-2 flex items-center gap-1.5 flex-wrap">
+            <Suspense fallback={null}>
+              <MobileBookDrawer activeBookId={book.id} />
+            </Suspense>
             <PassageSearch currentBook={book} currentChapter={chapter} translation={translation} />
             <div className="ml-auto flex items-center gap-1.5">
             {/* Translation */}

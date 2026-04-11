@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { ChevronRight, BookOpen, User, Calendar, Users, Target, Sparkles } from 'lucide-react'
 import { generateBookOverview } from '@/lib/claude'
 import { BookSidebar } from '@/components/book-sidebar'
+import { MobileBookDrawer } from '@/components/mobile-book-drawer'
 
 interface Props {
   params: Promise<{ book: string }>
@@ -65,6 +66,14 @@ export default async function BookOverviewPage({ params }: Props) {
 
       <div className="flex-1 overflow-y-auto min-w-0">
       <div className="max-w-5xl mx-auto px-4 py-8">
+
+      {/* Mobile book nav — only visible on small screens */}
+      <div className="lg:hidden mb-4">
+        <Suspense fallback={null}>
+          <MobileBookDrawer activeBookId={bookMeta.id} label={bookMeta.name} />
+        </Suspense>
+      </div>
+
       {/* Back */}
       <Link
         href={`/dashboard/reading/${bookSlug}/1`}
