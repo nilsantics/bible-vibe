@@ -254,60 +254,37 @@ export default async function DashboardPage({
         {/* Left column — stats + quick start */}
         <div className="lg:col-span-2 space-y-5">
 
-          {/* Stats row */}
-          {user && (
-            <div className="grid grid-cols-3 gap-3">
-              {/* Streak */}
-              <Card className="p-4 text-center border-border">
-                <div className="text-2xl font-bold flex items-center justify-center gap-1">
-                  <span className={streak > 0 ? 'streak-fire' : ''}>🔥</span>
-                  <span style={{ fontFamily: 'system-ui' }}>{streak}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
-                  Day streak
-                </p>
-              </Card>
-
-              {/* XP + Level */}
-              <Card className="p-4 text-center border-border">
-                <div className="text-2xl font-bold" style={{ fontFamily: 'system-ui' }}>
-                  {totalXP.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
-                  XP &bull; {level.name}
-                </p>
-              </Card>
-
-              {/* Badges */}
-              <Card className="p-4 text-center border-border">
-                <div className="text-2xl font-bold flex items-center justify-center gap-1">
-                  <span>🏆</span>
-                  <span style={{ fontFamily: 'system-ui' }}>{badgeCount}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
-                  Badges earned
-                </p>
-              </Card>
-            </div>
-          )}
-
-          {/* XP Progress */}
+          {/* Stats + XP row */}
           {user && (
             <Card className="p-4 border-border">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>
-                  {level.name}
-                </p>
+              <div className="grid grid-cols-3 divide-x divide-border mb-3">
+                <div className="text-center pr-3">
+                  <div className="text-2xl font-bold flex items-center justify-center gap-1" style={{ fontFamily: 'system-ui' }}>
+                    <span className={streak > 0 ? 'streak-fire' : ''}>🔥</span>
+                    <span>{streak}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>Day streak</p>
+                </div>
+                <div className="text-center px-3">
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'system-ui' }}>
+                    {totalXP.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>XP · {level.name}</p>
+                </div>
+                <div className="text-center pl-3">
+                  <div className="text-2xl font-bold flex items-center justify-center gap-1" style={{ fontFamily: 'system-ui' }}>
+                    <span>🏆</span><span>{badgeCount}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>Badges</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{level.name}</p>
                 <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                   {xpProgress.xpInLevel.toLocaleString()} / {xpProgress.xpNeeded.toLocaleString()} XP
                 </p>
               </div>
-              <Progress value={xpProgress.progress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-1.5" style={{ fontFamily: 'system-ui' }}>
-                {xpProgress.progress < 100
-                  ? `${100 - xpProgress.progress}% to next level`
-                  : 'Max level reached!'}
-              </p>
+              <Progress value={xpProgress.progress} className="h-1.5" />
             </Card>
           )}
 
@@ -387,11 +364,11 @@ export default async function DashboardPage({
                   key={b.name}
                   href={`/dashboard/reading/${b.name.toLowerCase()}/${b.chapter}`}
                 >
-                  <Card className="p-3 border-border hover:border-primary/40 transition-colors h-full">
-                    <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                  <Card className="p-3 border-border hover:border-primary/40 hover:bg-primary/5 transition-all h-full group">
+                    <p className="text-sm font-semibold group-hover:text-primary transition-colors" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                       {b.name} {b.chapter}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug" style={{ fontFamily: 'system-ui' }}>
                       {b.desc}
                     </p>
                   </Card>
@@ -404,20 +381,35 @@ export default async function DashboardPage({
         {/* Right column — Browse all books */}
         <div className="space-y-5">
           <Card className="p-4 border-border">
-            <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
-              Browse all books
-            </h2>
-            <div className="space-y-0.5 max-h-72 overflow-y-auto">
-              {BIBLE_BOOKS.map((b) => (
-                <Link
-                  key={b.id}
-                  href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}
-                >
-                  <div className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-muted/60 transition-colors">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>
+                Bible
+              </h2>
+            </div>
+            {/* OT */}
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-1 px-2" style={{ fontFamily: 'system-ui' }}>
+              Old Testament
+            </p>
+            <div className="space-y-0 max-h-44 overflow-y-auto mb-3">
+              {BIBLE_BOOKS.filter(b => b.id <= 39).map((b) => (
+                <Link key={b.id} href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}>
+                  <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors">
                     <span className="text-xs" style={{ fontFamily: 'system-ui' }}>{b.name}</span>
-                    <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                      {b.chapters}ch
-                    </span>
+                    <span className="text-[10px] text-muted-foreground/60" style={{ fontFamily: 'system-ui' }}>{b.chapters}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {/* NT */}
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mb-1 px-2" style={{ fontFamily: 'system-ui' }}>
+              New Testament
+            </p>
+            <div className="space-y-0 max-h-44 overflow-y-auto">
+              {BIBLE_BOOKS.filter(b => b.id >= 40).map((b) => (
+                <Link key={b.id} href={`/dashboard/reading/${b.name.toLowerCase().replace(/\s+/g, '-')}/1`}>
+                  <div className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-muted/60 transition-colors">
+                    <span className="text-xs" style={{ fontFamily: 'system-ui' }}>{b.name}</span>
+                    <span className="text-[10px] text-muted-foreground/60" style={{ fontFamily: 'system-ui' }}>{b.chapters}</span>
                   </div>
                 </Link>
               ))}

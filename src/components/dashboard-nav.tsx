@@ -138,20 +138,14 @@ export function DashboardNav({ user, streak, isPro }: Props) {
 
           {/* Study dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant={isStudy ? 'secondary' : 'ghost'}
-                size="sm"
-                className="gap-1 text-sm font-medium"
-              >
-                Study
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </Button>
+            <DropdownMenuTrigger className={`inline-flex items-center gap-1 rounded-md px-3 h-8 text-sm font-medium transition-colors outline-none ${isStudy ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
+              Study
+              <ChevronDown className="w-3 h-3 opacity-60" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56 p-1">
               {STUDY_ITEMS.map(({ href, label, icon: Icon, desc }) => (
-                <DropdownMenuItem key={href} asChild>
-                  <Link href={href} className="flex items-start gap-3 px-2 py-2 rounded-md cursor-pointer">
+                <DropdownMenuItem key={href} className="cursor-pointer" onClick={() => router.push(href)}>
+                  <div className="flex items-start gap-3 px-1 py-1">
                     <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
                       <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
@@ -159,7 +153,7 @@ export function DashboardNav({ user, streak, isPro }: Props) {
                       <p className="text-sm font-medium leading-tight" style={{ fontFamily: 'system-ui' }}>{label}</p>
                       <p className="text-xs text-muted-foreground leading-tight mt-0.5" style={{ fontFamily: 'system-ui' }}>{desc}</p>
                     </div>
-                  </Link>
+                  </div>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -167,20 +161,14 @@ export function DashboardNav({ user, streak, isPro }: Props) {
 
           {/* Library dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant={isLibrary ? 'secondary' : 'ghost'}
-                size="sm"
-                className="gap-1 text-sm font-medium"
-              >
-                Library
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </Button>
+            <DropdownMenuTrigger className={`inline-flex items-center gap-1 rounded-md px-3 h-8 text-sm font-medium transition-colors outline-none ${isLibrary ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
+              Library
+              <ChevronDown className="w-3 h-3 opacity-60" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56 p-1">
               {LIBRARY_ITEMS.map(({ href, label, icon: Icon, desc }) => (
-                <DropdownMenuItem key={href} asChild>
-                  <Link href={href} className="flex items-start gap-3 px-2 py-2 rounded-md cursor-pointer">
+                <DropdownMenuItem key={href} className="cursor-pointer" onClick={() => router.push(href)}>
+                  <div className="flex items-start gap-3 px-1 py-1">
                     <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
                       <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
@@ -188,18 +176,16 @@ export function DashboardNav({ user, streak, isPro }: Props) {
                       <p className="text-sm font-medium leading-tight" style={{ fontFamily: 'system-ui' }}>{label}</p>
                       <p className="text-xs text-muted-foreground leading-tight mt-0.5" style={{ fontFamily: 'system-ui' }}>{desc}</p>
                     </div>
-                  </Link>
+                  </div>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
               {!isPro && (
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/upgrade" className="flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer">
-                    <Zap className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-sm font-medium text-primary" style={{ fontFamily: 'system-ui' }}>
-                      Start Free Trial
-                    </span>
-                  </Link>
+                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => router.push('/dashboard/upgrade')}>
+                  <Zap className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm font-medium text-primary" style={{ fontFamily: 'system-ui' }}>
+                    Start Free Trial
+                  </span>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

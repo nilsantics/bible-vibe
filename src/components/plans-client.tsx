@@ -5,10 +5,17 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Play, Trash2, BookOpen, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { Trash2, BookOpen, ChevronRight, CheckCircle2, Play } from 'lucide-react'
 import { PLAN_TEMPLATES, getTodayAssignment, type PlanTemplate } from '@/lib/reading-plans'
+
+// Gradient palette per plan
+const PLAN_GRADIENTS: Record<string, string> = {
+  'bible-in-a-year':  'linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #3730a3 100%)',
+  'nt-in-90-days':    'linear-gradient(135deg, #c2813a 0%, #a0522d 50%, #7c3f1e 100%)',
+  'psalms-proverbs':  'linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%)',
+  'gospels':          'linear-gradient(135deg, #0891b2 0%, #0e7490 50%, #164e63 100%)',
+}
 
 interface ActivePlan {
   id: string
@@ -135,7 +142,7 @@ export function PlansClient({ templates, activePlans: initialPlans }: Props) {
                         <span className="font-medium text-sm" style={{ fontFamily: 'system-ui' }}>
                           {plan.name}
                         </span>
-                        <Badge variant="secondary" className="text-xs">Day {elapsed + 1}</Badge>
+                        <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full" style={{ fontFamily: 'system-ui' }}>Day {elapsed + 1}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: 'system-ui' }}>
                         {elapsed} of {total} days • {progress}% complete
@@ -189,40 +196,46 @@ export function PlansClient({ templates, activePlans: initialPlans }: Props) {
         <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
           {activePlans.length > 0 ? 'Add Another Plan' : 'Choose a Plan'}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {templates.map((template) => {
             const isActive = activePlans.some((p) => p.plan_type === template.id)
+            const gradient = PLAN_GRADIENTS[template.id] ?? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
             return (
-              <Card key={template.id} className={`p-4 ${isActive ? 'opacity-60' : 'hover:border-primary/40'} transition-colors`}>
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">{template.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm mb-1" style={{ fontFamily: 'system-ui' }}>
-                      {template.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-3" style={{ fontFamily: 'system-ui' }}>
-                      {template.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {template.durationDays} days
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        ~{template.chaptersPerDay} ch/day
-                      </Badge>
-                    </div>
+              <Card key={template.id} className={`overflow-hidden border-border ${isActive ? 'opacity-60' : 'hover:border-primary/40'} transition-colors`}>
+                {/* Gradient cover banner */}
+                <div className="relative h-20 flex items-end px-4 pb-3" style={{ background: gradient }}>
+                  <div className="absolute inset-0 opacity-10"
+                    style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '30px 30px' }}
+                  />
+                  <span className="text-3xl relative z-10">{template.icon}</span>
+                  <div className="ml-auto flex items-center gap-1.5 relative z-10">
+                    <span className="text-xs text-white/80 bg-white/20 px-2 py-0.5 rounded-full" style={{ fontFamily: 'system-ui' }}>
+                      {template.durationDays} days
+                    </span>
+                    <span className="text-xs text-white/80 bg-white/20 px-2 py-0.5 rounded-full" style={{ fontFamily: 'system-ui' }}>
+                      ~{template.chaptersPerDay} ch/day
+                    </span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  className="w-full mt-3 gap-1.5 text-xs"
-                  variant={isActive ? 'secondary' : 'default'}
-                  disabled={isActive || starting === template.id}
-                  onClick={() => !isActive && startPlan(template)}
-                >
-                  <Play className="w-3 h-3" />
-                  {isActive ? 'Already active' : starting === template.id ? 'Starting…' : 'Start plan'}
-                </Button>
+                {/* Body */}
+                <div className="p-4">
+                  <p className="font-semibold text-sm mb-1" style={{ fontFamily: 'system-ui' }}>
+                    {template.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-4 leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                    {template.description}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full gap-1.5 text-xs"
+                    variant={isActive ? 'secondary' : 'default'}
+                    disabled={isActive || starting === template.id}
+                    onClick={() => !isActive && startPlan(template)}
+                  >
+                    <Play className="w-3 h-3" />
+                    {isActive ? 'Already active' : starting === template.id ? 'Starting…' : 'Start plan'}
+                  </Button>
+                </div>
               </Card>
             )
           })}
