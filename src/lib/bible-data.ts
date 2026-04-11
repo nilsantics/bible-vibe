@@ -74,6 +74,23 @@ export const BIBLE_BOOKS = [
 
 export type BookName = (typeof BIBLE_BOOKS)[number]['name']
 
+// Book category groupings for the sidebar
+export const OT_CATEGORIES = [
+  { label: 'Pentateuch',      ids: [1, 2, 3, 4, 5] },
+  { label: 'Historical',      ids: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] },
+  { label: 'Wisdom & Poetry', ids: [18, 19, 20, 21, 22] },
+  { label: 'Major Prophets',  ids: [23, 24, 25, 26, 27] },
+  { label: 'Minor Prophets',  ids: [28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39] },
+] as const
+
+export const NT_CATEGORIES = [
+  { label: 'Gospels',         ids: [40, 41, 42, 43] },
+  { label: 'Acts',            ids: [44] },
+  { label: "Paul's Letters",  ids: [45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57] },
+  { label: 'General Letters', ids: [58, 59, 60, 61, 62, 63, 64, 65] },
+  { label: 'Prophecy',        ids: [66] },
+] as const
+
 export function getBookById(id: number) {
   return BIBLE_BOOKS.find((b) => b.id === id)
 }
