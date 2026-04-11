@@ -1,13 +1,16 @@
 import { NextRequest } from 'next/server'
 import { BIBLE_STUDY_SYSTEM_PROMPT, CLAUDE_MODEL } from '@/lib/claude'
+import { getTraditionPrompt, type TraditionId } from '@/lib/tradition'
 
 export const runtime = 'edge'
 
 export async function POST(request: NextRequest) {
-  const { verseRef, verseText, translation } = await request.json()
+  const { verseRef, verseText, translation, tradition } = await request.json()
   if (!verseRef || !verseText) {
     return new Response(JSON.stringify({ error: 'verseRef and verseText required' }), { status: 400 })
   }
+
+  const traditionSuffix = tradition ? getTraditionPrompt(tradition as TraditionId) : ''
 
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
@@ -27,7 +30,7 @@ Provide:
 3. **Key word insight** (1 sentence, only if there's a meaningful Hebrew/Greek word)
 4. **Theological significance** (1-2 sentences)
 
-Use markdown. Keep under 250 words.`,
+Use markdown. Keep under 250 words.${traditionSuffix}`,
       },
     ],
   })

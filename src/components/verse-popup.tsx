@@ -13,6 +13,7 @@ import type { HighlightColor } from '@/types'
 import type { CrossRefResult } from '@/app/api/crossref/route'
 import type { TaggedWord } from '@/app/api/strongs-verse/route'
 import type { OtNtConnection } from '@/app/api/ot-nt-connections/route'
+import { TraditionPicker, useTradition } from '@/components/tradition-picker'
 
 interface Verse {
   id: number
@@ -128,6 +129,7 @@ export function VersePopup({
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('explain')
   const [explainTriggered, setExplainTriggered] = useState(false)
+  const { tradition } = useTradition()
   const [noteText, setNoteText] = useState(currentNote)
   const [noteSaved, setNoteSaved] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -172,7 +174,7 @@ export function VersePopup({
 
   const { text: explanation, loading: loadingExplain } = useStreamingContent(
     explainTriggered, '/api/explain',
-    { verseRef, verseText: verse.text, translation }
+    { verseRef, verseText: verse.text, translation, tradition }
   )
 
   // Pre-load verse word tagging on mount so words are ready to click immediately
@@ -577,6 +579,7 @@ export function VersePopup({
             <p className="text-[11px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
           </div>
           <div className="flex items-center gap-0.5">
+            <TraditionPicker compact onChange={() => setExplainTriggered(false)} />
             <Button variant="ghost" size="icon" className="w-7 h-7" onClick={copyVerse} title="Copy verse">
               {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>

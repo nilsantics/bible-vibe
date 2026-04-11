@@ -61,7 +61,7 @@ const LIBRARY_ITEMS = [
   { href: '/dashboard/quiz',           label: 'Bible Quiz',      icon: HelpCircle,      desc: 'Test your knowledge' },
   { href: '/dashboard/aleph-bet',      label: 'Hebrew Alphabet', icon: Languages,       desc: 'Learn the Aleph-Bet' },
   { href: '/dashboard/notes',          label: 'My Notes',        icon: FileText,        desc: 'All your study notes' },
-  { href: '/dashboard/maps',           label: 'Biblical Maps',   icon: Map,             desc: 'Geography of Scripture' },
+  { href: '/dashboard/maps',           label: 'Visualizations',  icon: Map,             desc: 'Timelines, maps & lineages' },
   { href: '/dashboard/topics',         label: 'Topics',          icon: BookMarked,      desc: 'Browse by theme' },
   { href: '/dashboard/church-fathers', label: 'Church Fathers',  icon: GraduationCap,   desc: 'Early church writings' },
 ]
