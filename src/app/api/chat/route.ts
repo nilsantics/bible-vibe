@@ -22,16 +22,25 @@ export async function POST(request: NextRequest) {
   const rate = await checkChatRateLimit(user.id)
   if (!rate.allowed) return errorResponse(rate.message!, 429)
 
-  const { messages, currentPassage, depth } = await request.json()
+  const { messages, currentPassage, depth, focusArea } = await request.json()
 
   if (!messages || !Array.isArray(messages)) {
     return errorResponse('messages array required', 400)
   }
 
   const systemPrompt = getSystemPromptForDepth(depth ?? 'standard')
-  const systemAddendum = currentPassage
-    ? `\n\nThe user is currently reading: ${currentPassage}. Reference this passage when relevant.`
-    : ''
+
+  const focusAddendum: Record<string, string> = {
+    'cross-refs':     'Focus specifically on cross-references and parallel passages — how this text connects to other parts of Scripture.',
+    'original-lang':  'Focus on the original Hebrew or Greek words, their meanings, roots, and what the original language reveals.',
+    'theology':       'Focus on the theological themes — what this passage teaches about God, salvation, humanity, or the Church.',
+    'context':        'Focus on historical, cultural, and literary context — author, audience, occasion, and setting.',
+    'church-history': 'Focus on how Church Fathers, Reformers, and historic Christian tradition have interpreted this passage.',
+  }
+
+  const systemAddendum =
+    (currentPassage ? `\n\nThe user is currently reading: ${currentPassage}. Reference this passage when relevant.` : '') +
+    (focusArea && focusAddendum[focusArea] ? `\n\n${focusAddendum[focusArea]}` : '')
 
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })

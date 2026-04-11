@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import ReactMarkdown from 'react-markdown'
-import { X, Send, RotateCcw, Lock, Zap } from 'lucide-react'
+import { X, Send, RotateCcw, Lock, Zap, GitBranch, Languages, BookOpen, Church, Scroll } from 'lucide-react'
 import type { StudyDepth } from '@/lib/claude'
 
 interface Message {
@@ -14,10 +14,35 @@ interface Message {
   content: string
 }
 
+type FocusArea = 'all' | 'cross-refs' | 'original-lang' | 'theology' | 'context' | 'church-history'
+
 const DEPTH_OPTIONS: { value: StudyDepth; label: string; emoji: string; hint: string; pro: boolean }[] = [
-  { value: 'simple',   label: 'Simple',   emoji: '🌱', hint: 'Plain English, no jargon',              pro: false },
-  { value: 'standard', label: 'Standard', emoji: '📖', hint: 'Context + meaning',                     pro: false },
-  { value: 'scholar',  label: 'Scholar',  emoji: '🎓', hint: 'Deep dive, original languages',         pro: true  },
+  { value: 'simple',   label: 'Simple',   emoji: '🌱', hint: 'Plain English, no jargon',      pro: false },
+  { value: 'standard', label: 'Standard', emoji: '📖', hint: 'Context + meaning',             pro: false },
+  { value: 'scholar',  label: 'Scholar',  emoji: '🎓', hint: 'Deep dive, original languages', pro: true  },
+]
+
+const FOCUS_OPTIONS: { value: FocusArea; label: string; icon: React.ElementType }[] = [
+  { value: 'all',           label: 'All',           icon: Scroll     },
+  { value: 'cross-refs',    label: 'Cross-refs',    icon: GitBranch  },
+  { value: 'original-lang', label: 'Orig. Language',icon: Languages  },
+  { value: 'theology',      label: 'Theology',      icon: BookOpen   },
+  { value: 'context',       label: 'Context',       icon: Scroll     },
+  { value: 'church-history',label: 'Church History',icon: Church     },
+]
+
+const QUICK_ACTIONS = [
+  'Explain this chapter',
+  'What are the key themes?',
+  'Historical context',
+  'How does this connect to Jesus?',
+]
+
+const SCHOLAR_QUICK_ACTIONS = [
+  'What do the original words reveal?',
+  'How have theologians interpreted this?',
+  'OT/NT connections in this passage',
+  'What textual variants exist?',
 ]
 
 const STARTER_QUESTIONS_BY_DEPTH: Record<StudyDepth, string[]> = {
@@ -62,6 +87,7 @@ export function ChatPanel({
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [depth, setDepth] = useState<StudyDepth>('standard')
+  const [focusArea, setFocusArea] = useState<FocusArea>('all')
   const [followUps, setFollowUps] = useState<string[]>([])
   const [remaining, setRemaining] = useState<number | null>(null)
   const [showScholarGate, setShowScholarGate] = useState(false)
@@ -89,28 +115,29 @@ export function ChatPanel({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages, currentPassage, depth }),
+        body: JSON.stringify({
+          messages: newMessages,
+          currentPassage,
+          depth,
+          focusArea: focusArea === 'all' ? undefined : focusArea,
+        }),
       })
 
-      if (res.status === 401) {
-        throw new Error('Please sign in to chat with Ezra.')
-      }
+      if (res.status === 401) throw new Error('Please sign in to chat with Ezra.')
       if (res.status === 429) {
         setRateLimitHit(true)
-        setMessages(newMessages) // remove empty assistant bubble
+        setMessages(newMessages)
         setStreaming(false)
         track('rate_limit_hit', { passage: currentPassage })
         return
       }
       if (!res.ok) throw new Error('Chat request failed — please try again.')
 
-      // Track remaining from header
       const rem = res.headers.get('X-RateLimit-Remaining')
       if (rem !== null) setRemaining(parseInt(rem, 10))
 
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
-
       while (reader) {
         const { done, value } = await reader.read()
         if (done) break
@@ -119,10 +146,7 @@ export function ChatPanel({
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Sorry, something went wrong. Please try again.'
-      setMessages([
-        ...newMessages,
-        { role: 'assistant', content: msg },
-      ])
+      setMessages([...newMessages, { role: 'assistant', content: msg }])
     } finally {
       setStreaming(false)
       if (assistantContent) fetchFollowUps(content, assistantContent)
@@ -139,7 +163,7 @@ export function ChatPanel({
       const data = await res.json()
       if (data.questions?.length) setFollowUps(data.questions)
     } catch {
-      // silently skip — follow-up chips are a nice-to-have
+      // silently skip
     }
   }
 
@@ -165,6 +189,8 @@ export function ChatPanel({
   }
 
   const depthConfig = DEPTH_OPTIONS.find((d) => d.value === depth)!
+  const quickActions = depth === 'scholar' ? SCHOLAR_QUICK_ACTIONS : QUICK_ACTIONS
+  const bookName = currentPassage.split(' ').slice(0, -1).join(' ') || currentPassage
 
   return (
     <div className="fixed right-0 top-13 bottom-16 sm:bottom-0 w-full sm:w-84 bg-card border-l border-border flex flex-col z-30 shadow-xl">
@@ -172,19 +198,12 @@ export function ChatPanel({
       <div className="px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            {/* Ezra avatar */}
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 shadow-sm">
-              <span className="text-primary-foreground font-bold text-sm" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-                E
-              </span>
+              <span className="text-primary-foreground font-bold text-sm" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>E</span>
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight" style={{ fontFamily: 'system-ui' }}>
-                Ezra
-              </p>
-              <p className="text-xs text-muted-foreground leading-tight" style={{ fontFamily: 'system-ui' }}>
-                {currentPassage}
-              </p>
+              <p className="text-sm font-semibold leading-tight" style={{ fontFamily: 'system-ui' }}>Ezra</p>
+              <p className="text-xs text-muted-foreground leading-tight" style={{ fontFamily: 'system-ui' }}>{currentPassage}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -194,10 +213,7 @@ export function ChatPanel({
               </span>
             )}
             {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7"
+              <Button variant="ghost" size="icon" className="w-7 h-7"
                 onClick={() => { setMessages([]); setFollowUps([]); setRateLimitHit(false) }}
                 title="Clear chat"
               >
@@ -232,7 +248,7 @@ export function ChatPanel({
         </div>
       </div>
 
-      {/* Scholar gate prompt */}
+      {/* Scholar gate */}
       {showScholarGate && (
         <div className="mx-4 mt-3 bg-primary/5 border border-primary/20 rounded-xl p-3 shrink-0">
           <div className="flex items-start gap-2.5">
@@ -240,16 +256,13 @@ export function ChatPanel({
               <Zap className="w-3 h-3 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>
-                Scholar mode is Pro
-              </p>
+              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>Scholar mode is Pro</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed mb-2" style={{ fontFamily: 'system-ui' }}>
                 Deep dives into original languages, theology, and ANE context.
               </p>
               <Link href="/dashboard/upgrade">
                 <Button size="sm" className="h-6 text-[11px] px-3 gap-1">
-                  <Zap className="w-3 h-3" />
-                  Upgrade to Pro
+                  <Zap className="w-3 h-3" /> Start Free Trial
                 </Button>
               </Link>
             </div>
@@ -260,7 +273,7 @@ export function ChatPanel({
         </div>
       )}
 
-      {/* Rate limit hit banner */}
+      {/* Rate limit banner */}
       {rateLimitHit && (
         <div className="mx-4 mt-3 bg-amber-500/10 border border-amber-500/25 rounded-xl p-3 shrink-0">
           <div className="flex items-start gap-2.5">
@@ -268,16 +281,13 @@ export function ChatPanel({
               <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>
-                Daily limit reached
-              </p>
+              <p className="text-xs font-semibold text-foreground mb-0.5" style={{ fontFamily: 'system-ui' }}>Daily limit reached</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed mb-2" style={{ fontFamily: 'system-ui' }}>
-                You&apos;ve used all {FREE_DAILY_LIMIT} free messages today. Upgrade for unlimited conversations.
+                You&apos;ve used all {FREE_DAILY_LIMIT} free messages today.
               </p>
               <Link href="/dashboard/upgrade">
                 <Button size="sm" className="h-6 text-[11px] px-3 gap-1">
-                  <Zap className="w-3 h-3" />
-                  Upgrade to Pro
+                  <Zap className="w-3 h-3" /> Start Free Trial
                 </Button>
               </Link>
             </div>
@@ -289,7 +299,7 @@ export function ChatPanel({
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
           <div className="space-y-4">
-            {/* Intro message from Ezra */}
+            {/* Intro */}
             <div className="flex gap-2.5">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-primary-foreground font-bold text-xs" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>E</span>
@@ -301,10 +311,29 @@ export function ChatPanel({
               </div>
             </div>
 
+            {/* Quick action chips — context-aware */}
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-2" style={{ fontFamily: 'system-ui' }}>
+                Continue studying {bookName}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {quickActions.map((q) => (
+                  <button
+                    key={q}
+                    className="text-left text-xs bg-secondary/40 hover:bg-secondary/80 rounded-xl px-3 py-2 transition-colors border border-border/50 hover:border-primary/30 leading-tight"
+                    style={{ fontFamily: 'system-ui' }}
+                    onClick={() => sendMessage(q + (currentPassage ? ` (${currentPassage})` : ''))}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Starter questions */}
             <div className="space-y-1.5">
-              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                Try one of these:
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold" style={{ fontFamily: 'system-ui' }}>
+                Or try:
               </p>
               {STARTER_QUESTIONS_BY_DEPTH[depth].map((q) => (
                 <button
@@ -328,16 +357,13 @@ export function ChatPanel({
                   </div>
                 )}
                 {msg.role === 'user' ? (
-                  <div
-                    className="bg-primary text-primary-foreground text-xs rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%]"
-                    style={{ fontFamily: 'system-ui' }}
-                  >
+                  <div className="bg-primary text-primary-foreground text-xs rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%]" style={{ fontFamily: 'system-ui' }}>
                     {msg.content}
                   </div>
                 ) : (
                   <div className="max-w-[90%]">
                     {msg.content === '' && streaming ? (
-                      <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2 space-y-1.5">
+                      <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-2">
                         <div className="flex gap-1 items-center py-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
                           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -355,17 +381,16 @@ export function ChatPanel({
                 )}
               </div>
             ))}
+
             {/* Follow-up chips */}
-            {!streaming && followUps.length > 0 && messages.length > 0 && (
+            {!streaming && followUps.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-xs text-muted-foreground pl-8" style={{ fontFamily: 'system-ui' }}>
-                  Follow up:
-                </p>
+                <p className="text-xs text-muted-foreground pl-8" style={{ fontFamily: 'system-ui' }}>Follow up:</p>
                 {followUps.map((q) => (
                   <button
                     key={q}
                     onClick={() => { setFollowUps([]); sendMessage(q) }}
-                    className="w-full text-left text-xs bg-secondary/40 hover:bg-secondary/80 rounded-xl px-3 py-2 transition-colors border border-border/50 hover:border-primary/30 ml-8"
+                    className="w-full text-left text-xs bg-secondary/40 hover:bg-secondary/80 rounded-xl px-3 py-2 transition-colors border border-border/50 hover:border-primary/30"
                     style={{ fontFamily: 'system-ui', marginLeft: '2rem', width: 'calc(100% - 2rem)' }}
                   >
                     {q}
@@ -373,17 +398,37 @@ export function ChatPanel({
                 ))}
               </div>
             )}
-
             <div ref={bottomRef} />
           </div>
         )}
+      </div>
+
+      {/* Source focus chips */}
+      <div className="px-4 pt-2 pb-1 shrink-0 border-t border-border/50">
+        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+          {FOCUS_OPTIONS.map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              onClick={() => setFocusArea(value)}
+              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border whitespace-nowrap transition-colors shrink-0 ${
+                focusArea === value
+                  ? 'bg-primary text-primary-foreground border-primary font-medium'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
+              }`}
+              style={{ fontFamily: 'system-ui' }}
+            >
+              <Icon className="w-2.5 h-2.5" />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Input */}
       <div className="border-t border-border p-3 shrink-0">
         <div className="flex gap-2">
           <Textarea
-            placeholder={`Ask Ezra anything…`}
+            placeholder="Ask Ezra anything…"
             className="text-sm resize-none min-h-10 max-h-28 border-border bg-muted/40 rounded-xl"
             rows={1}
             value={input}
@@ -400,13 +445,10 @@ export function ChatPanel({
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p
-          className="text-xs text-muted-foreground text-center mt-1.5"
-          style={{ fontFamily: 'system-ui' }}
-        >
+        <p className="text-xs text-muted-foreground text-center mt-1.5" style={{ fontFamily: 'system-ui' }}>
           {depthConfig.emoji} {depthConfig.hint}
           {!isPro && remaining !== null && remaining <= 5 && remaining > 0 && (
-            <span className="text-amber-600 dark:text-amber-400 ml-2">· {remaining} msg{remaining === 1 ? '' : 's'} left today</span>
+            <span className="text-amber-600 dark:text-amber-400 ml-2">· {remaining} msg{remaining === 1 ? '' : 's'} left</span>
           )}
         </p>
       </div>

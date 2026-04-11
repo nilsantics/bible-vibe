@@ -117,13 +117,20 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
   const prevChapter = chapter > 1 ? chapter - 1 : null
   const nextChapter = chapter < bookMeta.chapters ? chapter + 1 : null
 
-  // Find prev/next book for chapter boundary navigation
   const prevBook = chapter === 1
     ? BIBLE_BOOKS.find((b) => b.order === bookMeta.order - 1)
     : null
   const nextBook = chapter === bookMeta.chapters
     ? BIBLE_BOOKS.find((b) => b.order === bookMeta.order + 1)
     : null
+
+  // Fetch chapter overview (may be null if not yet generated)
+  const { data: chapterOverview } = await supabase
+    .from('chapter_overviews')
+    .select('summary, key_ideas, connections')
+    .eq('book_id', bookMeta.id)
+    .eq('chapter_number', chapter)
+    .single()
 
   return (
     <BibleReader
@@ -140,6 +147,7 @@ export default async function ReadingPage({ params, searchParams }: PageProps) {
       nextChapter={nextChapter}
       prevBook={prevBook ?? null}
       nextBook={nextBook ?? null}
+      chapterOverview={chapterOverview ?? null}
     />
   )
 }

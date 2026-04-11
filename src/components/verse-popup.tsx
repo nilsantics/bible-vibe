@@ -12,6 +12,7 @@ import Link from 'next/link'
 import type { HighlightColor } from '@/types'
 import type { CrossRefResult } from '@/app/api/crossref/route'
 import type { TaggedWord } from '@/app/api/strongs-verse/route'
+import type { OtNtConnection } from '@/app/api/ot-nt-connections/route'
 
 interface Verse {
   id: number
@@ -142,6 +143,9 @@ export function VersePopup({
   const [loadingCrossRefs, setLoadingCrossRefs] = useState(false)
   const crossRefFetched = useRef(false)
 
+  const [otNtConns, setOtNtConns] = useState<OtNtConnection[] | null>(null)
+  const otNtFetched = useRef(false)
+
   const [wordQuery, setWordQuery] = useState('')
   const [wordResults, setWordResults] = useState<StrongsEntry[]>([])
   const [wordLoading, setWordLoading] = useState(false)
@@ -198,6 +202,14 @@ export function VersePopup({
       .then((d) => setCrossRefs(d.crossRefs ?? []))
       .catch(() => setCrossRefs([]))
       .finally(() => setLoadingCrossRefs(false))
+
+    if (!otNtFetched.current) {
+      otNtFetched.current = true
+      fetch(`/api/ot-nt-connections?book_id=${verse.book_id}&chapter=${verse.chapter_number}&verse=${verse.verse_number}`)
+        .then((r) => r.json())
+        .then((d) => setOtNtConns(d.connections ?? []))
+        .catch(() => setOtNtConns([]))
+    }
   }, [activeTab, verse.book_id, verse.chapter_number, verse.verse_number])
 
   // Close on outside click (desktop only — mobile has backdrop)
@@ -275,32 +287,32 @@ export function VersePopup({
       <>
         {/* Backdrop */}
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
           onClick={onClose}
         />
 
         {/* Sheet */}
         <div
           ref={popupRef}
-          className="fixed bottom-16 left-0 right-0 z-50 bg-card rounded-t-2xl shadow-2xl border-t border-border flex flex-col overflow-hidden"
-          style={{ maxHeight: 'calc(85dvh - 4rem)' }}
+          className="fixed bottom-16 left-0 right-0 z-50 bg-card rounded-t-3xl shadow-2xl border-t border-border/60 flex flex-col overflow-hidden"
+          style={{ maxHeight: 'calc(88dvh - 4rem)' }}
         >
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1 shrink-0">
-            <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+          <div className="flex justify-center pt-3 pb-2 shrink-0">
+            <div className="w-9 h-1 rounded-full bg-muted-foreground/25" />
           </div>
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-2 shrink-0">
+          {/* Verse reference + actions */}
+          <div className="flex items-center justify-between px-4 pb-1 shrink-0">
             <div>
-              <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>{verseRef}</p>
-              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
+              <p className="text-sm font-semibold tracking-tight" style={{ fontFamily: 'system-ui' }}>{verseRef}</p>
+              <p className="text-[11px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
             </div>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={copyVerse} title="Copy verse">
+            <div className="flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={copyVerse} title="Copy">
                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={shareVerse} title="Share verse">
+              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={shareVerse} title="Share">
                 <Share2 className="w-4 h-4" />
               </Button>
               {isAuthenticated && (
@@ -315,18 +327,17 @@ export function VersePopup({
           </div>
 
           {/* Verse text */}
-          <div className="px-4 pb-3 shrink-0">
+          <div className="px-4 py-2.5 mx-4 mb-1 shrink-0 bg-muted/40 rounded-xl">
             <p className="bible-text text-sm leading-relaxed text-foreground">{verse.text}</p>
           </div>
 
           {/* Highlight row */}
-          <div className="px-4 pb-3 flex items-center gap-3 shrink-0">
-            <span className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>Highlight:</span>
+          <div className="px-4 py-2 flex items-center gap-2.5 shrink-0">
             {COLORS.map(({ color, hex }) => (
               <button
                 key={color}
-                className={`w-6 h-6 rounded-full transition-transform active:scale-95 ${
-                  currentHighlight === color ? 'ring-2 ring-offset-1 ring-foreground/40 scale-110' : ''
+                className={`w-6 h-6 rounded-full transition-all active:scale-90 ${
+                  currentHighlight === color ? 'ring-2 ring-offset-1 ring-foreground/40 scale-110' : 'hover:scale-110'
                 }`}
                 style={{ backgroundColor: hex }}
                 onClick={() => onHighlight(currentHighlight === color ? null : color)}
@@ -335,7 +346,7 @@ export function VersePopup({
             ))}
             {currentHighlight && (
               <button
-                className="ml-auto text-xs text-muted-foreground"
+                className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
                 style={{ fontFamily: 'system-ui' }}
                 onClick={() => onHighlight(null)}
               >
@@ -345,21 +356,21 @@ export function VersePopup({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-t border-b border-border shrink-0">
+          <div className="flex border-t border-border/60 shrink-0">
             {TABS.map(({ id, shortLabel, icon: Icon }) => (
               <button
                 key={id}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors relative ${
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs transition-colors relative ${
                   activeTab === id
-                    ? 'text-primary border-b-2 border-primary font-medium bg-primary/5'
-                    : 'text-muted-foreground'
+                    ? 'text-primary border-b-2 border-primary font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
                 onClick={() => setActiveTab(id)}
               >
                 <Icon className="w-4 h-4" />
                 <span style={{ fontFamily: 'system-ui', fontSize: '10px' }}>{shortLabel}</span>
                 {id === 'words' && !isPro && (
-                  <span className="absolute top-1 right-1 flex items-center">
+                  <span className="absolute top-1 right-1">
                     <Zap className="w-2 h-2 text-primary" />
                   </span>
                 )}
@@ -378,6 +389,7 @@ export function VersePopup({
 
               crossRefs={crossRefs}
               loadingCrossRefs={loadingCrossRefs}
+              otNtConns={otNtConns}
               onClose={onClose}
               onOpenChat={onOpenChat}
               wordQuery={wordQuery}
@@ -409,14 +421,14 @@ export function VersePopup({
   // ── DESKTOP FLOATING POPUP ───────────────────────────────────────────────
   return (
     <div ref={popupRef} style={desktopStyle} className="max-w-[90vw]">
-      <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-card border border-border/70 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+        <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5 border-b border-border/60">
           <div>
-            <p className="text-sm font-semibold text-foreground" style={{ fontFamily: 'system-ui' }}>{verseRef}</p>
-            <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
+            <p className="text-sm font-semibold tracking-tight text-foreground" style={{ fontFamily: 'system-ui' }}>{verseRef}</p>
+            <p className="text-[11px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button variant="ghost" size="icon" className="w-7 h-7" onClick={copyVerse} title="Copy verse">
               {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
@@ -435,17 +447,16 @@ export function VersePopup({
         </div>
 
         {/* Verse text */}
-        <div className="px-4 py-3 border-b border-border bg-secondary/20">
+        <div className="px-4 py-3 mx-3 mt-3 mb-1 bg-muted/40 rounded-xl">
           <p className="bible-text text-sm leading-relaxed text-foreground">{verse.text}</p>
         </div>
 
         {/* Highlight colors */}
-        <div className="px-4 py-2.5 flex items-center gap-2 border-b border-border">
-          <span className="text-xs text-muted-foreground mr-1" style={{ fontFamily: 'system-ui' }}>Highlight:</span>
+        <div className="px-4 py-2 flex items-center gap-2">
           {COLORS.map(({ color, hex }) => (
             <button
               key={color}
-              className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${
+              className={`w-5 h-5 rounded-full transition-all hover:scale-110 ${
                 currentHighlight === color ? 'ring-2 ring-offset-1 ring-foreground/30 scale-110' : ''
               }`}
               style={{ backgroundColor: hex }}
@@ -455,7 +466,7 @@ export function VersePopup({
           ))}
           {currentHighlight && (
             <button
-              className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+              className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
               style={{ fontFamily: 'system-ui' }}
               onClick={() => onHighlight(null)}
             >
@@ -465,14 +476,14 @@ export function VersePopup({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border overflow-x-auto">
+        <div className="flex border-y border-border/60 overflow-x-auto">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs transition-colors shrink-0 relative ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs transition-colors shrink-0 relative ${
                 activeTab === id
-                  ? 'text-primary border-b-2 border-primary font-medium bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary border-b-2 border-primary font-semibold bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
               }`}
               style={{ fontFamily: 'system-ui' }}
               onClick={() => setActiveTab(id)}
@@ -480,7 +491,7 @@ export function VersePopup({
               <Icon className="w-3 h-3" />
               {label}
               {id === 'words' && !isPro && (
-                <Zap className="w-2.5 h-2.5 text-primary ml-0.5" />
+                <Zap className="w-2.5 h-2.5 text-primary" />
               )}
             </button>
           ))}
@@ -496,6 +507,7 @@ export function VersePopup({
             loadingExplain={loadingExplain}
             crossRefs={crossRefs}
             loadingCrossRefs={loadingCrossRefs}
+            otNtConns={otNtConns}
             onClose={onClose}
             onOpenChat={onOpenChat}
             wordQuery={wordQuery}
@@ -533,6 +545,7 @@ interface TabContentProps {
   loadingExplain: boolean
   crossRefs: CrossRefResult[] | null
   loadingCrossRefs: boolean
+  otNtConns: OtNtConnection[] | null
   onClose: () => void
   onOpenChat: () => void
   wordQuery: string
@@ -558,7 +571,7 @@ interface TabContentProps {
 
 function TabContent({
   activeTab, explainTriggered, setExplainTriggered, explanation, loadingExplain,
-  crossRefs, loadingCrossRefs, onClose, onOpenChat,
+  crossRefs, loadingCrossRefs, otNtConns, onClose, onOpenChat,
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
   noteText, setNoteText, noteSaved, handleSaveNote, isAuthenticated,
@@ -624,11 +637,50 @@ function TabContent({
               ))}
             </div>
           ) : crossRefs !== null ? (
-            <div className="py-6 text-center">
+            <div className="py-4 text-center">
               <GitBranch className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
               <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>No cross-references found.</p>
             </div>
           ) : null}
+
+          {/* OT↔NT Connections */}
+          {otNtConns && otNtConns.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5" style={{ fontFamily: 'system-ui' }}>
+                <span className="inline-block w-3 h-3 rounded-full bg-amber-400/80" />
+                {otNtConns[0].direction === 'fulfillment' ? 'NT Fulfillments' : 'OT Sources'}
+              </p>
+              <div className="space-y-2">
+                {otNtConns.map((conn) => (
+                  <Link
+                    key={conn.id}
+                    href={`/dashboard/reading/${conn.book_name.toLowerCase().replace(/\s+/g, '-')}/${conn.chapter}#v${conn.verse}`}
+                    onClick={onClose}
+                  >
+                    <div className="rounded-lg border border-border hover:border-primary/40 transition-colors p-2.5 group">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold" style={{ fontFamily: 'system-ui' }}>{conn.ref}</span>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full uppercase tracking-wide ${
+                          conn.type === 'quote'
+                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                            : conn.type === 'allusion'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        }`} style={{ fontFamily: 'system-ui' }}>
+                          {conn.type}
+                        </span>
+                      </div>
+                      {conn.note && (
+                        <p className="text-[11px] text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                          {conn.note}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

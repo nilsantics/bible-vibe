@@ -8,12 +8,26 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Sign in to upgrade.' }, { status: 401 })
 
-    const { plan } = await request.json() // 'monthly' | 'yearly'
-    const priceId = plan === 'yearly' ? PLANS.yearly.priceId : PLANS.monthly.priceId
-
+    const { plan } = await request.json() // 'monthly' | 'yearly' | 'lifetime'
+    const origin = request.headers.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL!
     const customerId = await getOrCreateCustomer(user.id, user.email!)
 
-    const origin = request.headers.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL!
+    // Lifetime = one-time payment, no subscription
+    if (plan === 'lifetime') {
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{ price: PLANS.lifetime.priceId, quantity: 1 }],
+        success_url: `${origin}/dashboard?upgraded=1`,
+        cancel_url: `${origin}/dashboard/upgrade`,
+        metadata: { user_id: user.id, plan: 'lifetime' },
+        allow_promotion_codes: true,
+      })
+      return NextResponse.json({ url: session.url })
+    }
+
+    const priceId = plan === 'yearly' ? PLANS.yearly.priceId : PLANS.monthly.priceId
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -25,6 +39,7 @@ export async function POST(request: NextRequest) {
       metadata: { user_id: user.id },
       subscription_data: {
         metadata: { user_id: user.id },
+        trial_period_days: 5,
       },
       allow_promotion_codes: true,
     })

@@ -1,7 +1,5 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
@@ -208,25 +206,35 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Verse of the Day */}
+      {/* Verse of the Day — full-width gradient hero card */}
       {votdVerse && votdBook && (
         <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`}>
-          <Card className="p-5 mb-6 border-primary/20 bg-primary/5 hover:border-primary/40 transition-colors">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
-                  Verse of the Day
-                </p>
-                <p className="bible-text text-sm leading-relaxed text-foreground italic mb-2">
-                  &ldquo;{votdVerse.text}&rdquo;
-                </p>
-                <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                  — {votdBook.name} {votd.chapter}:{votd.verse}
-                </p>
+          <div className="relative mb-6 rounded-2xl overflow-hidden group cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #c2813a 0%, #a0522d 40%, #7c3f1e 100%)' }}
+          >
+            {/* Decorative texture */}
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }}
+            />
+            <div className="relative px-6 py-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
+                    ✦ Verse of the Day
+                  </p>
+                  <p className="text-lg leading-relaxed text-white italic mb-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                    &ldquo;{votdVerse.text}&rdquo;
+                  </p>
+                  <p className="text-sm text-white/70" style={{ fontFamily: 'system-ui' }}>
+                    — {votdBook.name} {votd.chapter}:{votd.verse}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-1 group-hover:bg-white/30 transition-colors">
+                  <ChevronRight className="w-4 h-4 text-white" />
+                </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
             </div>
-          </Card>
+          </div>
         </Link>
       )}
 
@@ -332,32 +340,34 @@ export default async function DashboardPage({
           {user && recentReading.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
-                Continue reading
+                Recent chapters
               </h2>
               <div className="space-y-2">
                 {recentReading.map((r, i) => {
                   const bookMeta = BIBLE_BOOKS.find((b) => b.id === r.book_id)
                   if (!bookMeta) return null
+                  const nextCh = r.chapter_number < bookMeta.chapters ? r.chapter_number + 1 : null
+                  const pct = Math.round((r.chapter_number / bookMeta.chapters) * 100)
                   return (
                     <Link
                       key={i}
-                      href={`/dashboard/reading/${bookMeta.name.toLowerCase().replace(/\s+/g, '-')}/${r.chapter_number}`}
+                      href={`/dashboard/reading/${bookMeta.name.toLowerCase().replace(/\s+/g, '-')}/${nextCh ?? r.chapter_number}`}
                     >
                       <Card className="p-3 border-border hover:border-primary/40 transition-colors flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                             <BookOpen className="w-4 h-4 text-primary" />
                           </div>
                           <div>
                             <p className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>
-                              {bookMeta.name} {r.chapter_number}
+                              {nextCh ? `${bookMeta.name} ${nextCh}` : `${bookMeta.name} ${r.chapter_number}`}
                             </p>
                             <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
-                              {bookMeta.testament} Testament
+                              {nextCh ? `Continue from ch ${r.chapter_number}` : 'Finished this book'} · {pct}% through {bookMeta.name}
                             </p>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                       </Card>
                     </Link>
                   )

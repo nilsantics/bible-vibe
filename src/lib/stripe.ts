@@ -9,16 +9,21 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const PLANS = {
   monthly: {
     priceId: process.env.STRIPE_PRICE_MONTHLY!,
-    amount: 999,   // cents
+    amount: 999,
     label: '$9.99 / month',
     interval: 'month' as const,
   },
   yearly: {
     priceId: process.env.STRIPE_PRICE_YEARLY!,
-    amount: 8900,  // cents
+    amount: 8900,
     label: '$89 / year',
     interval: 'year' as const,
     savings: 'Save 26%',
+  },
+  lifetime: {
+    priceId: process.env.STRIPE_PRICE_LIFETIME!,
+    amount: 14999,
+    label: '$149.99 one-time',
   },
 }
 
@@ -38,7 +43,7 @@ export async function getSubscription(userId: string) {
 
 export function isActiveSub(sub: Awaited<ReturnType<typeof getSubscription>>) {
   if (!sub) return false
-  return sub.status === 'active' || sub.status === 'trialing'
+  return sub.status === 'active' || sub.status === 'trialing' || sub.status === 'lifetime'
 }
 
 /** Get or create a Stripe customer ID for a user */

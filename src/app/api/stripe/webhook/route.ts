@@ -25,8 +25,11 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        if (session.mode !== 'subscription') break
-        await handleSubscriptionChange(session.subscription as string)
+        if (session.mode === 'subscription') {
+          await handleSubscriptionChange(session.subscription as string)
+        } else if (session.mode === 'payment' && session.metadata?.plan === 'lifetime') {
+          await handleLifetimePurchase(session)
+        }
         break
       }
       case 'customer.subscription.created':
@@ -50,6 +53,28 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ received: true })
+}
+
+async function handleLifetimePurchase(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.user_id
+  if (!userId) return
+
+  // Store as a special 'lifetime' subscription that never expires
+  await supabase.from('subscriptions').upsert({
+    id: `lifetime_${userId}`,
+    user_id: userId,
+    stripe_customer_id: session.customer as string,
+    status: 'lifetime',
+    price_id: process.env.STRIPE_PRICE_LIFETIME!,
+    current_period_end: '2099-12-31T23:59:59.000Z',
+    cancel_at_period_end: false,
+    updated_at: new Date().toISOString(),
+  })
+
+  await supabase
+    .from('profiles')
+    .update({ stripe_customer_id: session.customer as string })
+    .eq('id', userId)
 }
 
 async function handleSubscriptionChange(subscriptionId: string) {
