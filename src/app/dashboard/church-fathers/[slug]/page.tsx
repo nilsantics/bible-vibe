@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { ChevronRight, ChevronLeft, BookMarked, Scroll } from 'lucide-react'
+import { BookSidebar } from '@/components/book-sidebar'
+import { MobileBookDrawer } from '@/components/mobile-book-drawer'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -43,7 +46,20 @@ export default async function PatristicReaderPage({ params, searchParams }: Prop
   const currentSection = sections.find((s) => s.section_number === sectionNum)
 
   return (
+    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 53px)' }}>
+      <Suspense fallback={<aside className="hidden lg:flex w-52 shrink-0 border-r border-border bg-background" />}>
+        <BookSidebar />
+      </Suspense>
+
+      <div className="flex-1 overflow-y-auto min-w-0">
     <div className="max-w-3xl mx-auto px-4 py-8">
+
+      {/* Mobile drawer */}
+      <div className="lg:hidden mb-4">
+        <Suspense fallback={null}>
+          <MobileBookDrawer label={writing.father_name} />
+        </Suspense>
+      </div>
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6" style={{ fontFamily: 'system-ui' }}>
@@ -175,6 +191,8 @@ export default async function PatristicReaderPage({ params, searchParams }: Prop
           </div>
         </div>
       </div>
+    </div>
+    </div>
     </div>
   )
 }

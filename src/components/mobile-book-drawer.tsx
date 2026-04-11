@@ -1,24 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { BookOpen, ChevronRight, X } from 'lucide-react'
 import { BIBLE_BOOKS, OT_CATEGORIES, NT_CATEGORIES, APOC_BOOKS, APOC_CATEGORIES } from '@/lib/bible-data'
+import type { PatristicWritingMeta } from '@/app/api/patristic-writings/route'
 
 interface Props {
-  activeBookId: number
+  activeBookId?: number
   /** Label shown on the trigger button (e.g. "Proverbs") */
   label?: string
 }
 
 export function MobileBookDrawer({ activeBookId, label }: Props) {
   const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState<'OT' | 'NT' | 'Apoc'>(activeBookId <= 39 ? 'OT' : 'NT')
-  const [expandedBookId, setExpandedBookId] = useState<number | null>(activeBookId)
-
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const isPatristicPage = pathname.includes('/church-fathers/')
+
+  const [tab, setTab] = useState<'OT' | 'NT' | 'Apoc' | 'CF'>(
+    isPatristicPage ? 'CF' : ((activeBookId ?? 1) <= 39 ? 'OT' : 'NT')
+  )
+  const [expandedBookId, setExpandedBookId] = useState<number | null>(activeBookId ?? null)
+
+  const [writings, setWritings] = useState<PatristicWritingMeta[]>([])
+  const [writingsLoaded, setWritingsLoaded] = useState(false)
+
+  useEffect(() => {
+    if (tab !== 'CF' || writingsLoaded) return
+    setWritingsLoaded(true)
+    fetch('/api/patristic-writings')
+      .then((r) => r.json())
+      .then((d) => setWritings(d.writings ?? []))
+      .catch(() => {})
+  }, [tab, writingsLoaded])
   const translation = searchParams.get('translation') ?? 'ESV'
 
   // Detect current chapter from URL
@@ -134,11 +150,11 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
 
             {/* Tabs */}
             <div className="flex border-b border-border shrink-0">
-              {(['OT', 'NT', 'Apoc'] as const).map((t) => (
+              {(['OT', 'NT', 'Apoc', 'CF'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${
+                  className={`flex-1 py-2.5 text-[11px] font-semibold transition-colors ${
                     tab === t
                       ? 'text-foreground border-b-2 border-primary -mb-px'
                       : 'text-muted-foreground'
@@ -211,6 +227,32 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
                     </div>
                   )
                 })}
+
+              {tab === 'CF' && (
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest px-4 pt-3 pb-1" style={{ fontFamily: 'system-ui' }}>
+                    Church Fathers
+                  </p>
+                  {!writingsLoaded && (
+                    <div className="px-4 space-y-2 py-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  )}
+                  {writings.map((w) => (
+                    <Link
+                      key={w.slug}
+                      href={`/dashboard/church-fathers/${w.slug}`}
+                      onClick={() => setOpen(false)}
+                      className="flex flex-col px-4 py-3 border-b border-border/40 last:border-0 active:bg-muted/60 transition-colors"
+                    >
+                      <span className="text-sm font-medium text-foreground/90 leading-snug" style={{ fontFamily: 'system-ui' }}>{w.title}</span>
+                      <span className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>{w.father_name} · {w.era}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Bottom padding for home bar */}
               <div className="h-8" />
