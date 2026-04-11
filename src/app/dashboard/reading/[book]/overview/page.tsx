@@ -56,7 +56,7 @@ export default async function BookOverviewPage({ params }: Props) {
   const themes: string[] = overview?.key_themes ?? []
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Back */}
       <Link
         href={`/dashboard/reading/${bookSlug}/1`}
@@ -108,7 +108,7 @@ export default async function BookOverviewPage({ params }: Props) {
           )}
 
           {/* 4 meta cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { icon: User,     label: 'Author',        value: overview.author },
               { icon: Calendar, label: 'Date Written',   value: overview.date_written },

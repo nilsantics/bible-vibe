@@ -894,7 +894,7 @@ export function BibleReader({
         </div>{/* end sticky toolbar */}
 
         {/* Bible text */}
-        <div className="max-w-2xl mx-auto px-6 py-10 pb-32" ref={readerRef}>
+        <div className="max-w-3xl mx-auto px-8 py-10 pb-32" ref={readerRef}>
           {/* Chapter header */}
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
