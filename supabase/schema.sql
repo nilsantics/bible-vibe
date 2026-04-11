@@ -475,3 +475,78 @@ CREATE TABLE IF NOT EXISTS commentaries (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_commentary_unique ON commentaries(source, book_id, chapter);
 CREATE INDEX  IF NOT EXISTS idx_commentary_lookup ON commentaries(book_id, chapter);
+
+-- ============================================================
+-- RAG COMMENTARY LIBRARY (Matthew Henry, Clarke, Gill, etc.)
+-- Chunked public-domain commentary text with vector embeddings
+-- ============================================================
+CREATE TABLE IF NOT EXISTS commentary_chunks (
+  id          SERIAL PRIMARY KEY,
+  source      TEXT     NOT NULL,       -- 'matthew-henry', 'john-gill', etc.
+  book_id     SMALLINT NOT NULL,
+  chapter     SMALLINT NOT NULL,
+  verse_start SMALLINT,               -- NULL = whole chapter
+  verse_end   SMALLINT,
+  heading     TEXT,
+  content     TEXT     NOT NULL,
+  embedding   VECTOR(1536),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_commentary_chunks_ref    ON commentary_chunks(book_id, chapter);
+CREATE INDEX IF NOT EXISTS idx_commentary_chunks_source ON commentary_chunks(source);
+CREATE INDEX IF NOT EXISTS idx_commentary_chunks_hnsw
+  ON commentary_chunks USING HNSW (embedding VECTOR_COSINE_OPS);
+
+-- RAG search: semantic over commentary library
+CREATE OR REPLACE FUNCTION search_commentary(
+  query_embedding VECTOR(1536),
+  p_book_id       SMALLINT DEFAULT NULL,
+  p_chapter       SMALLINT DEFAULT NULL,
+  match_count     INT      DEFAULT 5
+)
+RETURNS TABLE (
+  id          INT,
+  source      TEXT,
+  book_id     SMALLINT,
+  chapter     SMALLINT,
+  verse_start SMALLINT,
+  verse_end   SMALLINT,
+  heading     TEXT,
+  content     TEXT,
+  similarity  FLOAT
+)
+LANGUAGE sql STABLE
+AS $$
+  SELECT
+    c.id, c.source, c.book_id, c.chapter, c.verse_start, c.verse_end, c.heading, c.content,
+    1 - (c.embedding <=> query_embedding) AS similarity
+  FROM commentary_chunks c
+  WHERE c.embedding IS NOT NULL
+    AND (p_book_id IS NULL OR c.book_id = p_book_id)
+  ORDER BY c.embedding <=> query_embedding
+  LIMIT match_count;
+$$;
+
+-- ============================================================
+-- CHURCH FATHERS — Patristic Writings
+-- ============================================================
+CREATE TABLE IF NOT EXISTS patristic_writings (
+  id             SERIAL PRIMARY KEY,
+  slug           TEXT UNIQUE NOT NULL,
+  father_name    TEXT NOT NULL,
+  title          TEXT NOT NULL,
+  era            TEXT,
+  tradition      TEXT,
+  description    TEXT,
+  total_sections INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS patristic_sections (
+  id             SERIAL PRIMARY KEY,
+  writing_id     INT  NOT NULL REFERENCES patristic_writings(id) ON DELETE CASCADE,
+  section_number INT  NOT NULL,
+  title          TEXT,
+  content        TEXT NOT NULL,
+  UNIQUE(writing_id, section_number)
+);
+CREATE INDEX IF NOT EXISTS idx_patristic_sections_writing ON patristic_sections(writing_id, section_number);

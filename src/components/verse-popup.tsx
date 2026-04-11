@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ReactMarkdown from 'react-markdown'
 import {
-  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap, Tag,
+  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap, Tag, BookMarked,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { HighlightColor } from '@/types'
@@ -59,14 +59,15 @@ const COLORS: { color: HighlightColor; hex: string }[] = [
   { color: 'purple', hex: '#c4b5fd' },
 ]
 
-type Tab = 'explain' | 'crossref' | 'words' | 'note' | 'tags'
+type Tab = 'explain' | 'commentary' | 'crossref' | 'words' | 'note' | 'tags'
 
 const TABS = [
-  { id: 'explain'  as Tab, label: 'Explain',   shortLabel: 'Explain',  icon: Sparkles  },
-  { id: 'crossref' as Tab, label: 'Cross-refs', shortLabel: 'Refs',    icon: GitBranch },
-  { id: 'words'    as Tab, label: "Strong's",  shortLabel: "Strong's", icon: Search    },
-  { id: 'note'     as Tab, label: 'My Note',   shortLabel: 'Note',     icon: Pencil    },
-  { id: 'tags'     as Tab, label: 'Tags',      shortLabel: 'Tags',     icon: Tag       },
+  { id: 'explain'    as Tab, label: 'Explain',    shortLabel: 'Explain', icon: Sparkles   },
+  { id: 'commentary' as Tab, label: 'Commentary', shortLabel: 'Sources', icon: BookMarked },
+  { id: 'crossref'   as Tab, label: 'Cross-refs', shortLabel: 'Refs',   icon: GitBranch  },
+  { id: 'words'      as Tab, label: "Strong's",   shortLabel: "Strong's",icon: Search     },
+  { id: 'note'       as Tab, label: 'My Note',    shortLabel: 'Note',   icon: Pencil     },
+  { id: 'tags'       as Tab, label: 'Tags',       shortLabel: 'Tags',   icon: Tag        },
 ] as const
 
 function useStreamingContent(
@@ -129,6 +130,7 @@ export function VersePopup({
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('explain')
   const [explainTriggered, setExplainTriggered] = useState(false)
+  const [commentaryTriggered, setCommentaryTriggered] = useState(false)
   const { tradition } = useTradition()
   const [noteText, setNoteText] = useState(currentNote)
   const [noteSaved, setNoteSaved] = useState(false)
@@ -175,6 +177,11 @@ export function VersePopup({
   const { text: explanation, loading: loadingExplain } = useStreamingContent(
     explainTriggered, '/api/explain',
     { verseRef, verseText: verse.text, translation, tradition }
+  )
+
+  const { text: commentary, loading: loadingCommentary } = useStreamingContent(
+    commentaryTriggered, '/api/commentary',
+    { verseRef, verseText: verse.text, bookId: verse.book_id, chapter: verse.chapter_number, verse: verse.verse_number, tradition }
   )
 
   // Pre-load verse word tagging on mount so words are ready to click immediately
@@ -401,18 +408,18 @@ export function VersePopup({
               <p className="text-[11px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>{translation}</p>
             </div>
             <div className="flex items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={copyVerse} title="Copy">
+              <Button variant="ghost" size="icon" className="w-10 h-10" onClick={copyVerse} title="Copy">
                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={shareVerse} title="Share">
+              <Button variant="ghost" size="icon" className="w-10 h-10" onClick={shareVerse} title="Share">
                 <Share2 className="w-4 h-4" />
               </Button>
               {isAuthenticated && (
-                <Button variant="ghost" size="icon" className="w-8 h-8" onClick={onBookmark}>
+                <Button variant="ghost" size="icon" className="w-10 h-10" onClick={onBookmark}>
                   <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="w-8 h-8" onClick={onClose}>
+              <Button variant="ghost" size="icon" className="w-10 h-10" onClick={onClose}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -477,11 +484,11 @@ export function VersePopup({
           )}
 
           {/* Highlight row */}
-          <div className="px-4 py-2 flex items-center gap-2.5 shrink-0">
+          <div className="px-4 py-2 flex items-center gap-2 shrink-0">
             {COLORS.map(({ color, hex }) => (
               <button
                 key={color}
-                className={`w-6 h-6 rounded-full transition-all active:scale-90 ${
+                className={`w-8 h-8 rounded-full transition-all active:scale-90 ${
                   currentHighlight === color ? 'ring-2 ring-offset-1 ring-foreground/40 scale-110' : 'hover:scale-110'
                 }`}
                 style={{ backgroundColor: hex }}
@@ -531,6 +538,10 @@ export function VersePopup({
               setExplainTriggered={setExplainTriggered}
               explanation={explanation}
               loadingExplain={loadingExplain}
+              commentaryTriggered={commentaryTriggered}
+              setCommentaryTriggered={setCommentaryTriggered}
+              commentary={commentary}
+              loadingCommentary={loadingCommentary}
 
               crossRefs={crossRefs}
               loadingCrossRefs={loadingCrossRefs}
@@ -663,11 +674,11 @@ export function VersePopup({
         )}
 
         {/* Highlight colors */}
-        <div className="px-4 py-2 flex items-center gap-2">
+        <div className="px-4 py-2 flex items-center gap-3">
           {COLORS.map(({ color, hex }) => (
             <button
               key={color}
-              className={`w-5 h-5 rounded-full transition-all hover:scale-110 ${
+              className={`w-8 h-8 rounded-full transition-all hover:scale-110 ${
                 currentHighlight === color ? 'ring-2 ring-offset-1 ring-foreground/30 scale-110' : ''
               }`}
               style={{ backgroundColor: hex }}
@@ -716,6 +727,10 @@ export function VersePopup({
             setExplainTriggered={setExplainTriggered}
             explanation={explanation}
             loadingExplain={loadingExplain}
+            commentaryTriggered={commentaryTriggered}
+            setCommentaryTriggered={setCommentaryTriggered}
+            commentary={commentary}
+            loadingCommentary={loadingCommentary}
             crossRefs={crossRefs}
             loadingCrossRefs={loadingCrossRefs}
             otNtConns={otNtConns}
@@ -759,6 +774,10 @@ interface TabContentProps {
   setExplainTriggered: (v: boolean) => void
   explanation: string
   loadingExplain: boolean
+  commentaryTriggered: boolean
+  setCommentaryTriggered: (v: boolean) => void
+  commentary: string
+  loadingCommentary: boolean
   crossRefs: CrossRefResult[] | null
   loadingCrossRefs: boolean
   otNtConns: OtNtConnection[] | null
@@ -792,6 +811,7 @@ interface TabContentProps {
 
 function TabContent({
   activeTab, explainTriggered, setExplainTriggered, explanation, loadingExplain,
+  commentaryTriggered, setCommentaryTriggered, commentary, loadingCommentary,
   crossRefs, loadingCrossRefs, otNtConns, onClose, onOpenChat,
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
@@ -828,6 +848,23 @@ function TabContent({
               </div>
             )}
           </>
+        )
+      )}
+
+      {/* Commentary (RAG — Matthew Henry et al.) */}
+      {activeTab === 'commentary' && (
+        !commentaryTriggered ? (
+          <div className="px-4 py-6 flex flex-col items-center gap-3">
+            <p className="text-xs text-muted-foreground text-center" style={{ fontFamily: 'system-ui' }}>
+              Historical commentary from Matthew Henry and other classic sources.
+            </p>
+            <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCommentaryTriggered(true)}>
+              <BookMarked className="w-3.5 h-3.5" />
+              Search commentary library
+            </Button>
+          </div>
+        ) : (
+          <StreamingContent text={commentary} loading={loadingCommentary} />
         )
       )}
 

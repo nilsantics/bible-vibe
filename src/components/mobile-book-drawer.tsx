@@ -78,7 +78,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
           </div>
 
           {isExpanded && (
-            <div className="grid grid-cols-7 gap-1 px-4 pb-3">
+            <div className="grid grid-cols-7 gap-1.5 px-4 pb-3">
               {Array.from({ length: b.chapters }, (_, i) => i + 1).map((ch) => (
                 <Link
                   key={ch}
@@ -86,7 +86,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
                   onClick={() => setOpen(false)}
                 >
                   <div
-                    className={`text-xs text-center py-1.5 rounded-md font-medium transition-colors ${
+                    className={`text-xs text-center py-2.5 rounded-lg font-medium transition-colors ${
                       isActive && ch === activeChapter
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground bg-muted/50 active:bg-muted'
