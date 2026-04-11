@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import { Card } from '@/components/ui/card'
@@ -58,7 +59,9 @@ export default async function BookOverviewPage({ params }: Props) {
 
   return (
     <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 53px)' }}>
-      <BookSidebar activeBookId={bookMeta.id} />
+      <Suspense fallback={<aside className="hidden lg:flex w-52 shrink-0 border-r border-border bg-background" />}>
+        <BookSidebar activeBookId={bookMeta.id} />
+      </Suspense>
 
       <div className="flex-1 overflow-y-auto min-w-0">
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -127,7 +130,7 @@ export default async function BookOverviewPage({ params }: Props) {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1" style={{ fontFamily: 'system-ui' }}>
                       {label}
                     </p>
-                    <p className="text-sm" style={{ fontFamily: 'system-ui' }}>{value}</p>
+                    <p className="text-sm line-clamp-3" style={{ fontFamily: 'system-ui' }}>{value}</p>
                   </div>
                 </div>
               </Card>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
@@ -574,7 +574,9 @@ export function BibleReader({
     <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 53px)' }}>
 
       {/* ── LEFT: Book + Chapter sidebar ── */}
-      <BookSidebar activeBookId={book.id} />
+      <Suspense fallback={<aside className="hidden lg:flex w-52 shrink-0 border-r border-border bg-background" />}>
+        <BookSidebar activeBookId={book.id} />
+      </Suspense>
 
       {/* ── CENTER: Toolbar + Text ── */}
       <div

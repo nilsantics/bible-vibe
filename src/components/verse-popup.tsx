@@ -158,6 +158,11 @@ export function VersePopup({
   const [chipEntry, setChipEntry] = useState<StrongsEntry | null>(null)
   const [chipEntryLoading, setChipEntryLoading] = useState(false)
 
+  // Inline word-click state (for clicking words directly in the verse text)
+  const [inlineWord, setInlineWord] = useState<string | null>(null)
+  const [inlineEntry, setInlineEntry] = useState<TaggedWord & { definition?: string } | null>(null)
+  const [inlineLoading, setInlineLoading] = useState(false)
+
   const [tags, setTags] = useState<{ id: string; tag_name: string }[]>([])
   const [tagInput, setTagInput] = useState('')
   const [tagsLoaded, setTagsLoaded] = useState(false)
@@ -170,9 +175,9 @@ export function VersePopup({
     { verseRef, verseText: verse.text, translation }
   )
 
-  // Auto-load verse word tagging when Strong's tab opens
+  // Pre-load verse word tagging on mount so words are ready to click immediately
   useEffect(() => {
-    if (activeTab !== 'words' || verseWordsFetched.current) return
+    if (verseWordsFetched.current) return
     verseWordsFetched.current = true
     setVerseWordsLoading(true)
     const testament = verse.book_id <= 39 ? 'OT' : 'NT'
@@ -182,7 +187,59 @@ export function VersePopup({
       .then((d) => setVerseWords(d.words ?? []))
       .catch(() => setVerseWords([]))
       .finally(() => setVerseWordsLoading(false))
-  }, [activeTab, verse, bookName])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Inline word click — looks up the word from the tagged list or searches Strong's
+  async function handleVerseWordClick(rawWord: string) {
+    const clean = rawWord.replace(/[.,;:!?'"()[\]—]/g, '').toLowerCase()
+    if (!clean) return
+
+    if (inlineWord === clean) {
+      setInlineWord(null)
+      setInlineEntry(null)
+      return
+    }
+
+    setInlineWord(clean)
+    setInlineEntry(null)
+    setInlineLoading(true)
+
+    // Try to match against already-tagged verse words
+    const tagged = verseWords.find((w) => w.word.toLowerCase() === clean)
+    if (tagged) {
+      setInlineEntry({ ...tagged })
+      // Also pull full DB entry for richer definition
+      try {
+        const r = await fetch(`/api/strongs?number=${encodeURIComponent(tagged.number)}`)
+        const d = await r.json()
+        if (d.entry?.definition) setInlineEntry({ ...tagged, definition: d.entry.definition })
+      } finally {
+        setInlineLoading(false)
+      }
+      return
+    }
+
+    // Fallback: search by English word
+    try {
+      const testament = verse.book_id <= 39 ? 'OT' : 'NT'
+      const r = await fetch(`/api/strongs?word=${encodeURIComponent(clean)}&testament=${testament}`)
+      const d = await r.json()
+      const e = d.entries?.[0]
+      if (e) {
+        setInlineEntry({
+          word: rawWord,
+          original: e.word,
+          number: e.number,
+          transliteration: e.transliteration ?? '',
+          brief: e.definition?.split('.')[0] ?? '',
+          definition: e.definition,
+        })
+      }
+    } finally {
+      setInlineLoading(false)
+    }
+  }
 
   // Fetch full DB entry when a chip is clicked
   async function handleChipClick(tagged: TaggedWord) {
@@ -359,10 +416,63 @@ export function VersePopup({
             </div>
           </div>
 
-          {/* Verse text */}
-          <div className="px-4 py-2.5 mx-4 mb-1 shrink-0 bg-muted/40 rounded-xl">
-            <p className="bible-text text-sm leading-relaxed text-foreground">{verse.text}</p>
+          {/* Verse text — clickable words */}
+          <div className="px-4 pt-2.5 pb-2 mx-4 mb-1 shrink-0 bg-muted/40 rounded-xl">
+            <p className="bible-text text-sm leading-relaxed text-foreground">
+              {verse.text.split(/(\s+)/).map((part, i) => {
+                if (/^\s+$/.test(part)) return <span key={i}>{part}</span>
+                const clean = part.replace(/[.,;:!?'"()[\]—]/g, '').toLowerCase()
+                const isActive = inlineWord === clean && !!clean
+                return (
+                  <span
+                    key={i}
+                    onClick={() => handleVerseWordClick(part)}
+                    className={`cursor-pointer rounded px-0.5 -mx-0.5 transition-colors ${
+                      isActive ? 'bg-primary/20 text-primary' : 'hover:bg-primary/10 hover:text-primary'
+                    }`}
+                  >
+                    {part}
+                  </span>
+                )
+              })}
+            </p>
+            {!inlineWord && !verseWordsLoading && (
+              <p className="text-[10px] text-muted-foreground/50 mt-1.5" style={{ fontFamily: 'system-ui' }}>
+                Tap any word for its meaning
+              </p>
+            )}
           </div>
+
+          {/* Inline word definition (mobile) */}
+          {(inlineWord || inlineLoading) && (
+            <div className="mx-4 mb-1 shrink-0 bg-card border border-border/60 rounded-xl px-4 py-3">
+              {inlineLoading && !inlineEntry ? (
+                <div className="space-y-1.5">
+                  {[80, 60, 90].map((w, i) => (
+                    <div key={i} className="h-2.5 bg-muted rounded animate-pulse" style={{ width: `${w}%` }} />
+                  ))}
+                </div>
+              ) : inlineEntry ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-lg font-medium leading-none">{inlineEntry.original}</span>
+                    <span className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{inlineEntry.number}</span>
+                    <span className="text-xs text-muted-foreground italic">{inlineEntry.transliteration}</span>
+                  </div>
+                  <p className="text-sm font-medium mt-1" style={{ fontFamily: 'system-ui' }}>{inlineEntry.brief}</p>
+                  {inlineEntry.definition && inlineEntry.definition !== inlineEntry.brief && (
+                    <p className="text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                      {inlineEntry.definition}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                  No Strong&apos;s data found for &ldquo;{inlineWord}&rdquo;
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Highlight row */}
           <div className="px-4 py-2 flex items-center gap-2.5 shrink-0">
@@ -484,10 +594,70 @@ export function VersePopup({
           </div>
         </div>
 
-        {/* Verse text */}
-        <div className="px-4 py-3 mx-3 mt-3 mb-1 bg-muted/40 rounded-xl">
-          <p className="bible-text text-sm leading-relaxed text-foreground">{verse.text}</p>
+        {/* Verse text — clickable words */}
+        <div className="px-4 pt-3 pb-2 mx-3 mt-3 bg-muted/40 rounded-xl">
+          <p className="bible-text text-sm leading-relaxed text-foreground">
+            {verse.text.split(/(\s+)/).map((part, i) => {
+              if (/^\s+$/.test(part)) return <span key={i}>{part}</span>
+              const clean = part.replace(/[.,;:!?'"()[\]—]/g, '').toLowerCase()
+              const isActive = inlineWord === clean && !!clean
+              return (
+                <span
+                  key={i}
+                  onClick={() => handleVerseWordClick(part)}
+                  className={`cursor-pointer rounded px-0.5 -mx-0.5 transition-colors ${
+                    isActive
+                      ? 'bg-primary/20 text-primary'
+                      : 'hover:bg-primary/10 hover:text-primary'
+                  }`}
+                >
+                  {part}
+                </span>
+              )
+            })}
+          </p>
+          {!inlineWord && !verseWordsLoading && (
+            <p className="text-[10px] text-muted-foreground/50 mt-1.5" style={{ fontFamily: 'system-ui' }}>
+              Tap any word for its meaning
+            </p>
+          )}
+          {verseWordsLoading && (
+            <p className="text-[10px] text-muted-foreground/40 mt-1.5 animate-pulse" style={{ fontFamily: 'system-ui' }}>
+              Loading word lookup…
+            </p>
+          )}
         </div>
+
+        {/* Inline word definition */}
+        {(inlineWord || inlineLoading) && (
+          <div className="mx-3 mb-1 bg-card border border-border/60 rounded-xl px-4 py-3 text-sm">
+            {inlineLoading && !inlineEntry ? (
+              <div className="space-y-1.5">
+                {[80, 60, 90].map((w, i) => (
+                  <div key={i} className="h-2.5 bg-muted rounded animate-pulse" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+            ) : inlineEntry ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-medium leading-none">{inlineEntry.original}</span>
+                  <span className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">{inlineEntry.number}</span>
+                  <span className="text-xs text-muted-foreground italic">{inlineEntry.transliteration}</span>
+                </div>
+                <p className="text-sm font-medium mt-1" style={{ fontFamily: 'system-ui' }}>{inlineEntry.brief}</p>
+                {inlineEntry.definition && inlineEntry.definition !== inlineEntry.brief && (
+                  <p className="text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                    {inlineEntry.definition}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                No Strong&apos;s data found for &ldquo;{inlineWord}&rdquo;
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Highlight colors */}
         <div className="px-4 py-2 flex items-center gap-2">
