@@ -1,55 +1,107 @@
-'use client'
-
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { Card } from '@/components/ui/card'
 import { BookMarked, ExternalLink, Users, BookOpen, Scroll, Church, ShieldAlert } from 'lucide-react'
 
+// Writings available natively (must match slugs in patristic_writings table)
+const NATIVE_SLUGS = [
+  'didache',
+  'polycarp-philippians',
+  'ignatius-romans',
+  'on-the-incarnation',
+  'augustine-confessions',
+  'justin-first-apology',
+  'irenaeus-against-heresies-1',
+]
+
 const FATHERS = [
   {
-    name: 'Ignatius of Antioch',
-    dates: 'c. 35–108 AD',
+    name: 'The Didache',
+    father: 'Unknown (Apostolic)',
+    dates: 'c. 50–120 AD',
     tradition: 'Apostolic Father',
-    desc: 'Bishop of Antioch, disciple of the Apostle John. Seven letters written en route to his martyrdom in Rome.',
-    writings: ['Letter to the Ephesians', 'Letter to the Romans', 'Letter to the Smyrnaeans'],
-    url: 'https://www.newadvent.org/fathers/0103.htm',
+    desc: 'The oldest surviving Christian catechism — Two Ways, baptism, Eucharist, fasting, and church order.',
+    slug: 'didache',
+    emoji: '📜',
+    gradient: 'from-stone-600 to-stone-800',
+  },
+  {
+    name: 'Epistle to the Philippians',
+    father: 'Polycarp of Smyrna',
+    dates: 'c. 110–140 AD',
+    tradition: 'Apostolic Father',
+    desc: 'Letter from the bishop of Smyrna — Christian conduct, refuting heresy, and the example of Ignatius.',
+    slug: 'polycarp-philippians',
     emoji: '✉️',
     gradient: 'from-slate-600 to-slate-800',
   },
   {
-    name: 'Polycarp of Smyrna',
-    dates: 'c. 69–155 AD',
+    name: 'Epistle to the Romans',
+    father: 'Ignatius of Antioch',
+    dates: 'c. 108 AD',
     tradition: 'Apostolic Father',
-    desc: 'Bishop of Smyrna, disciple of John the Apostle. His martyrdom account is one of the earliest outside the NT.',
-    writings: ['Letter to the Philippians', 'The Martyrdom of Polycarp'],
-    url: 'https://www.newadvent.org/fathers/0136.htm',
-    emoji: '🕯️',
-    gradient: 'from-stone-600 to-stone-800',
+    desc: 'Written en route to martyrdom — Ignatius pleads not to be spared. "I am God\'s wheat."',
+    slug: 'ignatius-romans',
+    emoji: '⛓️',
+    gradient: 'from-red-700 to-red-900',
   },
   {
-    name: 'Justin Martyr',
-    dates: 'c. 100–165 AD',
+    name: 'First Apology',
+    father: 'Justin Martyr',
+    dates: 'c. 155 AD',
     tradition: 'Apologist',
-    desc: 'First great Christian apologist. Defended Christianity to Roman emperors and engaged Greek philosophy.',
-    writings: ['First Apology', 'Second Apology', 'Dialogue with Trypho'],
-    url: 'https://www.newadvent.org/fathers/0126.htm',
+    desc: 'A defense of Christianity to the Emperor — includes the earliest description of Christian Sunday worship.',
+    slug: 'justin-first-apology',
     emoji: '⚖️',
     gradient: 'from-blue-700 to-blue-900',
   },
   {
-    name: 'Irenaeus of Lyon',
-    dates: 'c. 130–202 AD',
+    name: 'Against Heresies — Book I',
+    father: 'Irenaeus of Lyon',
+    dates: 'c. 180 AD',
     tradition: 'Apologist',
-    desc: 'Bishop of Lyon, disciple of Polycarp. His masterwork Against Heresies defined early orthodoxy against Gnosticism.',
-    writings: ['Against Heresies', 'Proof of the Apostolic Preaching'],
-    url: 'https://www.newadvent.org/fathers/0103.htm',
+    desc: 'Exposure of the Valentinian Gnostic system and defense of the apostolic Rule of Faith.',
+    slug: 'irenaeus-against-heresies-1',
     emoji: '🛡️',
     gradient: 'from-emerald-700 to-emerald-900',
+  },
+  {
+    name: 'On the Incarnation',
+    father: 'Athanasius of Alexandria',
+    dates: 'c. 318 AD',
+    tradition: 'Nicene Father',
+    desc: 'Why the Son of God became human. C.S. Lewis called it "one of the greatest theological works ever written."',
+    slug: 'on-the-incarnation',
+    emoji: '✝️',
+    gradient: 'from-violet-700 to-violet-900',
+  },
+  {
+    name: 'Confessions',
+    father: 'Augustine of Hippo',
+    dates: 'c. 397–400 AD',
+    tradition: 'Latin Father',
+    desc: 'The first autobiography — Augustine traces his sinful youth to dramatic conversion. "Our heart is restless until it rests in Thee."',
+    slug: 'augustine-confessions',
+    emoji: '📖',
+    gradient: 'from-rose-700 to-rose-900',
+  },
+]
+
+const EXTERNAL_FATHERS = [
+  {
+    name: 'Ignatius of Antioch',
+    dates: 'c. 35–108 AD',
+    tradition: 'Apostolic Father',
+    desc: 'Seven letters to churches written en route to his martyrdom in Rome.',
+    url: 'https://www.newadvent.org/fathers/0103.htm',
+    emoji: '🕯️',
+    gradient: 'from-stone-600 to-stone-800',
   },
   {
     name: 'Tertullian',
     dates: 'c. 155–220 AD',
     tradition: 'Latin Father',
-    desc: 'First major Latin theologian. Coined the term "Trinity." Brilliant and polemical defender of the faith.',
-    writings: ['Apology', 'Against Marcion', 'On the Prescription of Heretics'],
+    desc: 'First major Latin theologian. Coined the term "Trinity." Author of the Apology and Against Marcion.',
     url: 'https://www.newadvent.org/fathers/0301.htm',
     emoji: '⚔️',
     gradient: 'from-red-700 to-red-900',
@@ -58,68 +110,34 @@ const FATHERS = [
     name: 'Origen of Alexandria',
     dates: 'c. 185–253 AD',
     tradition: 'Alexandrian',
-    desc: 'Most prolific early Christian writer. Pioneered biblical scholarship, allegorical exegesis, and systematic theology.',
-    writings: ['On First Principles', 'Contra Celsum', 'Homilies on Genesis'],
+    desc: 'Most prolific early Christian writer. On First Principles, Contra Celsum, and hundreds of homilies.',
     url: 'https://www.newadvent.org/fathers/0411.htm',
     emoji: '📜',
     gradient: 'from-amber-700 to-amber-900',
   },
   {
-    name: 'Athanasius of Alexandria',
-    dates: 'c. 296–373 AD',
-    tradition: 'Nicene Father',
-    desc: '"Athanasius contra mundum" — Defender of Nicene Trinitarianism against Arianism through five periods of exile.',
-    writings: ['On the Incarnation', 'Against the Arians', 'Life of St. Antony'],
-    url: 'https://www.newadvent.org/fathers/0100.htm',
-    emoji: '🏛️',
-    gradient: 'from-violet-700 to-violet-900',
-  },
-  {
     name: 'Basil the Great',
     dates: 'c. 330–379 AD',
     tradition: 'Cappadocian Father',
-    desc: 'One of the Cappadocian Fathers. Shaped monasticism, defended the Holy Spirit\'s divinity, and structured early liturgy.',
-    writings: ['On the Holy Spirit', 'Hexaemeron', 'Longer and Shorter Rules'],
+    desc: 'On the Holy Spirit and Hexaemeron. Shaped Eastern monasticism and defended Trinitarian theology.',
     url: 'https://www.newadvent.org/fathers/3201.htm',
     emoji: '🌿',
     gradient: 'from-green-700 to-green-900',
   },
   {
-    name: 'Gregory of Nazianzus',
-    dates: 'c. 329–390 AD',
-    tradition: 'Cappadocian Father',
-    desc: '"The Theologian." Theologian of the Trinity at Constantinople. His orations shaped Trinitarian vocabulary permanently.',
-    writings: ['Five Theological Orations', 'Carmina (Poems)', 'Panegyric on Athanasius'],
-    url: 'https://www.newadvent.org/fathers/3102.htm',
-    emoji: '✨',
-    gradient: 'from-sky-700 to-sky-900',
-  },
-  {
     name: 'John Chrysostom',
     dates: 'c. 349–407 AD',
     tradition: 'Antiochene',
-    desc: '"Golden-mouthed" — greatest preacher of the ancient church. Archbishop of Constantinople, master expositor of Scripture.',
-    writings: ['Homilies on Matthew', 'Homilies on Romans', 'On the Priesthood'],
+    desc: '"Golden-mouthed" — greatest preacher of the ancient church and master expositor of Paul.',
     url: 'https://www.newadvent.org/fathers/2001.htm',
     emoji: '🗣️',
     gradient: 'from-orange-700 to-orange-900',
   },
   {
-    name: 'Augustine of Hippo',
-    dates: '354–430 AD',
-    tradition: 'Latin Father',
-    desc: 'The most influential theologian in Western Christianity. His thought shaped Catholic, Protestant, and Reformed traditions.',
-    writings: ['Confessions', 'City of God', 'On the Trinity', 'On Free Will'],
-    url: 'https://www.newadvent.org/fathers/1201.htm',
-    emoji: '📖',
-    gradient: 'from-rose-700 to-rose-900',
-  },
-  {
     name: 'Jerome',
     dates: 'c. 345–420 AD',
     tradition: 'Latin Father',
-    desc: 'Produced the Vulgate — the Latin Bible translation used for 1,000 years. Greatest biblical scholar of the ancient church.',
-    writings: ['Vulgate Bible', 'Commentary on Galatians', 'Lives of Illustrious Men'],
+    desc: 'Produced the Vulgate Bible. Greatest biblical scholar of antiquity.',
     url: 'https://www.newadvent.org/fathers/3001.htm',
     emoji: '📝',
     gradient: 'from-indigo-700 to-indigo-900',
@@ -130,7 +148,7 @@ const RESOURCE_SECTIONS = [
   {
     icon: BookOpen,
     label: 'Complete Writings',
-    desc: 'Read the Church Fathers in their own words',
+    desc: 'Full public-domain collections',
     links: [
       { label: 'New Advent — Fathers of the Church', url: 'https://www.newadvent.org/fathers/' },
       { label: 'CCEL — Early Church Fathers (38 volumes)', url: 'https://ccel.org/fathers' },
@@ -140,10 +158,9 @@ const RESOURCE_SECTIONS = [
   {
     icon: Church,
     label: 'Councils & Creeds',
-    desc: 'The councils that defined Christian orthodoxy',
+    desc: 'The councils that defined orthodoxy',
     links: [
       { label: 'Nicene Creed (325 AD)', url: 'https://www.newadvent.org/fathers/3801.htm' },
-      { label: 'Council of Nicaea — Documents', url: 'https://www.newadvent.org/fathers/3801.htm' },
       { label: 'Chalcedonian Definition (451 AD)', url: 'https://www.newadvent.org/fathers/3810.htm' },
       { label: 'Apostles\' Creed — Early Forms', url: 'https://www.newadvent.org/cathen/01629a.htm' },
     ],
@@ -151,11 +168,11 @@ const RESOURCE_SECTIONS = [
   {
     icon: ShieldAlert,
     label: 'Heresies & Orthodoxy',
-    desc: 'Understanding early theological controversies',
+    desc: 'Early theological controversies',
     links: [
-      { label: 'Irenaeus — Against Heresies', url: 'https://www.newadvent.org/fathers/0103.htm' },
       { label: 'Arianism — History & Refutation', url: 'https://www.newadvent.org/cathen/01707c.htm' },
       { label: 'Gnosticism — Early Church Response', url: 'https://www.newadvent.org/cathen/06592a.htm' },
+      { label: 'Marcion & the Canon', url: 'https://www.newadvent.org/cathen/09645c.htm' },
     ],
   },
   {
@@ -165,13 +182,21 @@ const RESOURCE_SECTIONS = [
     links: [
       { label: 'Baptism in the Early Church', url: 'https://www.newadvent.org/cathen/02258b.htm' },
       { label: 'Eucharist — Patristic Writings', url: 'https://www.newadvent.org/cathen/05572c.htm' },
-      { label: 'Prayer of the Early Christians', url: 'https://www.newadvent.org/fathers/0714.htm' },
       { label: 'Eschatology — Ancient Views', url: 'https://www.newadvent.org/cathen/05530c.htm' },
     ],
   },
 ]
 
-export default function ChurchFathersPage() {
+export default async function ChurchFathersPage() {
+  const supabase = await createClient()
+
+  // Check which native writings are actually seeded
+  const { data: seeded } = await supabase
+    .from('patristic_writings')
+    .select('slug, total_sections')
+
+  const seededMap = new Map((seeded ?? []).map((w) => [w.slug, w.total_sections]))
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
@@ -185,7 +210,7 @@ export default function ChurchFathersPage() {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground ml-12 max-w-xl" style={{ fontFamily: 'system-ui' }}>
-          The theologians, bishops, and martyrs of the early church who shaped Christian doctrine, defended orthodoxy, and handed down the faith.
+          The theologians, bishops, and martyrs of the early church — in their own words, natively on Kairos.
         </p>
       </div>
 
@@ -198,24 +223,77 @@ export default function ChurchFathersPage() {
         />
         <div className="relative">
           <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-2" style={{ fontFamily: 'system-ui' }}>
-            ✦ Why Read the Church Fathers?
+            ✦ Reading the Fathers
           </p>
           <p className="text-base leading-relaxed text-white/90 italic mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-            &ldquo;The Church Fathers are like luminous commentators on Scripture who have stood the test of time. To read them is to see how the Bible was understood by those closest in time and culture to the apostles.&rdquo;
+            &ldquo;The Church Fathers show us how the Bible was understood by those closest in time and culture to the apostles — a window into the living tradition of the faith.&rdquo;
           </p>
           <p className="text-xs text-white/50" style={{ fontFamily: 'system-ui' }}>
-            They wrote in Greek, Latin, and Syriac · 1st–8th century AD · All texts in public domain
+            All texts public domain · 1st–5th century AD · Greek, Latin, and Syriac originals
           </p>
         </div>
       </div>
 
-      {/* Church Fathers grid */}
+      {/* Native writings grid */}
       <div className="mb-10">
         <h2 className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest mb-4" style={{ fontFamily: 'system-ui' }}>
-          Key Fathers & Their Writings
+          Read on Kairos
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {FATHERS.map((father) => (
+          {FATHERS.map((writing) => {
+            const isReady = seededMap.has(writing.slug)
+            const sections = seededMap.get(writing.slug) ?? 0
+
+            return isReady ? (
+              <Link key={writing.slug} href={`/dashboard/church-fathers/${writing.slug}`}>
+                <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer h-full">
+                  <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4 relative`}>
+                    <span className="text-2xl">{writing.emoji}</span>
+                    <span className="text-[10px] text-white/60 font-mono">{sections} sections</span>
+                  </div>
+                  <div className="p-3">
+                    <p className="font-semibold text-sm group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: 'system-ui' }}>
+                      {writing.name}
+                    </p>
+                    <p className="text-[10px] text-primary/70 font-medium mb-1.5 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
+                      {writing.father} · {writing.dates}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                      {writing.desc}
+                    </p>
+                  </div>
+                </Card>
+              </Link>
+            ) : (
+              <Card key={writing.slug} className="overflow-hidden border-border border-dashed opacity-60 h-full">
+                <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4 opacity-70`}>
+                  <span className="text-2xl">{writing.emoji}</span>
+                  <span className="text-[10px] text-white/60 font-mono">seeding soon</span>
+                </div>
+                <div className="p-3">
+                  <p className="font-semibold text-sm mb-0.5" style={{ fontFamily: 'system-ui' }}>
+                    {writing.name}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/70 font-medium mb-1.5 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
+                    {writing.father} · {writing.dates}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
+                    {writing.desc}
+                  </p>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* More fathers — external links */}
+      <div className="mb-10">
+        <h2 className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest mb-4" style={{ fontFamily: 'system-ui' }}>
+          More Fathers — External Sources
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {EXTERNAL_FATHERS.map((father) => (
             <a
               key={father.name}
               href={father.url}
@@ -223,15 +301,13 @@ export default function ChurchFathersPage() {
               rel="noopener noreferrer"
             >
               <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer h-full">
-                {/* Gradient banner */}
                 <div className={`h-14 bg-gradient-to-br ${father.gradient} flex items-center justify-between px-4 relative`}>
                   <span className="text-2xl">{father.emoji}</span>
-                  <span className="text-[10px] text-white/60 font-mono" style={{ fontFamily: 'monospace' }}>{father.dates}</span>
+                  <span className="text-[10px] text-white/60 font-mono">{father.dates}</span>
                   <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ExternalLink className="w-3 h-3 text-white/70" />
                   </span>
                 </div>
-                {/* Body */}
                 <div className="p-3">
                   <p className="font-semibold text-sm group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: 'system-ui' }}>
                     {father.name}
@@ -239,21 +315,9 @@ export default function ChurchFathersPage() {
                   <p className="text-[10px] text-primary/70 font-medium mb-1.5 uppercase tracking-wide" style={{ fontFamily: 'system-ui' }}>
                     {father.tradition}
                   </p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed mb-2" style={{ fontFamily: 'system-ui' }}>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed" style={{ fontFamily: 'system-ui' }}>
                     {father.desc}
                   </p>
-                  <div className="space-y-0.5">
-                    {father.writings.slice(0, 2).map((w) => (
-                      <p key={w} className="text-[10px] text-muted-foreground/60 leading-snug" style={{ fontFamily: 'system-ui' }}>
-                        · {w}
-                      </p>
-                    ))}
-                    {father.writings.length > 2 && (
-                      <p className="text-[10px] text-muted-foreground/40" style={{ fontFamily: 'system-ui' }}>
-                        + {father.writings.length - 2} more
-                      </p>
-                    )}
-                  </div>
                 </div>
               </Card>
             </a>
@@ -262,9 +326,9 @@ export default function ChurchFathersPage() {
       </div>
 
       {/* Resource sections */}
-      <div className="space-y-8">
+      <div className="space-y-4">
         <h2 className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
-          Resources & Collections
+          Collections & Resources
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {RESOURCE_SECTIONS.map((section) => (

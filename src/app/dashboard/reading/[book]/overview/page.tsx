@@ -34,7 +34,8 @@ export default async function BookOverviewPage({ params }: Props) {
       const { data: inserted } = await supabase
         .from('book_overviews')
         .insert({
-          book_id: bookMeta.id,
+          book_id:      bookMeta.id,
+          book_name:    bookMeta.name,
           author:       generated.author,
           date_written: generated.date_written,
           audience:     generated.audience,
