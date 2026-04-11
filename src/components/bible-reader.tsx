@@ -105,7 +105,10 @@ export function BibleReader({
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [compareTranslation, setCompareTranslation] = useState<string | null>(null)
   const [compareVerses, setCompareVerses] = useState<Verse[]>([])
-  const [fontFamily, setFontFamily] = useState<'serif' | 'sans'>('serif')
+  const [fontFamily, setFontFamily] = useState<'serif' | 'sans' | 'mono'>('serif')
+  const [lineSpacing, setLineSpacing] = useState<'tight' | 'normal' | 'relaxed' | 'loose'>('relaxed')
+  const [viewMode, setViewMode] = useState<'paragraph' | 'verse'>('paragraph')
+  const [typographyOpen, setTypographyOpen] = useState(false)
   const readerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showVerseHint, setShowVerseHint] = useState(false)
@@ -130,19 +133,17 @@ export function BibleReader({
   const wordCount = verses.reduce((n, v) => n + v.text.split(/\s+/).length, 0)
   const readingMinutes = Math.max(1, Math.round(wordCount / 200))
 
-  // Persist font family preference
+  // Persist / restore all typography settings
   useEffect(() => {
-    const saved = localStorage.getItem('bv_font_family') as 'serif' | 'sans' | null
-    if (saved) setFontFamily(saved)
+    const ff = localStorage.getItem('bv_font_family') as 'serif' | 'sans' | 'mono' | null
+    const fs = localStorage.getItem('bv_font_size') as 'sm' | 'md' | 'lg' | null
+    const sp = localStorage.getItem('bv_line_spacing') as 'tight' | 'normal' | 'relaxed' | 'loose' | null
+    const vm = localStorage.getItem('bv_view_mode') as 'paragraph' | 'verse' | null
+    if (ff) setFontFamily(ff)
+    if (fs) setFontSize(fs)
+    if (sp) setLineSpacing(sp)
+    if (vm) setViewMode(vm)
   }, [])
-
-  function cycleFontFamily() {
-    setFontFamily((f) => {
-      const next = f === 'serif' ? 'sans' : 'serif'
-      localStorage.setItem('bv_font_family', next)
-      return next
-    })
-  }
 
   // Save last reading position
   useEffect(() => {
@@ -309,7 +310,8 @@ export function BibleReader({
   // ── Derived values ───────────────────────────────────────────────────────────
 
   const fontSizePx = { sm: '0.9rem', md: '1.05rem', lg: '1.2rem' }[fontSize]
-  const fontFamilyCss = fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui, sans-serif'
+  const fontFamilyCss = fontFamily === 'serif' ? 'Georgia, serif' : fontFamily === 'mono' ? 'ui-monospace, monospace' : 'system-ui, sans-serif'
+  const lineHeightCss = { tight: '1.55', normal: '1.7', relaxed: '1.9', loose: '2.2' }[lineSpacing]
   const isOT = book.testament === 'OT' || book.testament === 'Old'
 
   // ── Event handlers ───────────────────────────────────────────────────────────
@@ -324,20 +326,25 @@ export function BibleReader({
     track('verse_popup_opened', { book: book.name, chapter, verse: verse.verse_number })
   }
 
-  // Scroll to verse from URL hash on mount
+  // Scroll to verse from URL hash on mount — also auto-selects it so connections load
   useEffect(() => {
     const hash = window.location.hash
     if (!hash.startsWith('#v')) return
     const vNum = parseInt(hash.slice(2), 10)
     if (isNaN(vNum)) return
     setTimeout(() => {
+      const container = scrollRef.current
       const el = document.getElementById(`verse-${vNum}`)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.add('ring-2', 'ring-primary/50', 'rounded')
-        setTimeout(() => el.classList.remove('ring-2', 'ring-primary/50', 'rounded'), 2500)
+      if (el && container) {
+        const elRect = el.getBoundingClientRect()
+        const containerRect = container.getBoundingClientRect()
+        container.scrollTop += elRect.top - containerRect.top - containerRect.height / 2 + elRect.height / 2
       }
-    }, 300)
+      // Auto-select the verse so the right panel loads connections
+      const verse = verses.find((v) => v.verse_number === vNum)
+      if (verse) setSelectedVerse(verse)
+    }, 350)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function closePopup() {
@@ -451,7 +458,8 @@ export function BibleReader({
         e.preventDefault()
         setChatOpen(true)
       } else if (e.key === 'Escape') {
-        if (shortcutsOpen) setShortcutsOpen(false)
+        if (typographyOpen) setTypographyOpen(false)
+        else if (shortcutsOpen) setShortcutsOpen(false)
         else if (selectedVerse) closePopup()
         else {
           setSelectedInterlinearWord(null)
@@ -595,7 +603,7 @@ export function BibleReader({
                   const isActive = b.id === book.id
                   return (
                     <div key={b.id}>
-                      <Link href={`/dashboard/reading/${slug}/1?translation=${translation}`} prefetch>
+                      <Link href={`/dashboard/reading/${slug}/overview`} prefetch>
                         <div className={`px-2 py-1 rounded-md text-sm leading-snug transition-colors ${isActive ? 'text-primary font-semibold bg-primary/8' : 'text-foreground/70 hover:text-foreground hover:bg-muted/50'}`} style={{ fontFamily: 'system-ui' }}>
                           {b.name}
                         </div>
@@ -630,7 +638,7 @@ export function BibleReader({
                   const isActive = b.id === book.id
                   return (
                     <div key={b.id}>
-                      <Link href={`/dashboard/reading/${slug}/1?translation=${translation}`} prefetch>
+                      <Link href={`/dashboard/reading/${slug}/overview`} prefetch>
                         <div className={`px-2 py-1 rounded-md text-sm leading-snug transition-colors ${isActive ? 'text-primary font-semibold bg-primary/8' : 'text-foreground/70 hover:text-foreground hover:bg-muted/50'}`} style={{ fontFamily: 'system-ui' }}>
                           {b.name}
                         </div>
@@ -727,32 +735,103 @@ export function BibleReader({
               )}
             </div>
 
-            {/* Font size */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 font-normal"
-              onClick={() => setFontSize((s) => s === 'sm' ? 'md' : s === 'md' ? 'lg' : 'sm')}
-              title="Change font size"
-            >
-              <Type className="w-3 h-3" />
-              <span style={{ fontFamily: 'system-ui' }} className="hidden sm:inline">
-                {fontSize === 'sm' ? 'Small' : fontSize === 'md' ? 'Medium' : 'Large'}
-              </span>
-            </Button>
+            {/* Typography panel button */}
+            <div className="relative">
+              <Button
+                variant={typographyOpen ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-7 px-2 text-xs gap-1 font-normal"
+                onClick={() => setTypographyOpen((o) => !o)}
+                title="Typography settings"
+              >
+                <Type className="w-3 h-3" />
+                <span style={{ fontFamily: 'system-ui' }} className="hidden sm:inline">T</span>
+              </Button>
 
-            {/* Font family toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1 font-normal"
-              onClick={cycleFontFamily}
-              title="Toggle font style"
-            >
-              <span className="text-xs" style={{ fontFamily: fontFamily === 'serif' ? 'Georgia, serif' : 'system-ui' }}>
-                {fontFamily === 'serif' ? 'Serif' : 'Sans'}
-              </span>
-            </Button>
+              {typographyOpen && (
+                <div
+                  className="absolute right-0 top-9 z-50 w-64 bg-popover border border-border rounded-xl shadow-xl p-4 space-y-4"
+                  style={{ fontFamily: 'system-ui' }}
+                  onMouseLeave={() => setTypographyOpen(false)}
+                >
+                  {/* VIEW */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-2">View</p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(['paragraph', 'verse'] as const).map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => { setViewMode(v); localStorage.setItem('bv_view_mode', v) }}
+                          className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-xs font-medium transition-colors ${viewMode === v ? 'bg-foreground text-background' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
+                        >
+                          <span className="text-[10px] leading-none opacity-60">{v === 'paragraph' ? '¶' : '≡'}</span>
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {}}
+                        className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-xs font-medium bg-muted text-muted-foreground/40 cursor-not-allowed relative"
+                      >
+                        <span className="text-[10px] leading-none opacity-40">αβ</span>
+                        Interlinear
+                        <span className="absolute -top-1 -right-1 text-[8px] bg-primary text-primary-foreground px-1 rounded-full font-bold">Pro</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* FONT */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-2">Font</p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(['serif', 'sans', 'mono'] as const).map((f) => (
+                        <button
+                          key={f}
+                          onClick={() => { setFontFamily(f); localStorage.setItem('bv_font_family', f) }}
+                          className={`px-2 py-2 rounded-lg text-xs font-medium transition-colors ${fontFamily === f ? 'bg-foreground text-background' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
+                          style={{ fontFamily: f === 'serif' ? 'Georgia, serif' : f === 'mono' ? 'ui-monospace, monospace' : 'system-ui' }}
+                        >
+                          {f.charAt(0).toUpperCase() + f.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SIZE */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-2">Size</p>
+                    <div className="flex items-center justify-between bg-muted rounded-lg px-3 py-1.5">
+                      <button
+                        onClick={() => { const s = fontSize === 'lg' ? 'md' : 'sm'; setFontSize(s); localStorage.setItem('bv_font_size', s) }}
+                        className="text-lg font-bold text-muted-foreground hover:text-foreground transition-colors w-6 h-6 flex items-center justify-center"
+                      >−</button>
+                      <span className="text-sm font-medium">
+                        {fontSize === 'sm' ? 'Small' : fontSize === 'md' ? 'Medium' : 'Large'}
+                      </span>
+                      <button
+                        onClick={() => { const s = fontSize === 'sm' ? 'md' : 'lg'; setFontSize(s); localStorage.setItem('bv_font_size', s) }}
+                        className="text-lg font-bold text-muted-foreground hover:text-foreground transition-colors w-6 h-6 flex items-center justify-center"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  {/* SPACING */}
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest mb-2">Spacing</p>
+                    <div className="grid grid-cols-4 gap-1">
+                      {(['tight', 'normal', 'relaxed', 'loose'] as const).map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => { setLineSpacing(s); localStorage.setItem('bv_line_spacing', s) }}
+                          className={`px-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${lineSpacing === s ? 'bg-foreground text-background' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}
+                        >
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Ask Ezra */}
             <Button
@@ -987,7 +1066,7 @@ export function BibleReader({
                     return (
                       <div key={verse.id} className={`flex gap-2 cursor-pointer rounded-lg px-3 py-1.5 transition-colors ${hlClass} ${selectedVerse?.id === verse.id ? 'bg-primary/8' : 'hover:bg-primary/5'}`} onClick={(e) => handleVerseClick(verse, e)}>
                         <span className="shrink-0 w-5 text-right select-none" style={{ fontSize: '0.6rem', fontFamily: 'system-ui', fontWeight: 700, opacity: 0.3, paddingTop: '0.25em' }}>{verse.verse_number}</span>
-                        <p className="flex-1 leading-relaxed" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+                        <p className="flex-1" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>
                           {verse.text}
                           {hasNote && <span className="inline-block w-1.5 h-1.5 bg-accent rounded-full ml-0.5 mb-0.5 align-middle" />}
                         </p>
@@ -1004,16 +1083,42 @@ export function BibleReader({
                   {compareVerses.map((verse) => (
                     <div key={verse.id} className="flex gap-2 px-1 py-1.5">
                       <span className="shrink-0 w-5 text-right select-none" style={{ fontSize: '0.6rem', fontFamily: 'system-ui', fontWeight: 700, opacity: 0.25, paddingTop: '0.25em' }}>{verse.verse_number}</span>
-                      <p className="flex-1 leading-relaxed text-muted-foreground/80" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>{verse.text}</p>
+                      <p className="flex-1 text-muted-foreground/80" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>{verse.text}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-          /* ── NORMAL VIEW: flowing inline text ── */
+          /* ── VERSE VIEW: one verse per row ── */
+          ) : viewMode === 'verse' ? (
+            <div className="space-y-0.5 -mx-3">
+              {verses.map((verse) => {
+                const hlColor = highlights[verse.id]
+                const hasNote = !!notes[verse.id]
+                const hlClass = hlColor ? `hl-${hlColor}` : ''
+                return (
+                  <div
+                    key={verse.id}
+                    id={`verse-${verse.verse_number}`}
+                    className={`flex gap-2 cursor-pointer rounded-lg px-3 py-1.5 transition-colors ${hlClass} ${selectedVerse?.id === verse.id ? 'bg-primary/8' : 'hover:bg-primary/5'}`}
+                    onClick={(e) => handleVerseClick(verse, e)}
+                  >
+                    <span className="shrink-0 w-5 text-right select-none" style={{ fontSize: '0.6rem', fontFamily: 'system-ui', fontWeight: 700, opacity: 0.3, paddingTop: '0.25em' }}>
+                      {verse.verse_number}
+                    </span>
+                    <p className="flex-1" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>
+                      {verse.text}
+                      {hasNote && <span className="inline-block w-1.5 h-1.5 bg-accent rounded-full ml-0.5 mb-0.5 align-middle" title="You have a note on this verse" />}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+
+          /* ── PARAGRAPH VIEW: flowing inline text ── */
           ) : (
-            <p className="leading-[1.9] text-foreground" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss }}>
+            <p className="text-foreground" style={{ fontSize: fontSizePx, fontFamily: fontFamilyCss, lineHeight: lineHeightCss }}>
               {verses.map((verse) => {
                 const hlColor = highlights[verse.id]
                 const hasNote = !!notes[verse.id]
@@ -1109,7 +1214,7 @@ export function BibleReader({
                         </p>
                         <div className="space-y-0.5">
                           {crossRefs.map((c, i) => (
-                            <Link key={i} href={`/dashboard/reading/${c.book_name.toLowerCase().replace(/\s+/g, '-')}/${c.chapter}?translation=${translation}`}>
+                            <Link key={i} href={`/dashboard/reading/${c.book_name.toLowerCase().replace(/\s+/g, '-')}/${c.chapter}?translation=${translation}#v${c.verse}`}>
                               <div className="px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors group">
                                 <p className="text-xs font-medium text-primary group-hover:underline" style={{ fontFamily: 'system-ui' }}>{c.ref}</p>
                               </div>
@@ -1126,7 +1231,7 @@ export function BibleReader({
                         </p>
                         <div className="space-y-1.5">
                           {connections.map((c) => (
-                            <Link key={c.id} href={`/dashboard/reading/${c.book_name.toLowerCase().replace(/\s+/g, '-')}/${c.chapter}?translation=${translation}`}>
+                            <Link key={c.id} href={`/dashboard/reading/${c.book_name.toLowerCase().replace(/\s+/g, '-')}/${c.chapter}?translation=${translation}#v${c.verse}`}>
                               <div className="px-3 py-2 rounded-lg bg-muted/30 hover:bg-muted/60 transition-colors">
                                 <p className="text-xs font-semibold text-primary" style={{ fontFamily: 'system-ui' }}>{c.ref}</p>
                                 <p className="text-[10px] text-muted-foreground/60 capitalize mt-0.5" style={{ fontFamily: 'system-ui' }}>{c.type}</p>

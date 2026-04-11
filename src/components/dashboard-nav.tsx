@@ -49,7 +49,7 @@ interface Props {
 }
 
 const STUDY_ITEMS = [
-  { href: '/dashboard',              label: 'Dashboard',     icon: LayoutDashboard, desc: 'Plans, streaks & stats' },
+  { href: '/dashboard/home',         label: 'Dashboard',     icon: LayoutDashboard, desc: 'Plans, streaks & stats' },
   { href: '/dashboard/search',       label: 'Search',        icon: Search,          desc: 'Search the Bible' },
   { href: '/dashboard/plans',        label: 'Reading Plans', icon: CalendarDays,    desc: 'Guided multi-week journeys' },
   { href: '/dashboard/study-history',label: 'Study History', icon: History,         desc: 'Highlights, notes & bookmarks' },

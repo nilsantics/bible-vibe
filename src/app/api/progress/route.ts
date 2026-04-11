@@ -126,11 +126,13 @@ export async function POST(request: NextRequest) {
       }
 
       if (earned) {
-        await supabase
+        const { error: badgeErr } = await supabase
           .from('user_badges')
           .insert({ user_id: user.id, badge_id: badge.id })
-          .select()
-        newBadges.push(`${badge.icon} ${badge.name}`)
+        // Only notify if the row was actually inserted (not a duplicate)
+        if (!badgeErr) {
+          newBadges.push(`${badge.icon} ${badge.name}`)
+        }
       }
     }
   }
