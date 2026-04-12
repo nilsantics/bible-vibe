@@ -594,12 +594,12 @@ export function BibleReader({
           {/* Scroll progress bar */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
 
-          <div className="px-4 py-2 flex items-center gap-1.5 flex-wrap">
+          <div className="px-3 py-2 flex items-center gap-1.5 overflow-hidden">
             <Suspense fallback={null}>
               <MobileBookDrawer activeBookId={book.id} />
             </Suspense>
             <PassageSearch currentBook={book} currentChapter={chapter} translation={translation} />
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-1 shrink-0">
             {/* Translation */}
             <Select value={translation} onValueChange={handleTranslationChange}>
               <SelectTrigger className="h-7 border border-border rounded-lg px-2 text-xs font-semibold bg-transparent w-auto gap-1 focus:ring-0">
@@ -652,12 +652,11 @@ export function BibleReader({
               <Button
                 variant={typographyOpen ? 'secondary' : 'outline'}
                 size="sm"
-                className="h-7 px-2 text-xs gap-1 font-normal"
+                className="h-7 w-7 px-0 text-xs gap-1 font-normal"
                 onClick={() => setTypographyOpen((o) => !o)}
                 title="Typography settings"
               >
                 <Type className="w-3 h-3" />
-                <span style={{ fontFamily: 'system-ui' }} className="hidden sm:inline">T</span>
               </Button>
 
               {typographyOpen && (
@@ -763,11 +762,11 @@ export function BibleReader({
             <Button
               variant={chatOpen ? 'secondary' : 'outline'}
               size="sm"
-              className="h-7 px-2 text-xs gap-1 font-normal ml-auto"
+              className="h-7 px-2 text-xs gap-1 font-normal"
               onClick={() => { if (!chatOpen) track('chat_opened', { book: book.name, chapter }); setChatOpen((o) => !o) }}
             >
               <MessageSquare className="w-3 h-3" />
-              <span style={{ fontFamily: 'system-ui' }}>Ask Ezra</span>
+              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Ezra</span>
             </Button>
 
             {/* Keyboard shortcuts — desktop only */}
@@ -780,8 +779,8 @@ export function BibleReader({
             >
               ?
             </Button>
+            </div>
           </div>
-        </div>
         </div>{/* end sticky toolbar */}
 
         {/* Bible text */}

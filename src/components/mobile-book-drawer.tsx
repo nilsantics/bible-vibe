@@ -26,14 +26,16 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
 
   const [writings, setWritings] = useState<PatristicWritingMeta[]>([])
   const [writingsLoaded, setWritingsLoaded] = useState(false)
+  const [writingsLoading, setWritingsLoading] = useState(false)
 
   useEffect(() => {
     if (tab !== 'CF' || writingsLoaded) return
     setWritingsLoaded(true)
+    setWritingsLoading(true)
     fetch('/api/patristic-writings')
       .then((r) => r.json())
-      .then((d) => setWritings(d.writings ?? []))
-      .catch(() => {})
+      .then((d) => { setWritings(d.writings ?? []); setWritingsLoading(false) })
+      .catch(() => setWritingsLoading(false))
   }, [tab, writingsLoaded])
   const translation = searchParams.get('translation') ?? 'ESV'
 
@@ -167,7 +169,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
             </div>
 
             {/* Book list */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               {tab === 'OT' &&
                 OT_CATEGORIES.map((cat) => (
                   <div key={cat.label}>
@@ -230,14 +232,26 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
 
               {tab === 'CF' && (
                 <div>
+                  <Link
+                    href="/dashboard/church-fathers"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 border-b border-border/40 bg-primary/5 active:bg-primary/10 transition-colors"
+                  >
+                    <span className="text-xs font-semibold text-primary" style={{ fontFamily: 'system-ui' }}>Browse all Church Fathers →</span>
+                  </Link>
                   <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest px-4 pt-3 pb-1" style={{ fontFamily: 'system-ui' }}>
-                    Church Fathers
+                    Writings on Kairos
                   </p>
-                  {!writingsLoaded && (
+                  {writingsLoading && (
                     <div className="px-4 space-y-2 py-2">
                       {[...Array(5)].map((_, i) => (
                         <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />
                       ))}
+                    </div>
+                  )}
+                  {!writingsLoading && writings.length === 0 && writingsLoaded && (
+                    <div className="px-4 py-6 text-center">
+                      <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>No writings loaded yet</p>
                     </div>
                   )}
                   {writings.map((w) => (

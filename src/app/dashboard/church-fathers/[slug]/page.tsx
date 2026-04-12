@@ -54,15 +54,40 @@ export default async function PatristicReaderPage({ params, searchParams }: Prop
       <div className="flex-1 overflow-y-auto min-w-0">
     <div className="max-w-3xl mx-auto px-4 py-8">
 
-      {/* Mobile drawer */}
-      <div className="lg:hidden mb-4">
+      {/* Mobile sticky nav bar */}
+      <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border -mx-4 px-4 py-2 mb-4 flex items-center gap-2">
         <Suspense fallback={null}>
           <MobileBookDrawer label={writing.father_name} />
         </Suspense>
+        <Link href="/dashboard/church-fathers" className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0" style={{ fontFamily: 'system-ui' }}>
+          ← All Fathers
+        </Link>
+        <span className="text-muted-foreground/30 text-xs">·</span>
+        <span className="text-xs text-foreground/70 truncate font-medium" style={{ fontFamily: 'system-ui' }}>{writing.title}</span>
       </div>
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6" style={{ fontFamily: 'system-ui' }}>
+      {/* Mobile section picker — horizontal scroll */}
+      {sections.length > 0 && (
+        <div className="lg:hidden -mx-4 px-4 mb-5 overflow-x-auto flex gap-1.5 pb-1 scrollbar-hide">
+          {sections.map((sec) => (
+            <Link
+              key={sec.section_number}
+              href={`/dashboard/church-fathers/${slug}?s=${sec.section_number}`}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                sec.section_number === sectionNum
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground bg-muted/40 active:bg-muted'
+              }`}
+              style={{ fontFamily: 'system-ui' }}
+            >
+              {sec.section_number}. {sec.title ? (sec.title.length > 20 ? sec.title.slice(0, 20) + '…' : sec.title) : `§${sec.section_number}`}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Breadcrumb — desktop only */}
+      <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground mb-6" style={{ fontFamily: 'system-ui' }}>
         <Link href="/dashboard/church-fathers" className="hover:text-foreground transition-colors">
           Church Fathers
         </Link>

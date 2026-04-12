@@ -159,14 +159,14 @@ export function PassageSearch({
       {/* Trigger button — replaces the two old selects */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 h-8 px-2 rounded-lg hover:bg-muted/60 transition-colors text-sm font-semibold"
+        className="flex items-center gap-1 h-8 px-2 rounded-lg hover:bg-muted/60 transition-colors text-sm font-semibold min-w-0"
         style={{ fontFamily: 'system-ui' }}
         title="Go to passage (g)"
       >
         <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <span className="text-foreground">{currentBook.name}</span>
-        <span className="text-muted-foreground font-normal">·</span>
-        <span className="text-muted-foreground font-normal">Ch {currentChapter}</span>
+        <span className="hidden sm:inline text-foreground truncate">{currentBook.name}</span>
+        <span className="sm:hidden text-foreground shrink-0">{currentBook.abbr}</span>
+        <span className="text-muted-foreground font-normal shrink-0">·{currentChapter}</span>
         <kbd className="hidden sm:inline text-[10px] font-mono bg-muted border border-border rounded px-1 py-0.5 text-muted-foreground/60 ml-1">g</kbd>
       </button>
 
