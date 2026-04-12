@@ -121,10 +121,10 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
       {open && (
         <>
           {/* Full-screen overlay */}
-          <div className="fixed inset-0 z-50 bg-card flex flex-col">
+          <div className="fixed inset-0 z-50 bg-card" style={{ display: 'grid', gridTemplateRows: 'auto auto 1fr' }}>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 border-b border-border">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border">
               <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>
                 Bible Books
               </p>
@@ -137,7 +137,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-border shrink-0">
+            <div className="flex border-b border-border">
               {(['OT', 'NT', 'Apoc', 'CF'] as const).map((t) => (
                 <button
                   key={t}
@@ -155,7 +155,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
             </div>
 
             {/* Book list */}
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="overflow-y-auto">
               {tab === 'OT' &&
                 OT_CATEGORIES.map((cat) => (
                   <div key={cat.label}>
