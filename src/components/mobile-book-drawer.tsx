@@ -120,32 +120,19 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
       {/* Bottom sheet */}
       {open && (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
-            onClick={() => setOpen(false)}
-          />
-
-          {/* Sheet */}
-          <div
-            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl shadow-2xl border-t border-border/60 flex flex-col overflow-hidden"
-            style={{ maxHeight: '82dvh' }}
-          >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-9 h-1 rounded-full bg-muted-foreground/20" />
-            </div>
+          {/* Full-screen overlay */}
+          <div className="fixed inset-0 z-50 bg-card flex flex-col">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-2 shrink-0">
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 border-b border-border">
               <p className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>
                 Bible Books
               </p>
               <button
                 onClick={() => setOpen(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
