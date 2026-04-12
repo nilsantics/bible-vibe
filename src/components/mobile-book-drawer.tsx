@@ -111,11 +111,10 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
       {/* Trigger — only visible on mobile */}
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-muted/60 border border-border/60 text-xs font-semibold transition-colors active:bg-muted"
-        style={{ fontFamily: 'system-ui' }}
+        className="lg:hidden flex items-center justify-center h-8 w-8 rounded-lg bg-muted/60 border border-border/60 transition-colors active:bg-muted shrink-0"
+        aria-label="Browse books"
       >
-        <BookOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-        <span>{label ?? activeBook?.name ?? 'Books'}</span>
+        <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
       </button>
 
       {/* Bottom sheet */}
@@ -129,7 +128,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
 
           {/* Sheet */}
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl shadow-2xl border-t border-border/60 flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl shadow-2xl border-t border-border/60 flex flex-col overflow-hidden"
             style={{ maxHeight: '82dvh' }}
           >
             {/* Handle */}
