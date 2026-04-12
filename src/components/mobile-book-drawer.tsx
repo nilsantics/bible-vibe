@@ -121,7 +121,7 @@ export function MobileBookDrawer({ activeBookId, label }: Props) {
       {open && (
         <>
           {/* Full-screen overlay */}
-          <div className="fixed inset-0 z-50 bg-card" style={{ display: 'grid', gridTemplateRows: 'auto auto 1fr' }}>
+          <div className="fixed inset-0 z-50 bg-card" style={{ display: 'grid', gridTemplateRows: 'auto auto 1fr', height: '100dvh' }}>
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border">
