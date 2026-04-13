@@ -14,9 +14,6 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return err('Sign in to access historical context.', 401)
 
-  const limit = await checkFeatureRateLimit(user.id)
-  if (!limit.allowed) return err(limit.message!, 429)
-
   const { bookName, chapter, verseText } = await request.json()
   if (!bookName || !verseText) {
     return new Response(JSON.stringify({ error: 'bookName and verseText required' }), { status: 400 })

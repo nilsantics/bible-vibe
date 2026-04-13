@@ -74,9 +74,10 @@ function useStreamingContent(
   trigger: boolean,
   url: string,
   body: object
-): { text: string; loading: boolean } {
+): { text: string; loading: boolean; limitError: string | null } {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [limitError, setLimitError] = useState<string | null>(null)
   const fetched = useRef(false)
 
   useEffect(() => {
@@ -84,12 +85,22 @@ function useStreamingContent(
     fetched.current = true
     async function stream() {
       setLoading(true)
+      setLimitError(null)
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
+        if (res.status === 401) {
+          setLimitError('Sign in to access this feature.')
+          return
+        }
+        if (res.status === 429) {
+          const d = await res.json().catch(() => ({}))
+          setLimitError(d.error ?? 'Daily limit reached. Upgrade to Pro for unlimited access.')
+          return
+        }
         if (!res.ok || !res.body) throw new Error('Stream failed')
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
@@ -109,7 +120,7 @@ function useStreamingContent(
     stream()
   }, [trigger])
 
-  return { text, loading }
+  return { text, loading, limitError }
 }
 
 export function VersePopup({
@@ -174,12 +185,12 @@ export function VersePopup({
   const popupRef = useRef<HTMLDivElement>(null)
   const verseRef = `${bookName} ${verse.chapter_number}:${verse.verse_number}`
 
-  const { text: explanation, loading: loadingExplain } = useStreamingContent(
+  const { text: explanation, loading: loadingExplain, limitError: explainLimitError } = useStreamingContent(
     explainTriggered, '/api/explain',
     { verseRef, verseText: verse.text, translation, tradition }
   )
 
-  const { text: commentary, loading: loadingCommentary } = useStreamingContent(
+  const { text: commentary, loading: loadingCommentary, limitError: commentaryLimitError } = useStreamingContent(
     commentaryTriggered, '/api/commentary',
     { verseRef, verseText: verse.text, bookId: verse.book_id, chapter: verse.chapter_number, verse: verse.verse_number, tradition }
   )
@@ -545,10 +556,12 @@ export function VersePopup({
               setExplainTriggered={setExplainTriggered}
               explanation={explanation}
               loadingExplain={loadingExplain}
+              explainLimitError={explainLimitError}
               commentaryTriggered={commentaryTriggered}
               setCommentaryTriggered={setCommentaryTriggered}
               commentary={commentary}
               loadingCommentary={loadingCommentary}
+              commentaryLimitError={commentaryLimitError}
 
               crossRefs={crossRefs}
               loadingCrossRefs={loadingCrossRefs}
@@ -781,10 +794,12 @@ interface TabContentProps {
   setExplainTriggered: (v: boolean) => void
   explanation: string
   loadingExplain: boolean
+  explainLimitError: string | null
   commentaryTriggered: boolean
   setCommentaryTriggered: (v: boolean) => void
   commentary: string
   loadingCommentary: boolean
+  commentaryLimitError: string | null
   crossRefs: CrossRefResult[] | null
   loadingCrossRefs: boolean
   otNtConns: OtNtConnection[] | null
@@ -817,8 +832,8 @@ interface TabContentProps {
 }
 
 function TabContent({
-  activeTab, explainTriggered, setExplainTriggered, explanation, loadingExplain,
-  commentaryTriggered, setCommentaryTriggered, commentary, loadingCommentary,
+  activeTab, explainTriggered, setExplainTriggered, explanation, loadingExplain, explainLimitError,
+  commentaryTriggered, setCommentaryTriggered, commentary, loadingCommentary, commentaryLimitError,
   crossRefs, loadingCrossRefs, otNtConns, onClose, onOpenChat,
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
@@ -839,6 +854,8 @@ function TabContent({
               Explain this verse
             </Button>
           </div>
+        ) : explainLimitError ? (
+          <UpgradeBanner message={explainLimitError} />
         ) : (
           <>
             <StreamingContent text={explanation} loading={loadingExplain} />
@@ -870,6 +887,8 @@ function TabContent({
               Search commentary library
             </Button>
           </div>
+        ) : commentaryLimitError ? (
+          <UpgradeBanner message={commentaryLimitError} />
         ) : (
           <StreamingContent text={commentary} loading={loadingCommentary} />
         )
@@ -1248,6 +1267,27 @@ function StreamingContent({ text, loading }: { text: string; loading: boolean })
           {loading && <span className="inline-block w-0.5 h-3 bg-primary ml-0.5 animate-pulse align-middle" />}
         </div>
       )}
+    </div>
+  )
+}
+
+function UpgradeBanner({ message }: { message: string }) {
+  return (
+    <div className="m-3 bg-amber-500/10 border border-amber-500/25 rounded-xl p-3" style={{ fontFamily: 'system-ui' }}>
+      <div className="flex items-start gap-2.5">
+        <div className="w-6 h-6 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
+          <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-foreground mb-1">Daily limit reached</p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">{message}</p>
+          <Link href="/dashboard/upgrade">
+            <Button size="sm" className="h-6 text-[11px] px-3 gap-1">
+              <Zap className="w-3 h-3" /> Upgrade to Pro
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getSubscription, isActiveSub } from '@/lib/stripe'
 
 const CHAT_DAILY_LIMIT = 20
-const FEATURE_DAILY_LIMIT = 30 // commentary, explain, context, devotional, quiz, synthesize, etc.
+const FEATURE_DAILY_LIMIT = 20 // commentary (RAG), quiz, synthesize notes — explicit expensive actions
 
 function adminClient() {
   return createClient(
@@ -83,7 +83,7 @@ export async function checkFeatureRateLimit(
   if (current >= FEATURE_DAILY_LIMIT) {
     return {
       allowed: false,
-      message: `You've used all ${FEATURE_DAILY_LIMIT} free AI feature lookups today. Upgrade to Pro for unlimited access.`,
+      message: `You've reached your ${FEATURE_DAILY_LIMIT} free uses today. Upgrade to Pro for unlimited commentary, quizzes, and AI note synthesis.`,
     }
   }
 

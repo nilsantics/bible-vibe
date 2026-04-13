@@ -218,6 +218,12 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: content, bookName, chapter }),
       })
+      if (res.status === 429) {
+        const d = await res.json().catch(() => ({}))
+        setSynthesis(`**Daily limit reached**\n\n${d.error ?? 'Upgrade to Pro for unlimited AI note synthesis.'}`)
+        setSynthesizing(false)
+        return
+      }
       if (!res.body) throw new Error()
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
