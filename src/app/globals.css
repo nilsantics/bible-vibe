@@ -248,3 +248,53 @@ button, input, select, textarea, label,
 nav, header, aside, footer, [data-ui] {
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
+
+/* ─── Tiptap note editor ─────────────────────────────────────── */
+.note-editor .ProseMirror {
+  outline: none;
+  min-height: 100%;
+  padding: 1.25rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+.note-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: oklch(var(--muted-foreground) / 0.4);
+  pointer-events: none;
+  height: 0;
+}
+.note-editor .ProseMirror h1,
+.note-editor .ProseMirror h2,
+.note-editor .ProseMirror h3 {
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+.note-editor .ProseMirror h2 { font-size: 1.1rem; }
+.note-editor .ProseMirror h3 { font-size: 1rem; }
+.note-editor .ProseMirror strong { font-weight: 700; }
+.note-editor .ProseMirror em { font-style: italic; }
+.note-editor .ProseMirror blockquote {
+  border-left: 3px solid oklch(var(--primary) / 0.4);
+  background: oklch(var(--primary) / 0.05);
+  margin: 0.75em 0;
+  padding: 0.5em 1em;
+  border-radius: 0 0.375rem 0.375rem 0;
+  color: oklch(var(--foreground) / 0.75);
+}
+.note-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid oklch(var(--border));
+  margin: 1.25em 0;
+}
+.note-editor .ProseMirror ul,
+.note-editor .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+.note-editor .ProseMirror p { margin: 0.25em 0; }

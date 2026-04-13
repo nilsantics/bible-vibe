@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import { Markdown } from 'tiptap-markdown'
 import {
-  X, Sparkles, GripVertical, Check, Clock, Eye, Pencil,
+  X, Sparkles, GripVertical, Check, Clock,
   Minus, Plus, ArrowLeft, BookOpen, Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -49,10 +53,10 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   const [activeId, setActiveId] = useState<string | null>(null)
   const activeIdRef = useRef<string | null>(null)
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const titleRef = useRef('')
+  const [content, setContent] = useState('') // markdown string kept in sync with editor
   const [saveState, setSaveState] = useState<'saved' | 'unsaved' | 'saving'>('saved')
   const [savedAt, setSavedAt] = useState<Date | null>(null)
-  const [preview, setPreview] = useState(false)
   const [dragOver, setDragOver] = useState(false)
 
   // synthesis state
@@ -60,8 +64,62 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   const [synthesizing, setSynthesizing] = useState(false)
   const [showSynthesis, setShowSynthesis] = useState(false)
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // ── save ────────────────────────────────────────────────
+  const save = useCallback(async (id: string, t: string, c: string) => {
+    if (!isAuthenticated) return
+    setSaveState('saving')
+    try {
+      const r = await fetch('/api/study-notes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, title: t, content: c }),
+      })
+      const d = await r.json()
+      if (d.note) setNotes(prev => prev.map(n => n.id === id ? d.note : n))
+      setSaveState('saved')
+      setSavedAt(new Date())
+    } catch {
+      setSaveState('unsaved')
+    }
+  }, [isAuthenticated])
+
+  function scheduleSave(newTitle: string, newContent: string) {
+    const id = activeIdRef.current
+    if (!id) return
+    setSaveState('unsaved')
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => save(id, newTitle, newContent), 1200)
+  }
+
+  // ── Tiptap editor ────────────────────────────────────────
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Markdown.configure({ html: false, transformPastedText: true }),
+      Placeholder.configure({ placeholder: 'Start writing, or drag a verse from the reader to quote it.' }),
+    ],
+    editorProps: {
+      attributes: { class: 'h-full' },
+    },
+    onUpdate({ editor }) {
+      const md = editor.storage.markdown.getMarkdown()
+      setContent(md)
+      scheduleSave(titleRef.current, md)
+    },
+  })
+
+  // Sync title ref
+  useEffect(() => { titleRef.current = title }, [title])
+
+  // When active note changes → push content into editor
+  useEffect(() => {
+    if (!editor || view !== 'editor') return
+    editor.commands.setContent(content, false)
+    editor.commands.focus('end')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, editor])
 
   // ── load list ────────────────────────────────────────────
   const loadNotes = useCallback(async () => {
@@ -82,10 +140,10 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
     activeIdRef.current = note.id
     setActiveId(note.id)
     setTitle(note.title)
+    titleRef.current = note.title
     setContent(note.content)
     setSaveState('saved')
     setSavedAt(null)
-    setPreview(false)
     setShowSynthesis(false)
     setView('editor')
   }
@@ -120,97 +178,24 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
     activeIdRef.current = null
   }
 
-  // ── save ────────────────────────────────────────────────
-  const save = useCallback(async (id: string, t: string, c: string) => {
-    if (!isAuthenticated) return
-    setSaveState('saving')
-    try {
-      const r = await fetch('/api/study-notes', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, title: t, content: c }),
-      })
-      const d = await r.json()
-      if (d.note) setNotes(prev => prev.map(n => n.id === id ? d.note : n))
-      setSaveState('saved')
-      setSavedAt(new Date())
-    } catch {
-      setSaveState('unsaved')
-    }
-  }, [isAuthenticated])
-
-  function scheduleSave(newTitle: string, newContent: string) {
-    const id = activeIdRef.current
-    if (!id) return
-    setSaveState('unsaved')
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => save(id, newTitle, newContent), 1200)
-  }
-
+  // ── toolbar commands ─────────────────────────────────────
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTitle(e.target.value)
-    scheduleSave(e.target.value, content)
-  }
-
-  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setContent(e.target.value)
-    scheduleSave(title, e.target.value)
-  }
-
-  // ── formatting ───────────────────────────────────────────
-  function wrapSelection(before: string, after: string) {
-    const ta = textareaRef.current
-    if (!ta) return
-    const s = ta.selectionStart, e = ta.selectionEnd
-    const next = content.slice(0, s) + before + content.slice(s, e) + after + content.slice(e)
-    setContent(next)
-    scheduleSave(title, next)
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(s + before.length, e + before.length) }, 0)
-  }
-
-  function insertAtLineStart(prefix: string) {
-    const ta = textareaRef.current
-    if (!ta) return
-    const s = ta.selectionStart
-    const ls = content.lastIndexOf('\n', s - 1) + 1
-    const has = content.slice(ls).startsWith(prefix)
-    const next = has
-      ? content.slice(0, ls) + content.slice(ls + prefix.length)
-      : content.slice(0, ls) + prefix + content.slice(ls)
-    setContent(next)
-    scheduleSave(title, next)
-    const delta = has ? -prefix.length : prefix.length
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(s + delta, s + delta) }, 0)
-  }
-
-  function insertDivider() {
-    const ta = textareaRef.current
-    if (!ta) return
-    const pos = ta.selectionStart
-    const pad = pos > 0 && content[pos - 1] !== '\n' ? '\n\n' : ''
-    const ins = pad + '---\n\n'
-    const next = content.slice(0, pos) + ins + content.slice(pos)
-    setContent(next)
-    scheduleSave(title, next)
-    setTimeout(() => { ta.focus(); ta.setSelectionRange(pos + ins.length, pos + ins.length) }, 0)
+    const val = e.target.value
+    setTitle(val)
+    titleRef.current = val
+    scheduleSave(val, content)
   }
 
   // ── drag & drop ──────────────────────────────────────────
   function handleEditorDrop(e: React.DragEvent) {
     e.preventDefault()
     setDragOver(false)
-    setPreview(false)
     const raw = e.dataTransfer.getData('verse')
-    if (!raw) return
+    if (!raw || !editor) return
     const { text, ref } = JSON.parse(raw) as { text: string; ref: string }
-    const quote = `> "${text}"\n> — *${ref}*\n\n`
-    const ta = textareaRef.current
-    const pos = ta?.selectionStart ?? content.length
-    const pad = pos > 0 && content[pos - 1] !== '\n' ? '\n\n' : ''
-    const next = content.slice(0, pos) + pad + quote + content.slice(pos)
-    setContent(next)
-    scheduleSave(title, next)
-    setTimeout(() => { if (ta) { ta.focus(); ta.setSelectionRange(pos + pad.length + quote.length, pos + pad.length + quote.length) } }, 0)
+    const quote = `\n\n> "${text}"\n> — *${ref}*\n\n`
+    editor.commands.focus('end')
+    editor.commands.insertContent(quote)
   }
 
   async function handleListDrop(e: React.DragEvent) {
@@ -248,11 +233,19 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   }
 
   function applyAppend() {
-    const next = content.trimEnd() + '\n\n---\n\n' + synthesis
-    setContent(next); setShowSynthesis(false); scheduleSave(title, next)
+    const current = editor?.storage.markdown.getMarkdown() ?? content
+    const next = current.trimEnd() + '\n\n---\n\n' + synthesis
+    editor?.commands.setContent(next, false)
+    setContent(next)
+    setShowSynthesis(false)
+    scheduleSave(titleRef.current, next)
   }
+
   function applyReplace() {
-    setContent(synthesis); setShowSynthesis(false); scheduleSave(title, synthesis)
+    editor?.commands.setContent(synthesis, false)
+    setContent(synthesis)
+    setShowSynthesis(false)
+    scheduleSave(titleRef.current, synthesis)
   }
 
   function fmtSavedAt(d: Date) {
@@ -266,14 +259,14 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
         n.content.toLowerCase().includes(search.toLowerCase()))
     : notes
 
+  const words = wordCount(content)
+
   // ══════════════════════════════════════════════════════════
   // LIST VIEW
   // ══════════════════════════════════════════════════════════
   if (view === 'list') {
     return (
       <div className="flex flex-col h-full bg-background" style={{ fontFamily: 'system-ui' }}>
-
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <p className="text-sm font-semibold">My Notes</p>
           <div className="flex items-center gap-2">
@@ -284,16 +277,12 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
             >
               <Plus className="w-3 h-3" /> New Note
             </button>
-            <button
-              onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors"
-            >
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Search */}
         {notes.length > 2 && (
           <div className="px-3 py-2 border-b border-border shrink-0">
             <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
@@ -313,12 +302,7 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
           </div>
         )}
 
-        {/* List */}
-        <div
-          className="flex-1 overflow-y-auto"
-          onDrop={handleListDrop}
-          onDragOver={e => e.preventDefault()}
-        >
+        <div className="flex-1 overflow-y-auto" onDrop={handleListDrop} onDragOver={e => e.preventDefault()}>
           {!isAuthenticated ? (
             <div className="flex items-center justify-center h-full px-8">
               <p className="text-xs text-muted-foreground/40 text-center">Sign in to save and access your notes.</p>
@@ -378,11 +362,10 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-4 py-2.5 border-t border-border shrink-0">
           <p className="text-[10px] text-muted-foreground/30">
             {notes.length > 0
-              ? `${notes.length} note${notes.length === 1 ? '' : 's'} · drag a verse here to start a new note`
+              ? `${notes.length} note${notes.length === 1 ? '' : 's'} · drag a verse here to create a note`
               : 'Drag a verse from the reader to start a note'}
           </p>
         </div>
@@ -427,10 +410,7 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
           {saveState === 'unsaved' && (
             <span className="text-[10px] text-amber-500/80">unsaved</span>
           )}
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors"
-          >
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -438,19 +418,22 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
 
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border shrink-0">
-        <ToolBtn disabled={preview} title="Bold" onMouseDown={() => wrapSelection('**', '**')}>
+        <ToolBtn title="Bold" onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')}>
           <span className="font-bold text-sm">B</span>
         </ToolBtn>
-        <ToolBtn disabled={preview} title="Italic" onMouseDown={() => wrapSelection('*', '*')}>
+        <ToolBtn title="Italic" onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')}>
           <span className="italic text-sm">I</span>
         </ToolBtn>
-        <ToolBtn disabled={preview} title="Heading" onMouseDown={() => insertAtLineStart('## ')}>
+        <ToolBtn title="Heading" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })}>
           <span className="text-[11px] font-bold tracking-tight">H</span>
         </ToolBtn>
-        <ToolBtn disabled={preview} title="Blockquote" onMouseDown={() => insertAtLineStart('> ')}>
+        <ToolBtn title="Blockquote" onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')}>
           <span className="text-base leading-none font-serif">&ldquo;</span>
         </ToolBtn>
-        <ToolBtn disabled={preview} title="Divider" onMouseDown={insertDivider}>
+        <ToolBtn title="Bullet list" onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')}>
+          <span className="text-sm leading-none">•</span>
+        </ToolBtn>
+        <ToolBtn title="Divider" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>
           <Minus className="w-3.5 h-3.5" />
         </ToolBtn>
 
@@ -458,89 +441,31 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
 
         <button
           onClick={() => activeId && deleteNote(activeId)}
-          className="text-[11px] text-muted-foreground/40 hover:text-destructive transition-colors px-1.5 py-1 rounded mr-1"
+          className="text-[11px] text-muted-foreground/40 hover:text-destructive transition-colors px-1.5 py-1 rounded"
           title="Delete this note"
         >
           Delete
         </button>
-
-        <div className="w-px h-4 bg-border" />
-
-        {/* Edit / Preview toggle */}
-        <div className="flex items-center rounded-md border border-border overflow-hidden ml-1">
-          <button
-            onClick={() => setPreview(false)}
-            className={`flex items-center gap-1 px-2 py-1 text-[11px] transition-colors ${!preview ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <Pencil className="w-2.5 h-2.5" /> Edit
-          </button>
-          <button
-            onClick={() => setPreview(true)}
-            className={`flex items-center gap-1 px-2 py-1 text-[11px] transition-colors ${preview ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <Eye className="w-2.5 h-2.5" /> Preview
-          </button>
-        </div>
       </div>
 
-      {/* Content — edit or preview */}
-      {preview ? (
-        <div
-          className="flex-1 overflow-y-auto px-6 py-5"
-          onDrop={handleEditorDrop}
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-        >
-          {content ? (
-            <div
-              className="prose prose-sm max-w-none dark:prose-invert
-                prose-headings:font-semibold prose-headings:text-foreground
-                prose-p:text-foreground/90 prose-p:leading-relaxed
-                prose-blockquote:border-primary/40 prose-blockquote:bg-primary/5
-                prose-blockquote:rounded-r-lg prose-blockquote:py-1
-                prose-blockquote:not-italic prose-blockquote:text-foreground/70
-                prose-strong:text-foreground prose-em:text-foreground/80
-                prose-hr:border-border prose-li:text-foreground/90"
-              style={{ fontSize: '0.875rem', lineHeight: '1.75' }}
-            >
-              <ReactMarkdown>{content}</ReactMarkdown>
+      {/* Editor */}
+      <div
+        className={`flex-1 overflow-y-auto note-editor transition-colors ${dragOver ? 'bg-primary/5' : ''}`}
+        onDrop={handleEditorDrop}
+        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onClick={() => editor?.commands.focus()}
+      >
+        {dragOver && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-4 py-2">
+              <GripVertical className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Drop to quote verse</span>
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground/40 text-center mt-16">Nothing to preview yet.</p>
-          )}
-        </div>
-      ) : (
-        <div
-          className={`flex-1 overflow-y-auto relative transition-colors ${dragOver ? 'bg-primary/5' : ''}`}
-          onDrop={handleEditorDrop}
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-        >
-          {dragOver && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-              <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-xl px-4 py-2">
-                <GripVertical className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Drop to quote verse</span>
-              </div>
-            </div>
-          )}
-          {!content && !dragOver && (
-            <div className="absolute inset-0 flex items-center justify-center px-8 pointer-events-none">
-              <p className="text-xs text-muted-foreground/40 leading-relaxed text-center">
-                Start writing, or drag a verse from the reader to quote it.
-              </p>
-            </div>
-          )}
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            placeholder=""
-            className="w-full h-full min-h-full resize-none bg-transparent px-5 py-5 text-sm leading-7 outline-none text-foreground"
-            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-          />
-        </div>
-      )}
+          </div>
+        )}
+        <EditorContent editor={editor} className="h-full" />
+      </div>
 
       {/* Synthesis panel */}
       {showSynthesis && (
@@ -575,7 +500,7 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
       {/* Footer */}
       <div className="px-4 py-2.5 border-t border-border shrink-0 flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground/40">
-          {wordCount(content) > 0 ? `${wordCount(content)} word${wordCount(content) === 1 ? '' : 's'}` : 'Drag verses to quote them'}
+          {words > 0 ? `${words} word${words === 1 ? '' : 's'}` : 'Drag verses to quote them'}
         </span>
         <Button size="sm" className="h-7 px-3 text-xs gap-1.5" onClick={synthesize} disabled={!content.trim() || synthesizing}>
           <Sparkles className="w-3 h-3" />
@@ -586,15 +511,21 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   )
 }
 
-function ToolBtn({ children, title, onMouseDown, disabled }: {
-  children: React.ReactNode; title: string; onMouseDown: () => void; disabled?: boolean
+function ToolBtn({ children, title, onClick, active }: {
+  children: React.ReactNode
+  title: string
+  onClick: () => void
+  active?: boolean
 }) {
   return (
     <button
       title={title}
-      disabled={disabled}
-      onMouseDown={e => { e.preventDefault(); onMouseDown() }}
-      className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+      onMouseDown={e => { e.preventDefault(); onClick() }}
+      className={`w-7 h-7 flex items-center justify-center rounded transition-colors
+        ${active
+          ? 'bg-primary/15 text-primary'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+        }`}
     >
       {children}
     </button>
