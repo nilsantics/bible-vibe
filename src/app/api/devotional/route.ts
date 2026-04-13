@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return new Response(JSON.stringify({ error: 'Sign in to read devotionals.' }), { status: 401 })
 
   const cacheSource = `devotional-v${verse}`
 

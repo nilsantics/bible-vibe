@@ -14,6 +14,10 @@ export interface TaggedWord {
 
 // GET /api/strongs-verse?ref=Genesis+1:1&text=...&testament=OT
 export async function GET(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Sign in to use the interlinear view.' }, { status: 401 })
+
   const params = request.nextUrl.searchParams
   const ref = params.get('ref') ?? ''
   const text = params.get('text') ?? ''

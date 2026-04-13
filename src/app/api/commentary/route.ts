@@ -3,14 +3,26 @@ import { createClient } from '@/lib/supabase/server'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
 import Anthropic from '@anthropic-ai/sdk'
 import { getTraditionPrompt, type TraditionId } from '@/lib/tradition'
+import { checkFeatureRateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'edge'
 
 const client = new Anthropic()
 
+function err(msg: string, status: number) {
+  return new Response(JSON.stringify({ error: msg }), { status, headers: { 'Content-Type': 'application/json' } })
+}
+
 // ─── POST /api/commentary — RAG verse commentary ─────────────────────────────
 // Embeds the verse, pulls top Matthew Henry chunks, synthesises via Claude.
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return err('Sign in to access commentaries.', 401)
+
+  const limit = await checkFeatureRateLimit(user.id)
+  if (!limit.allowed) return err(limit.message!, 429)
+
   const { verseRef, verseText, bookId, chapter, verse, tradition } =
     await request.json()
 
@@ -133,6 +145,9 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return err('Sign in to access commentaries.', 401)
+
   const book = BIBLE_BOOKS.find((b) => b.id === book_id)
   if (!book) return new Response('Unknown book', { status: 404 })
 

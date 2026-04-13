@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkFeatureRateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'edge'
 
@@ -14,6 +15,9 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return errorResponse('Sign in to synthesize notes.', 401)
+
+  const limit = await checkFeatureRateLimit(user.id)
+  if (!limit.allowed) return errorResponse(limit.message!, 429)
 
   const { notes, bookName, chapter } = await request.json()
   if (!notes?.trim()) return errorResponse('notes content required', 400)

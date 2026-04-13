@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateQuiz } from '@/lib/claude'
 import { getBookById } from '@/lib/bible-data'
+import { checkFeatureRateLimit } from '@/lib/rate-limit'
 
 // POST /api/quiz  { passage: "John 3:16-21" }
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Sign in to generate a quiz.' }, { status: 401 })
+
+  const limit = await checkFeatureRateLimit(user.id)
+  if (!limit.allowed) return NextResponse.json({ error: limit.message }, { status: 429 })
 
   const { passage } = await request.json()
   if (!passage?.trim()) {

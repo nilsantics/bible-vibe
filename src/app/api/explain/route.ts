@@ -1,10 +1,23 @@
 import { NextRequest } from 'next/server'
 import { BIBLE_STUDY_SYSTEM_PROMPT, CLAUDE_MODEL } from '@/lib/claude'
 import { getTraditionPrompt, type TraditionId } from '@/lib/tradition'
+import { createClient } from '@/lib/supabase/server'
+import { checkFeatureRateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'edge'
 
+function err(msg: string, status: number) {
+  return new Response(JSON.stringify({ error: msg }), { status, headers: { 'Content-Type': 'application/json' } })
+}
+
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return err('Sign in to get verse explanations.', 401)
+
+  const limit = await checkFeatureRateLimit(user.id)
+  if (!limit.allowed) return err(limit.message!, 429)
+
   const { verseRef, verseText, translation, tradition } = await request.json()
   if (!verseRef || !verseText) {
     return new Response(JSON.stringify({ error: 'verseRef and verseText required' }), { status: 400 })
