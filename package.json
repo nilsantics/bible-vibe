@@ -41,15 +41,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "tsx": "^4.19.2",
-    "dotenv": "^16.5.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "better-sqlite3": "^12.8.0",
+    "dotenv": "^16.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

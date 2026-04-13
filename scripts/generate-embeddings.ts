@@ -11,6 +11,12 @@
 
 import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
+import * as dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+// Load .env.local
+dotenv.config({ path: join(process.cwd(), '.env.local') })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -24,7 +30,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !OPENAI_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 const openai = new OpenAI({ apiKey: OPENAI_KEY })
 
-const BATCH_SIZE = 100      // verses per embedding request
+const EMBED_BATCH = 50     // verses per OpenAI embedding request
+const INSERT_BATCH = 5     // rows per Supabase upsert (small = safe with HNSW index overhead)
 const EMBED_MODEL = 'text-embedding-3-small'
 
 function sleep(ms: number) {
@@ -45,20 +52,16 @@ async function main() {
   if (!trans) throw new Error('WEB translation not found — run seed-bible.ts first')
 
   // Count total verses
-  const { count } = await supabase
+  const { count: totalCount, error: countErr } = await supabase
     .from('verses')
-    .select('*', { count: 'exact', head: true })
+    .select('*', { count: 'estimated', head: true })
     .eq('translation_id', trans.id)
-  console.log(`Total WEB verses to embed: ${count}\n`)
+  if (countErr) console.error('Count error:', countErr.message)
+  const total = totalCount ?? 31104
+  console.log(`Total WEB verses to embed: ${total}\n`)
 
-  // Find verses that don't have embeddings yet
-  const { data: alreadyEmbedded } = await supabase
-    .from('verse_embeddings')
-    .select('verse_id')
-  const embeddedIds = new Set((alreadyEmbedded ?? []).map((e) => e.verse_id))
-  console.log(`Already embedded: ${embeddedIds.size}`)
-
-  // Fetch all verses in batches
+  // Fetch verses in pages, upsert embeddings (idempotent via onConflict)
+  // Skip fetching already-embedded IDs — upsert handles duplicates safely.
   let offset = 0
   let processed = 0
   const pageSize = 1000
@@ -66,58 +69,61 @@ async function main() {
   while (true) {
     const { data: verses, error } = await supabase
       .from('verses')
-      .select('id, text, book_id, chapter_number, verse_number')
+      .select('id, text')
       .eq('translation_id', trans.id)
       .range(offset, offset + pageSize - 1)
-      .order('book_id')
-      .order('chapter_number')
-      .order('verse_number')
 
     if (error) throw error
     if (!verses || verses.length === 0) break
 
-    const toEmbed = verses.filter((v) => !embeddedIds.has(v.id))
-
-    // Process in batches
-    for (let i = 0; i < toEmbed.length; i += BATCH_SIZE) {
-      const batch = toEmbed.slice(i, i + BATCH_SIZE)
+    // Embed in large batches (OpenAI is fast), insert in smaller batches (Supabase HNSW index)
+    for (let i = 0; i < verses.length; i += EMBED_BATCH) {
+      const batch = verses.slice(i, i + EMBED_BATCH)
       const texts = batch.map((v) => v.text)
 
+      let embeddings: number[][]
       try {
-        const response = await openai.embeddings.create({
-          model: EMBED_MODEL,
-          input: texts,
-        })
-
-        const embeddingRows = batch.map((v, idx) => ({
-          verse_id: v.id,
-          embedding: response.data[idx].embedding,
-        }))
-
-        const { error: insErr } = await supabase
-          .from('verse_embeddings')
-          .upsert(embeddingRows, { onConflict: 'verse_id' })
-        if (insErr) throw insErr
-
-        processed += batch.length
-        process.stdout.write(
-          `\rEmbedded: ${processed + embeddedIds.size} / ${count}    `
-        )
-
-        // Rate limit: ~3000 requests/min, be conservative
-        await sleep(50)
+        const response = await openai.embeddings.create({ model: EMBED_MODEL, input: texts })
+        embeddings = response.data.map((d) => d.embedding)
       } catch (err) {
-        console.error('\nEmbedding error:', err)
-        await sleep(2000) // back off on error
+        console.error('\nOpenAI embed error:', err)
+        await sleep(3000)
+        i -= EMBED_BATCH // retry
+        continue
       }
+
+      // Use JSON.stringify for embedding (matches pgvector wire format Supabase expects)
+      // Insert with ignoreDuplicates (ON CONFLICT DO NOTHING) — much faster than upsert on HNSW
+      const embeddingRows = batch.map((v: { id: number; text: string }, idx: number) => ({
+        verse_id: v.id,
+        embedding: JSON.stringify(embeddings[idx]),
+      }))
+
+      // Insert in smaller sub-batches to stay well within statement timeout
+      for (let j = 0; j < embeddingRows.length; j += INSERT_BATCH) {
+        const sub = embeddingRows.slice(j, j + INSERT_BATCH)
+        let retries = 3
+        while (retries-- > 0) {
+          const { error: insErr } = await supabase
+            .from('verse_embeddings')
+            .upsert(sub, { onConflict: 'verse_id', ignoreDuplicates: true })
+          if (!insErr) break
+          console.error(`\n  DB error (${retries} retries left): ${insErr.message}`)
+          await sleep(2000)
+        }
+        processed += sub.length
+        process.stdout.write(`\rEmbedded: ${processed} / ${total}    `)
+      }
+
+      await sleep(50) // rate limit
     }
 
     offset += pageSize
     if (verses.length < pageSize) break
   }
 
-  console.log(`\n\n✓ Done! ${processed} new embeddings generated.`)
-  console.log(`Total embeddings in DB: ${processed + embeddedIds.size}`)
+  console.log(`\n\n✓ Done! ${processed} embeddings processed (upserted).`)
+  console.log(`Total in DB: ${total}`)
 }
 
 main().catch((err) => {

@@ -24,10 +24,12 @@ import {
   Type,
   BookOpen,
   ChevronDown,
+  NotebookPen,
 } from 'lucide-react'
 import { VersePopup } from '@/components/verse-popup'
 import { ChatPanel } from '@/components/chat-panel'
 import { PassageSearch } from '@/components/passage-search'
+import { StudyNotesPanel } from '@/components/study-notes-panel'
 import { toast } from 'sonner'
 import { track } from '@vercel/analytics'
 import type { HighlightColor } from '@/types'
@@ -104,6 +106,7 @@ export function BibleReader({
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null)
   const [popupAnchor, setPopupAnchor] = useState<{ x: number; y: number } | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
+  const [notesOpen, setNotesOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [compareTranslation, setCompareTranslation] = useState<string | null>(null)
@@ -582,7 +585,7 @@ export function BibleReader({
       {/* ── CENTER: Toolbar + Text ── */}
       <div
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto min-w-0 ${chatOpen ? 'hidden sm:block' : ''}`}
+        className={`flex-1 overflow-y-auto min-w-0 ${(chatOpen || notesOpen) ? 'hidden lg:block' : ''}`}
         onScroll={(e) => {
           const el = e.currentTarget
           const total = el.scrollHeight - el.clientHeight
@@ -758,12 +761,24 @@ export function BibleReader({
               )}
             </div>
 
+            {/* Notes */}
+            <Button
+              variant={notesOpen ? 'secondary' : 'outline'}
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 font-normal"
+              onClick={() => { setNotesOpen((o) => !o); if (chatOpen) setChatOpen(false) }}
+              title="Study notes"
+            >
+              <NotebookPen className="w-3 h-3" />
+              <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Notes</span>
+            </Button>
+
             {/* Ask Ezra */}
             <Button
               variant={chatOpen ? 'secondary' : 'outline'}
               size="sm"
               className="h-7 px-2 text-xs gap-1 font-normal"
-              onClick={() => { if (!chatOpen) track('chat_opened', { book: book.name, chapter }); setChatOpen((o) => !o) }}
+              onClick={() => { if (!chatOpen) track('chat_opened', { book: book.name, chapter }); setChatOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
             >
               <MessageSquare className="w-3 h-3" />
               <span className="hidden sm:inline" style={{ fontFamily: 'system-ui' }}>Ezra</span>
@@ -1027,6 +1042,13 @@ export function BibleReader({
                   <div
                     key={verse.id}
                     id={`verse-${verse.verse_number}`}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('verse', JSON.stringify({
+                        text: verse.text,
+                        ref: `${book.name} ${chapter}:${verse.verse_number}`
+                      }))
+                    }}
                     className={`flex gap-2 cursor-pointer rounded-lg px-3 py-1.5 transition-colors ${hlClass} ${selectedVerse?.id === verse.id ? 'bg-primary/8' : 'hover:bg-primary/5'}`}
                     onClick={(e) => handleVerseClick(verse, e)}
                   >
@@ -1059,6 +1081,14 @@ export function BibleReader({
                       {verse.verse_number}
                     </sup>
                     <span
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation()
+                        e.dataTransfer.setData('verse', JSON.stringify({
+                          text: verse.text,
+                          ref: `${book.name} ${chapter}:${verse.verse_number}`
+                        }))
+                      }}
                       className={`cursor-pointer transition-colors rounded ${hlColor ? `hl-${hlColor}` : ''} ${
                         selectedVerse?.id === verse.id ? 'bg-primary/10' : 'hover:bg-primary/5'
                       } ${redLetter ? 'text-red-600 dark:text-red-400' : ''}`}
@@ -1218,6 +1248,33 @@ export function BibleReader({
           onClose={() => setChatOpen(false)}
           isPro={isPro}
         />
+      )}
+
+      {/* Notes panel — desktop inline, mobile full-screen */}
+      {notesOpen && (
+        <>
+          {/* Desktop: side panel */}
+          <div className="hidden lg:flex w-[420px] shrink-0 border-l border-border overflow-hidden flex-col">
+            <StudyNotesPanel
+              bookId={book.id}
+              bookName={book.name}
+              chapter={chapter}
+              onClose={() => setNotesOpen(false)}
+              isAuthenticated={isAuthenticated}
+            />
+          </div>
+
+          {/* Mobile: full-screen overlay */}
+          <div className="lg:hidden fixed inset-0 z-40 bg-background flex flex-col">
+            <StudyNotesPanel
+              bookId={book.id}
+              bookName={book.name}
+              chapter={chapter}
+              onClose={() => setNotesOpen(false)}
+              isAuthenticated={isAuthenticated}
+            />
+          </div>
+        </>
       )}
     </div>{/* end 3-col layout */}
 
