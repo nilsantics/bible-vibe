@@ -21,7 +21,7 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   const [showSynthesis, setShowSynthesis] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>()
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Load note for this chapter
   useEffect(() => {
