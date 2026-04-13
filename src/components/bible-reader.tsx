@@ -456,8 +456,10 @@ export function BibleReader({
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement).tagName
+      const target = e.target as HTMLElement
+      const tag = target.tagName
       if (tag === 'TEXTAREA' || tag === 'INPUT') return
+      if (target.isContentEditable) return
       if (e.key === 'j' || e.key === 'ArrowRight') {
         if (nextHref) router.push(nextHref)
       } else if (e.key === 'k' || e.key === 'ArrowLeft') {
