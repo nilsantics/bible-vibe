@@ -326,7 +326,7 @@ export function BibleReader({
     if (selection && selection.toString().length > 0) return
     setSelectedVerse(verse)
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-    setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
+    setPopupAnchor({ x: rect.left, y: rect.bottom + 8 })
     history.replaceState(null, '', `#v${verse.verse_number}`)
     track('verse_popup_opened', { book: book.name, chapter, verse: verse.verse_number })
   }
@@ -594,7 +594,7 @@ export function BibleReader({
           {/* Scroll progress bar */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-primary/70 transition-all duration-100 ease-out" style={{ width: `${scrollProgress}%` }} />
 
-          <div className="px-3 py-2 flex items-center gap-1.5 overflow-hidden">
+          <div className="px-3 py-2 flex items-center gap-1.5">
             <Suspense fallback={null}>
               <MobileBookDrawer activeBookId={book.id} />
             </Suspense>
@@ -661,8 +661,8 @@ export function BibleReader({
 
               {typographyOpen && (
                 <div
-                  className="absolute right-0 top-9 z-50 w-64 bg-popover border border-border rounded-xl shadow-xl p-4 space-y-4"
-                  style={{ fontFamily: 'system-ui' }}
+                  className="fixed z-[60] w-64 bg-popover border border-border rounded-xl shadow-xl p-4 space-y-4"
+                  style={{ fontFamily: 'system-ui', top: '96px', right: '8px' }}
                   onMouseLeave={() => setTypographyOpen(false)}
                 >
                   {/* VIEW */}
@@ -918,7 +918,7 @@ export function BibleReader({
                           onClick={(e) => {
                             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                             setSelectedVerse(verse)
-                            setPopupAnchor({ x: rect.left, y: rect.bottom + window.scrollY + 8 })
+                            setPopupAnchor({ x: rect.left, y: rect.bottom + 8 })
                             history.replaceState(null, '', `#v${verse.verse_number}`)
                           }}
                         >

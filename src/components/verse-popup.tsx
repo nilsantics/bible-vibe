@@ -372,12 +372,19 @@ export function VersePopup({
     }
   }
 
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 400
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+  const popupWidth = 340
+  const popupMaxHeight = 480
+  const clampedLeft = Math.min(Math.max(anchor.x, 8), vw - popupWidth - 8)
+  const fitsBelow = anchor.y + popupMaxHeight < vh
   const desktopStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: anchor.y,
-    left: Math.min(anchor.x, (typeof window !== 'undefined' ? window.innerWidth : 400) - 360),
+    position: 'fixed',
+    top: fitsBelow ? anchor.y : anchor.y - popupMaxHeight - 16,
+    left: clampedLeft,
     zIndex: 50,
-    width: 340,
+    width: popupWidth,
+    maxHeight: popupMaxHeight,
   }
 
   // ── MOBILE BOTTOM SHEET ──────────────────────────────────────────────────
