@@ -774,6 +774,8 @@ export function VersePopup({
             setNoteText={setNoteText}
             noteSaved={noteSaved}
             handleSaveNote={handleSaveNote}
+            explainLimitError={explainLimitError}
+            commentaryLimitError={commentaryLimitError}
             isAuthenticated={isAuthenticated}
             tags={tags}
             tagInput={tagInput}
