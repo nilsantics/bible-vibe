@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
   const embedding: number[] = embedData[0].embedding
 
   // 2. Semantic search over commentary_chunks (bias toward same book)
-  const supabase = await createClient()
   const { data: chunks } = await supabase.rpc('search_commentary', {
     query_embedding: embedding,
     p_book_id: bookId ?? null,
