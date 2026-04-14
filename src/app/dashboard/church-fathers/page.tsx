@@ -24,7 +24,6 @@ const FATHERS = [
     slug: 'didache',
     emoji: '📜',
     gradient: 'from-stone-600 to-stone-800',
-    image: null,
   },
   {
     name: 'Epistle to the Philippians',
@@ -35,7 +34,6 @@ const FATHERS = [
     slug: 'polycarp-philippians',
     emoji: '✉️',
     gradient: 'from-slate-600 to-slate-800',
-    image: '/images/church-fathers/polycarp.jpg',
   },
   {
     name: 'Epistle to the Romans',
@@ -46,7 +44,6 @@ const FATHERS = [
     slug: 'ignatius-romans',
     emoji: '⛓️',
     gradient: 'from-red-700 to-red-900',
-    image: '/images/church-fathers/ignatius.jpg',
   },
   {
     name: 'First Apology',
@@ -57,7 +54,6 @@ const FATHERS = [
     slug: 'justin-first-apology',
     emoji: '⚖️',
     gradient: 'from-blue-700 to-blue-900',
-    image: '/images/church-fathers/justin.jpg',
   },
   {
     name: 'Against Heresies — Book I',
@@ -68,7 +64,6 @@ const FATHERS = [
     slug: 'irenaeus-against-heresies-1',
     emoji: '🛡️',
     gradient: 'from-emerald-700 to-emerald-900',
-    image: '/images/church-fathers/irenaeus.jpg',
   },
   {
     name: 'On the Incarnation',
@@ -79,7 +74,6 @@ const FATHERS = [
     slug: 'on-the-incarnation',
     emoji: '✝️',
     gradient: 'from-violet-700 to-violet-900',
-    image: '/images/church-fathers/athanasius.jpg',
   },
   {
     name: 'Confessions',
@@ -90,7 +84,6 @@ const FATHERS = [
     slug: 'augustine-confessions',
     emoji: '📖',
     gradient: 'from-rose-700 to-rose-900',
-    image: '/images/church-fathers/augustine.jpg',
   },
 ]
 
@@ -103,7 +96,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0103.htm',
     emoji: '🕯️',
     gradient: 'from-stone-600 to-stone-800',
-    image: '/images/church-fathers/ignatius.jpg',
   },
   {
     name: 'Tertullian',
@@ -113,7 +105,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0301.htm',
     emoji: '⚔️',
     gradient: 'from-red-700 to-red-900',
-    image: '/images/church-fathers/tertullian.png',
   },
   {
     name: 'Origen of Alexandria',
@@ -123,7 +114,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0411.htm',
     emoji: '📜',
     gradient: 'from-amber-700 to-amber-900',
-    image: '/images/church-fathers/origen.jpg',
   },
   {
     name: 'Basil the Great',
@@ -133,7 +123,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/3201.htm',
     emoji: '🌿',
     gradient: 'from-green-700 to-green-900',
-    image: '/images/church-fathers/basil.jpg',
   },
   {
     name: 'John Chrysostom',
@@ -143,7 +132,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/2001.htm',
     emoji: '🗣️',
     gradient: 'from-orange-700 to-orange-900',
-    image: '/images/church-fathers/chrysostom.jpg',
   },
   {
     name: 'Jerome',
@@ -153,7 +141,6 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/3001.htm',
     emoji: '📝',
     gradient: 'from-indigo-700 to-indigo-900',
-    image: '/images/church-fathers/jerome.jpg',
   },
 ]
 
@@ -253,18 +240,10 @@ export default async function ChurchFathersPage() {
             return isReady ? (
               <Link key={writing.slug} href={`/dashboard/church-fathers/${writing.slug}`}>
                 <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer h-full">
-                  {writing.image ? (
-                    <div className="h-28 relative overflow-hidden">
-                      <img src={writing.image} alt={writing.father} className="w-full h-full object-cover object-top" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      <span className="absolute bottom-2 right-2 text-[10px] text-white/70 font-mono bg-black/40 px-1.5 py-0.5 rounded">{sections} sections</span>
-                    </div>
-                  ) : (
-                    <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4 relative`}>
-                      <span className="text-2xl">{writing.emoji}</span>
-                      <span className="text-[10px] text-white/60 font-mono">{sections} sections</span>
-                    </div>
-                  )}
+                  <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4`}>
+                    <span className="text-2xl">{writing.emoji}</span>
+                    <span className="text-[10px] text-white/60 font-mono">{sections} sections</span>
+                  </div>
                   <div className="p-3">
                     <p className="font-semibold text-sm group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: 'system-ui' }}>
                       {writing.name}
@@ -280,18 +259,10 @@ export default async function ChurchFathersPage() {
               </Link>
             ) : (
               <Card key={writing.slug} className="overflow-hidden border-border border-dashed opacity-60 h-full">
-                {writing.image ? (
-                  <div className="h-28 relative overflow-hidden opacity-70">
-                    <img src={writing.image} alt={writing.father} className="w-full h-full object-cover object-top" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute bottom-2 right-2 text-[10px] text-white/70 font-mono bg-black/40 px-1.5 py-0.5 rounded">seeding soon</span>
-                  </div>
-                ) : (
-                  <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4 opacity-70`}>
-                    <span className="text-2xl">{writing.emoji}</span>
-                    <span className="text-[10px] text-white/60 font-mono">seeding soon</span>
-                  </div>
-                )}
+                <div className={`h-14 bg-gradient-to-br ${writing.gradient} flex items-center justify-between px-4 opacity-70`}>
+                  <span className="text-2xl">{writing.emoji}</span>
+                  <span className="text-[10px] text-white/60 font-mono">seeding soon</span>
+                </div>
                 <div className="p-3">
                   <p className="font-semibold text-sm mb-0.5" style={{ fontFamily: 'system-ui' }}>
                     {writing.name}
@@ -323,24 +294,13 @@ export default async function ChurchFathersPage() {
               rel="noopener noreferrer"
             >
               <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer h-full">
-                {father.image ? (
-                  <div className="h-28 relative overflow-hidden">
-                    <img src={father.image} alt={father.name} className="w-full h-full object-cover object-top" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <span className="absolute bottom-2 right-2 text-[10px] text-white/70 font-mono">{father.dates}</span>
-                    <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ExternalLink className="w-3 h-3 text-white/90 drop-shadow" />
-                    </span>
-                  </div>
-                ) : (
-                  <div className={`h-14 bg-gradient-to-br ${father.gradient} flex items-center justify-between px-4 relative`}>
-                    <span className="text-2xl">{father.emoji}</span>
-                    <span className="text-[10px] text-white/60 font-mono">{father.dates}</span>
-                    <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ExternalLink className="w-3 h-3 text-white/70" />
-                    </span>
-                  </div>
-                )}
+                <div className={`h-14 bg-gradient-to-br ${father.gradient} flex items-center justify-between px-4 relative`}>
+                  <span className="text-2xl">{father.emoji}</span>
+                  <span className="text-[10px] text-white/60 font-mono">{father.dates}</span>
+                  <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ExternalLink className="w-3 h-3 text-white/70" />
+                  </span>
+                </div>
                 <div className="p-3">
                   <p className="font-semibold text-sm group-hover:text-primary transition-colors mb-0.5" style={{ fontFamily: 'system-ui' }}>
                     {father.name}
