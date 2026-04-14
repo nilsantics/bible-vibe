@@ -9,25 +9,33 @@ import {
   BookOpen, Search, BarChart2, LayoutDashboard,
   MoreHorizontal, CalendarDays, BrainCircuit,
   Bookmark, HelpCircle, Settings, LogOut, Sun, Moon, X, FileText, Languages,
+  Sparkles, Map, GraduationCap, History,
 } from 'lucide-react'
 
 type ReadingTheme = 'light' | 'dark' | 'sepia'
 
 const mainItems = [
-  { href: '/dashboard',               label: 'Home',     icon: LayoutDashboard, match: (p: string) => p === '/dashboard' },
+  { href: '/dashboard',               label: 'Home',     icon: LayoutDashboard, match: (p: string) => p === '/dashboard' || p === '/dashboard/home' },
   { href: '/dashboard/reading/genesis/1', label: 'Read', icon: BookOpen,        match: (p: string) => p.startsWith('/dashboard/reading') },
-  { href: '/dashboard/search',        label: 'Search',   icon: Search,          match: (p: string) => p.startsWith('/dashboard/search') },
-  { href: '/dashboard/progress',      label: 'Progress', icon: BarChart2,       match: (p: string) => p.startsWith('/dashboard/progress') },
+  { href: '/dashboard/topics',        label: 'Discover', icon: Sparkles,        match: (p: string) => p.startsWith('/dashboard/topics') },
+  { href: '/dashboard/notes',         label: 'Notes',    icon: FileText,        match: (p: string) => p.startsWith('/dashboard/notes') },
 ]
 
 const moreItems = [
-  { href: '/dashboard/plans',     label: 'Reading Plans', icon: CalendarDays },
-  { href: '/dashboard/memorize',  label: 'Memorize',      icon: BrainCircuit },
-  { href: '/dashboard/bookmarks', label: 'Bookmarks',     icon: Bookmark },
-  { href: '/dashboard/notes',     label: 'My Notes',      icon: FileText },
-  { href: '/dashboard/quiz',      label: 'Quiz',          icon: HelpCircle },
-  { href: '/dashboard/aleph-bet', label: 'Aleph-Bet',     icon: Languages },
-  { href: '/dashboard/settings',  label: 'Settings',      icon: Settings },
+  // Study
+  { href: '/dashboard/search',        label: 'Search',        icon: Search,        section: 'Study' },
+  { href: '/dashboard/plans',         label: 'Reading Plans', icon: CalendarDays,  section: 'Study' },
+  { href: '/dashboard/study-history', label: 'Study History', icon: History,       section: 'Study' },
+  { href: '/dashboard/bookmarks',     label: 'Bookmarks',     icon: Bookmark,      section: 'Study' },
+  // Learn
+  { href: '/dashboard/quiz',          label: 'Quiz',          icon: HelpCircle,    section: 'Learn' },
+  { href: '/dashboard/memorize',      label: 'Memorize',      icon: BrainCircuit,  section: 'Learn' },
+  { href: '/dashboard/aleph-bet',     label: 'Hebrew Alphabet', icon: Languages,   section: 'Learn' },
+  { href: '/dashboard/maps',          label: 'Maps & Timelines', icon: Map,         section: 'Learn' },
+  { href: '/dashboard/church-fathers',label: 'Church Fathers', icon: GraduationCap, section: 'Learn' },
+  // Account
+  { href: '/dashboard/progress',      label: 'Progress',      icon: BarChart2,     section: 'Account' },
+  { href: '/dashboard/settings',      label: 'Settings',      icon: Settings,      section: 'Account' },
 ]
 
 export function MobileBottomNav() {
@@ -131,21 +139,29 @@ export function MobileBottomNav() {
               </button>
             </div>
 
-            {/* Nav links */}
-            <div className="px-2 pb-2">
-              {moreItems.map((item) => {
-                const active = pathname.startsWith(item.href)
+            {/* Nav links — grouped by section */}
+            <div className="px-2 pb-2 max-h-[60vh] overflow-y-auto">
+              {(['Study', 'Learn', 'Account'] as const).map((section) => {
+                const items = moreItems.filter(i => i.section === section)
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
-                      active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/60'
-                    }`}
-                  >
-                    <item.icon className={`w-5 h-5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>{item.label}</span>
-                  </Link>
+                  <div key={section}>
+                    <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest px-3 pt-3 pb-1" style={{ fontFamily: 'system-ui' }}>{section}</p>
+                    {items.map((item) => {
+                      const active = pathname.startsWith(item.href)
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+                            active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/60'
+                          }`}
+                        >
+                          <item.icon className={`w-5 h-5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className="text-sm font-medium" style={{ fontFamily: 'system-ui' }}>{item.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
                 )
               })}
 

@@ -97,6 +97,14 @@ interface VerseResult {
   ref: string
   snippet: string
   why: string
+  type?: 'narrative' | 'poetry' | 'teaching' | 'prophecy'
+}
+
+const TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  narrative: { label: 'Story',    color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400' },
+  poetry:    { label: 'Poetry',   color: 'bg-violet-500/10 text-violet-700 dark:text-violet-400' },
+  teaching:  { label: 'Teaching', color: 'bg-sky-500/10 text-sky-700 dark:text-sky-400' },
+  prophecy:  { label: 'Prophecy', color: 'bg-rose-500/10 text-rose-700 dark:text-rose-400' },
 }
 
 export default function TopicsPage() {
@@ -248,12 +256,19 @@ export default function TopicsPage() {
                   >
                     {/* Verse ref + navigate */}
                     <div className="flex items-center justify-between px-4 pt-3.5 pb-2 border-b border-border/50">
-                      <span
-                        className="text-xs font-bold text-primary"
-                        style={{ fontFamily: 'system-ui' }}
-                      >
-                        {r.ref}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-xs font-bold text-primary"
+                          style={{ fontFamily: 'system-ui' }}
+                        >
+                          {r.ref}
+                        </span>
+                        {r.type && TYPE_LABELS[r.type] && (
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${TYPE_LABELS[r.type].color}`} style={{ fontFamily: 'system-ui' }}>
+                            {TYPE_LABELS[r.type].label}
+                          </span>
+                        )}
+                      </div>
                       <Link href={getBookHref(r)}>
                         <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors" style={{ fontFamily: 'system-ui' }}>
                           Read in context

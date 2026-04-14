@@ -48,22 +48,24 @@ interface Props {
   isPro: boolean
 }
 
-const STUDY_ITEMS = [
-  { href: '/dashboard/home',         label: 'Dashboard',     icon: LayoutDashboard, desc: 'Plans, streaks & stats' },
-  { href: '/dashboard/search',       label: 'Search',        icon: Search,          desc: 'Search the Bible' },
-  { href: '/dashboard/plans',        label: 'Reading Plans', icon: CalendarDays,    desc: 'Guided multi-week journeys' },
-  { href: '/dashboard/study-history',label: 'Study History', icon: History,         desc: 'Highlights, notes & bookmarks' },
-  { href: '/dashboard/memorize',     label: 'Memorize',      icon: BrainCircuit,    desc: 'Flashcard verse memory' },
-  { href: '/dashboard/progress',     label: 'Progress',      icon: BarChart2,       desc: 'XP, levels & badges' },
+const DISCOVER_ITEMS = [
+  { href: '/dashboard/topics',         label: 'Verse Discovery',  icon: Sparkles,        desc: 'Find passages by what they teach' },
+  { href: '/dashboard/search',         label: 'Search',           icon: Search,          desc: 'Search by keyword or verse' },
+  { href: '/dashboard/church-fathers', label: 'Church Fathers',   icon: GraduationCap,   desc: 'Early church writings & commentary' },
 ]
 
-const LIBRARY_ITEMS = [
-  { href: '/dashboard/quiz',           label: 'Bible Quiz',      icon: HelpCircle,      desc: 'Test your knowledge' },
-  { href: '/dashboard/aleph-bet',      label: 'Hebrew Alphabet', icon: Languages,       desc: 'Learn the Aleph-Bet' },
-  { href: '/dashboard/notes',          label: 'My Notes',        icon: FileText,        desc: 'All your study notes' },
-  { href: '/dashboard/maps',           label: 'Visualizations',  icon: Map,             desc: 'Timelines, maps & lineages' },
-  { href: '/dashboard/topics',         label: 'Topics',          icon: BookMarked,      desc: 'Browse by theme' },
-  { href: '/dashboard/church-fathers', label: 'Church Fathers',  icon: GraduationCap,   desc: 'Early church writings' },
+const STUDY_ITEMS = [
+  { href: '/dashboard/notes',          label: 'My Notes',         icon: FileText,        desc: 'All your study notes' },
+  { href: '/dashboard/plans',          label: 'Reading Plans',    icon: CalendarDays,    desc: 'Guided multi-week journeys' },
+  { href: '/dashboard/study-history',  label: 'Study History',    icon: History,         desc: 'Highlights, bookmarks & saved verses' },
+  { href: '/dashboard/bookmarks',      label: 'Bookmarks',        icon: BookMarked,      desc: 'Your saved verses' },
+]
+
+const LEARN_ITEMS = [
+  { href: '/dashboard/quiz',           label: 'Bible Quiz',       icon: HelpCircle,      desc: 'Test your Bible knowledge' },
+  { href: '/dashboard/memorize',       label: 'Memorize',         icon: BrainCircuit,    desc: 'Flashcard verse memory' },
+  { href: '/dashboard/aleph-bet',      label: 'Hebrew Alphabet',  icon: Languages,       desc: 'Learn the Aleph-Bet' },
+  { href: '/dashboard/maps',           label: 'Maps & Timelines', icon: Map,             desc: 'Visual Bible history' },
 ]
 
 export function DashboardNav({ user, streak, isPro }: Props) {
@@ -105,8 +107,9 @@ export function DashboardNav({ user, streak, isPro }: Props) {
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'GU'
   const isReading = pathname.startsWith('/dashboard/reading')
-  const isStudy = STUDY_ITEMS.some((s) => pathname.startsWith(s.href) && s.href !== '/dashboard') || pathname === '/dashboard'
-  const isLibrary = LIBRARY_ITEMS.some((s) => pathname.startsWith(s.href))
+  const isDiscover = DISCOVER_ITEMS.some((s) => pathname.startsWith(s.href))
+  const isStudy = STUDY_ITEMS.some((s) => pathname.startsWith(s.href))
+  const isLearn = LEARN_ITEMS.some((s) => pathname.startsWith(s.href))
 
   return (
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b border-border" data-ui>
@@ -139,60 +142,34 @@ export function DashboardNav({ user, streak, isPro }: Props) {
             </Button>
           </Link>
 
-          {/* Study dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={`inline-flex items-center gap-1 rounded-md px-3 h-8 text-sm font-medium transition-colors outline-none ${isStudy ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
-              Study
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 p-1">
-              {STUDY_ITEMS.map(({ href, label, icon: Icon, desc }) => (
-                <DropdownMenuItem key={href} className="cursor-pointer" onClick={() => router.push(href)}>
-                  <div className="flex items-start gap-3 px-1 py-1">
-                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+          {/* Discover dropdown */}
+          {[
+            { label: 'Discover', active: isDiscover, items: DISCOVER_ITEMS },
+            { label: 'Study',    active: isStudy,    items: STUDY_ITEMS    },
+            { label: 'Learn',    active: isLearn,    items: LEARN_ITEMS    },
+          ].map(({ label, active, items }) => (
+            <DropdownMenu key={label}>
+              <DropdownMenuTrigger className={`inline-flex items-center gap-1 rounded-md px-3 h-8 text-sm font-medium transition-colors outline-none ${active ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
+                {label}
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60 p-1">
+                {items.map(({ href, label: itemLabel, icon: Icon, desc }) => (
+                  <DropdownMenuItem key={href} className="cursor-pointer" onClick={() => router.push(href)}>
+                    <div className="flex items-start gap-3 px-1 py-1">
+                      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium leading-tight" style={{ fontFamily: 'system-ui' }}>{itemLabel}</p>
+                        <p className="text-xs text-muted-foreground leading-tight mt-0.5" style={{ fontFamily: 'system-ui' }}>{desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium leading-tight" style={{ fontFamily: 'system-ui' }}>{label}</p>
-                      <p className="text-xs text-muted-foreground leading-tight mt-0.5" style={{ fontFamily: 'system-ui' }}>{desc}</p>
-                    </div>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Library dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={`inline-flex items-center gap-1 rounded-md px-3 h-8 text-sm font-medium transition-colors outline-none ${isLibrary ? 'bg-secondary text-secondary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}>
-              Library
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 p-1">
-              {LIBRARY_ITEMS.map(({ href, label, icon: Icon, desc }) => (
-                <DropdownMenuItem key={href} className="cursor-pointer" onClick={() => router.push(href)}>
-                  <div className="flex items-start gap-3 px-1 py-1">
-                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium leading-tight" style={{ fontFamily: 'system-ui' }}>{label}</p>
-                      <p className="text-xs text-muted-foreground leading-tight mt-0.5" style={{ fontFamily: 'system-ui' }}>{desc}</p>
-                    </div>
-                  </div>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              {!isPro && (
-                <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => router.push('/dashboard/upgrade')}>
-                  <Zap className="w-3.5 h-3.5 text-primary" />
-                  <span className="text-sm font-medium text-primary" style={{ fontFamily: 'system-ui' }}>
-                    Start Free Trial
-                  </span>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ))}
         </nav>
 
         {/* Right side */}

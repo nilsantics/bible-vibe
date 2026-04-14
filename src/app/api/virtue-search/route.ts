@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server'
-import { CLAUDE_MODEL } from '@/lib/claude'
+import { CLAUDE_HAIKU_MODEL } from '@/lib/claude'
 import { createClient } from '@/lib/supabase/server'
 import { checkFeatureRateLimit } from '@/lib/rate-limit'
 
-export const runtime = 'edge'
+// Node runtime — longer timeout, needed for Claude response time
+export const maxDuration = 60
 
 function err(msg: string, status: number) {
   return new Response(JSON.stringify({ error: msg }), { status, headers: { 'Content-Type': 'application/json' } })
@@ -24,21 +25,21 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
   const message = await client.messages.create({
-    model: CLAUDE_MODEL,
+    model: CLAUDE_HAIKU_MODEL,
     max_tokens: 2000,
     messages: [{
       role: 'user',
       content: `A Christian wants to find Bible passages related to: "${goal}"
 
-Your task: find 10–12 passages that address this topic or virtue — including passages that DON'T use the exact word but embody the principle. This is the key: surface the non-obvious connections.
+Find 8–10 passages that address this topic. Key priorities:
 
-Examples of what this means:
-- "courage" → include Joshua 1:6 ("Be strong and courageous") even though it's framed as leadership
-- "patience" → include Romans 5:3-4 (suffering producing perseverance) even though the surface topic is suffering
-- "leadership" → include Nehemiah 1-2 (prayer then strategic action) even though it's a historical narrative
-- "anxiety" → include Philippians 4:6-7 AND Matthew 6:25-27 AND Psalm 23 (different angles on the same need)
+1. **Narrative first**: The Bible is ~60% poetry and narrative, ~10% prose. Prioritize stories and poems over epistles. For "patience," show Job, Joseph, Habakkuk — not just Romans 5. For "courage," show Gideon in Judges 6-7 or Esther. Stories and poems are easier to internalize than abstract teaching.
 
-Include a mix: well-known verses AND less-obvious passages. Both OT and NT where relevant.
+2. **Non-obvious connections**: Include passages that embody the principle without using the keyword. "Courage" → Joshua 1:6. "Patience" → Lamentations 3:25-26. "Leadership" → Nehemiah 1-2 (prayer then strategy). "God's sovereignty" → Genesis 50:20 (Joseph's story reveals it without defining it).
+
+3. **Mix of well-known and surprising**: At least 3 should be passages people wouldn't immediately think of.
+
+4. **Both OT and NT** where relevant.
 
 Return ONLY a JSON array:
 [
@@ -47,16 +48,17 @@ Return ONLY a JSON array:
     "chapter": 1,
     "verse": 6,
     "ref": "Joshua 1:6",
-    "snippet": "Be strong and courageous, for you shall cause this people to inherit the land that I swore to their fathers to give them.",
-    "why": "God's command here isn't about feeling brave — it's about acting in obedience despite fear. This reframes courage as faithfulness rather than emotion, making it accessible even when you don't feel courageous."
+    "snippet": "Be strong and courageous, for you shall cause this people to inherit the land that I swore to their fathers.",
+    "why": "God doesn't ask Joshua to feel brave — he commands action in spite of fear. Courage here is framed as obedience, not emotion, which makes it accessible even when you don't feel courageous.",
+    "type": "narrative"
   }
 ]
 
 Rules:
-- "snippet": a short accurate quote from the verse (WEB translation preferred, 1-2 sentences max)
-- "why": 2 sentences explaining HOW this passage addresses the goal — be specific, not generic. Name what the passage actually says.
-- Include surprising passages — don't just return the top 10 Google results
-- Return ONLY valid JSON array, no markdown, no explanation outside the JSON`
+- "snippet": short accurate quote, WEB translation preferred, 1-2 sentences
+- "why": 2 sentences explaining HOW this passage addresses the goal — name what it actually says
+- "type": one of "narrative", "poetry", "teaching", "prophecy"
+- Return ONLY valid JSON array, no markdown`
     }]
   })
 
