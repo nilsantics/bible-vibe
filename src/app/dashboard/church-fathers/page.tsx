@@ -35,7 +35,7 @@ const FATHERS = [
     slug: 'polycarp-philippians',
     emoji: '✉️',
     gradient: 'from-slate-600 to-slate-800',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Polycarp_of_Smyrna2.jpg/440px-Polycarp_of_Smyrna2.jpg',
+    image: '/images/church-fathers/polycarp.jpg',
   },
   {
     name: 'Epistle to the Romans',
@@ -46,7 +46,7 @@ const FATHERS = [
     slug: 'ignatius-romans',
     emoji: '⛓️',
     gradient: 'from-red-700 to-red-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Hosios_Loukas_%28south_west_chapel%2C_south_side%29_-_Ignatios.jpg/440px-Hosios_Loukas_%28south_west_chapel%2C_south_side%29_-_Ignatios.jpg',
+    image: '/images/church-fathers/ignatius.jpg',
   },
   {
     name: 'First Apology',
@@ -57,7 +57,7 @@ const FATHERS = [
     slug: 'justin-first-apology',
     emoji: '⚖️',
     gradient: 'from-blue-700 to-blue-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Saint_Justin_Martyr_by_Theophanes_the_Cretan.jpg/440px-Saint_Justin_Martyr_by_Theophanes_the_Cretan.jpg',
+    image: '/images/church-fathers/justin.jpg',
   },
   {
     name: 'Against Heresies — Book I',
@@ -68,7 +68,7 @@ const FATHERS = [
     slug: 'irenaeus-against-heresies-1',
     emoji: '🛡️',
     gradient: 'from-emerald-700 to-emerald-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Saint_irenee_saint_irenee.jpg/440px-Saint_irenee_saint_irenee.jpg',
+    image: '/images/church-fathers/irenaeus.jpg',
   },
   {
     name: 'On the Incarnation',
@@ -79,7 +79,7 @@ const FATHERS = [
     slug: 'on-the-incarnation',
     emoji: '✝️',
     gradient: 'from-violet-700 to-violet-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Hosios_Loukas_Crypt_%28south_east_groin-vault%29_-_Athanasios.jpg/440px-Hosios_Loukas_Crypt_%28south_east_groin-vault%29_-_Athanasios.jpg',
+    image: '/images/church-fathers/athanasius.jpg',
   },
   {
     name: 'Confessions',
@@ -90,7 +90,7 @@ const FATHERS = [
     slug: 'augustine-confessions',
     emoji: '📖',
     gradient: 'from-rose-700 to-rose-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Saint_Augustine_by_Philippe_de_Champaigne.jpg/440px-Saint_Augustine_by_Philippe_de_Champaigne.jpg',
+    image: '/images/church-fathers/augustine.jpg',
   },
 ]
 
@@ -103,7 +103,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0103.htm',
     emoji: '🕯️',
     gradient: 'from-stone-600 to-stone-800',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Hosios_Loukas_%28south_west_chapel%2C_south_side%29_-_Ignatios.jpg/440px-Hosios_Loukas_%28south_west_chapel%2C_south_side%29_-_Ignatios.jpg',
+    image: '/images/church-fathers/ignatius.jpg',
   },
   {
     name: 'Tertullian',
@@ -113,7 +113,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0301.htm',
     emoji: '⚔️',
     gradient: 'from-red-700 to-red-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Tertullian2.png/440px-Tertullian2.png',
+    image: '/images/church-fathers/tertullian.png',
   },
   {
     name: 'Origen of Alexandria',
@@ -123,7 +123,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/0411.htm',
     emoji: '📜',
     gradient: 'from-amber-700 to-amber-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Origen.jpg/440px-Origen.jpg',
+    image: '/images/church-fathers/origen.jpg',
   },
   {
     name: 'Basil the Great',
@@ -133,7 +133,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/3201.htm',
     emoji: '🌿',
     gradient: 'from-green-700 to-green-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Basil_of_Caesarea.jpg/440px-Basil_of_Caesarea.jpg',
+    image: '/images/church-fathers/basil.jpg',
   },
   {
     name: 'John Chrysostom',
@@ -143,7 +143,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/2001.htm',
     emoji: '🗣️',
     gradient: 'from-orange-700 to-orange-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Johnchrysostom.jpg/440px-Johnchrysostom.jpg',
+    image: '/images/church-fathers/chrysostom.jpg',
   },
   {
     name: 'Jerome',
@@ -153,7 +153,7 @@ const EXTERNAL_FATHERS = [
     url: 'https://www.newadvent.org/fathers/3001.htm',
     emoji: '📝',
     gradient: 'from-indigo-700 to-indigo-900',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/MatthiasStom-SaintJerome-Nantes.jpg/440px-MatthiasStom-SaintJerome-Nantes.jpg',
+    image: '/images/church-fathers/jerome.jpg',
   },
 ]
 
@@ -228,23 +228,16 @@ export default async function ChurchFathersPage() {
       </div>
 
       {/* Intro banner */}
-      <div className="rounded-2xl p-5 mb-8 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #3b2a1a 0%, #4a3420 50%, #2d1e0f 100%)' }}
-      >
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: 'radial-gradient(circle at 30% 70%, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
-        <div className="relative">
-          <p className="text-xs font-bold text-amber-400/70 uppercase tracking-widest mb-2" style={{ fontFamily: 'system-ui' }}>
-            ✦ Reading the Fathers
-          </p>
-          <p className="text-base leading-relaxed text-white/90 italic mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-            &ldquo;The Church Fathers show us how the Bible was understood by those closest in time and culture to the apostles — a window into the living tradition of the faith.&rdquo;
-          </p>
-          <p className="text-xs text-white/50" style={{ fontFamily: 'system-ui' }}>
-            All texts public domain · 1st–5th century AD · Greek, Latin, and Syriac originals
-          </p>
-        </div>
+      <div className="rounded-2xl p-5 mb-8 border border-border bg-muted/30">
+        <p className="text-xs font-semibold text-primary/60 uppercase tracking-widest mb-2" style={{ fontFamily: 'system-ui' }}>
+          Reading the Fathers
+        </p>
+        <p className="text-base leading-relaxed text-foreground/80 italic mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+          &ldquo;The Church Fathers show us how the Bible was understood by those closest in time and culture to the apostles — a window into the living tradition of the faith.&rdquo;
+        </p>
+        <p className="text-xs text-muted-foreground/60" style={{ fontFamily: 'system-ui' }}>
+          All texts public domain · 1st–5th century AD · Greek, Latin, and Syriac originals
+        </p>
       </div>
 
       {/* Native writings grid */}
