@@ -15,7 +15,7 @@ import {
 type ReadingTheme = 'light' | 'dark' | 'sepia'
 
 const mainItems = [
-  { href: '/dashboard',               label: 'Home',     icon: LayoutDashboard, match: (p: string) => p === '/dashboard' || p === '/dashboard/home' },
+  { href: '/dashboard/home',           label: 'Home',     icon: LayoutDashboard, match: (p: string) => p === '/dashboard' || p === '/dashboard/home' },
   { href: '/dashboard/reading/genesis/1', label: 'Read', icon: BookOpen,        match: (p: string) => p.startsWith('/dashboard/reading') },
   { href: '/dashboard/topics',        label: 'Discover', icon: Sparkles,        match: (p: string) => p.startsWith('/dashboard/topics') },
   { href: '/dashboard/notes',         label: 'Notes',    icon: FileText,        match: (p: string) => p.startsWith('/dashboard/notes') },

@@ -118,7 +118,8 @@ export function BibleReader({
 }: Props) {
   const router = useRouter()
   const [highlights, setHighlights] = useState<Record<number, string>>(initialHighlights)
-  const [notes, setNotes] = useState<Record<number, { id: string; content: string }>>(initialNotes)
+  const [notes] = useState<Record<number, { id: string; content: string }>>(initialNotes)
+  const [pendingVerse, setPendingVerse] = useState<{ ref: string; text: string } | null>(null)
   const [bookmarks, setBookmarks] = useState<Set<number>>(new Set())
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null)
   const [popupAnchor, setPopupAnchor] = useState<{ x: number; y: number } | null>(null)
@@ -392,27 +393,10 @@ export function BibleReader({
     }
   }
 
-  async function handleSaveNote(verseId: number, content: string) {
-    if (!isAuthenticated) { toast.info('Sign in to save notes'); return }
-    const existing = notes[verseId]
-    if (existing) {
-      const res = await fetch('/api/notes', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: existing.id, content }),
-      })
-      const data = await res.json()
-      if (data.note) setNotes((prev) => ({ ...prev, [verseId]: { id: data.note.id, content } }))
-    } else {
-      const res = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verse_id: verseId, content }),
-      })
-      const data = await res.json()
-      if (data.note) setNotes((prev) => ({ ...prev, [verseId]: { id: data.note.id, content } }))
-    }
-    toast.success('Note saved')
+  function handleAddToNotes(ref: string, text: string) {
+    setNotesOpen(true)
+    setChatOpen(false)
+    setPendingVerse({ ref, text })
   }
 
   function handleTranslationChange(newTranslation: string | null) {
@@ -1285,6 +1269,8 @@ export function BibleReader({
               chapter={chapter}
               onClose={() => setNotesOpen(false)}
               isAuthenticated={isAuthenticated}
+              pendingVerse={pendingVerse}
+              onPendingVerseHandled={() => setPendingVerse(null)}
             />
           </div>
 
@@ -1296,6 +1282,8 @@ export function BibleReader({
               chapter={chapter}
               onClose={() => setNotesOpen(false)}
               isAuthenticated={isAuthenticated}
+              pendingVerse={pendingVerse}
+              onPendingVerseHandled={() => setPendingVerse(null)}
             />
           </div>
         </>
@@ -1309,10 +1297,9 @@ export function BibleReader({
         bookName={book.name}
         translation={translation}
         currentHighlight={(highlights[selectedVerse.id] as HighlightColor) ?? null}
-        currentNote={notes[selectedVerse.id]?.content ?? ''}
         isBookmarked={bookmarks.has(selectedVerse.id)}
         onHighlight={(color) => handleHighlight(selectedVerse.id, color)}
-        onSaveNote={(content) => handleSaveNote(selectedVerse.id, content)}
+        onAddToNotes={handleAddToNotes}
         onBookmark={() => handleBookmark(selectedVerse.id)}
         onClose={closePopup}
         onOpenChat={() => { closePopup(); setChatOpen(true) }}

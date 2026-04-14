@@ -3,6 +3,7 @@ import { BIBLE_STUDY_SYSTEM_PROMPT, CLAUDE_MODEL } from '@/lib/claude'
 import { getTraditionPrompt, type TraditionId } from '@/lib/tradition'
 import { createClient } from '@/lib/supabase/server'
 import { checkFeatureRateLimit } from '@/lib/rate-limit'
+import { logAIUsage } from '@/lib/usage-log'
 
 export const runtime = 'edge'
 
@@ -50,7 +51,9 @@ Use markdown. Keep under 350 words.${traditionSuffix}`,
     async start(controller) {
       const encoder = new TextEncoder()
       try {
-        for await (const event of stream) {
+        // Log usage when stream finishes (non-blocking)
+          stream.finalMessage().then(msg => logAIUsage({ userId: user.id, route: '/api/explain', feature: 'explain_verse', model: CLAUDE_MODEL, inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens })).catch(() => {})
+          for await (const event of stream) {
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             controller.enqueue(encoder.encode(event.delta.text))
           }

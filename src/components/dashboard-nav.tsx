@@ -229,7 +229,7 @@ export function DashboardNav({ user, streak, isPro }: Props) {
                   )}
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard')}>
+                <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => router.push('/dashboard/home')}>
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
                 </DropdownMenuItem>

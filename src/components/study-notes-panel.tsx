@@ -5,9 +5,11 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from 'tiptap-markdown'
+import Image from '@tiptap/extension-image'
+import { createClient } from '@/lib/supabase/client'
 import {
   X, Sparkles, GripVertical, Check, Clock,
-  Minus, Plus, ArrowLeft, BookOpen, Search,
+  Minus, Plus, ArrowLeft, BookOpen, Search, Trash2, ImageIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BIBLE_BOOKS } from '@/lib/bible-data'
@@ -24,11 +26,13 @@ interface Note {
 }
 
 interface Props {
-  bookId: number
-  bookName: string
-  chapter: number
-  onClose: () => void
+  bookId?: number
+  bookName?: string
+  chapter?: number
+  onClose?: () => void
   isAuthenticated: boolean
+  pendingVerse?: { ref: string; text: string } | null
+  onPendingVerseHandled?: () => void
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -93,9 +97,23 @@ function parseSections(text: string): SynthesisSection[] {
   })
 }
 
+// ── image upload ──────────────────────────────────────────────────────────────
+
+async function uploadImage(file: File): Promise<string | null> {
+  try {
+    const supabase = createClient()
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const path = `notes/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('note-images').upload(path, file, { upsert: false })
+    if (error) return null
+    const { data } = supabase.storage.from('note-images').getPublicUrl(path)
+    return data.publicUrl
+  } catch { return null }
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 
-export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenticated }: Props) {
+export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenticated, pendingVerse, onPendingVerseHandled }: Props) {
   const [view, setView] = useState<'list' | 'editor'>('list')
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(false)
@@ -114,6 +132,7 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
   const [showSynthesis, setShowSynthesis] = useState(false)
   const [sections, setSections] = useState<SynthesisSection[]>([])
   const [synthStream, setSynthStream] = useState('')
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set())
 
   // slash menu
   const [slashMenu, setSlashMenu] = useState<{ query: string; top: number; left: number } | null>(null)
@@ -150,12 +169,34 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
 
   // ── editor ────────────────────────────────────────────────────────────────
 
+  const imageInputRef = useRef<HTMLInputElement>(null)
+
+  async function insertImage(file: File) {
+    if (!editor) return
+    const url = await uploadImage(file)
+    if (url) editor.chain().focus().setImage({ src: url }).run()
+  }
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Markdown.configure({ html: false, transformPastedText: true }),
       Placeholder.configure({ placeholder: 'Start writing… type / for commands' }),
+      Image.configure({ inline: false, allowBase64: false }),
     ],
+    editorProps: {
+      handlePaste(_, event) {
+        const items = event.clipboardData?.items
+        if (!items) return false
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile()
+            if (file) { insertImage(file); return true }
+          }
+        }
+        return false
+      },
+    },
     onUpdate({ editor }) {
       const md = (editor.storage as any).markdown.getMarkdown()
       setContent(md)
@@ -187,6 +228,25 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
     setTimeout(() => editor.commands.focus('end'), 50)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, editor])
+
+  // Auto-insert a verse from the verse popup "Add to Notes" action
+  useEffect(() => {
+    if (!pendingVerse) return
+    if (view === 'list') {
+      // Create a new note, which will switch to editor view — the effect will re-run
+      newNote()
+      return
+    }
+    if (!editor) return
+    // Small delay so the editor is fully focused after switching to editor view
+    const t = setTimeout(() => {
+      editor.commands.focus('end')
+      insertVerseQuote(pendingVerse.text, pendingVerse.ref)
+      onPendingVerseHandled?.()
+    }, 80)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingVerse, editor, view])
 
   // slash keyboard nav
   useEffect(() => {
@@ -449,9 +509,11 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
             >
               <Plus className="w-3 h-3" /> New Note
             </button>
-            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
-              <X className="w-3.5 h-3.5" />
-            </button>
+            {onClose && (
+              <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -492,20 +554,29 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
           ) : (
             <div className="divide-y divide-border">
               {filtered.map(note => (
-                <button key={note.id} onClick={() => openNote(note)} className="w-full text-left px-4 py-3.5 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-medium text-foreground leading-snug line-clamp-1 flex-1">{note.title || 'Untitled Note'}</p>
-                    <span className="text-[10px] text-muted-foreground/40 shrink-0 mt-0.5 tabular-nums">{timeAgo(note.updated_at)}</span>
-                  </div>
-                  {note.content && (
-                    <p className="text-xs text-muted-foreground/55 mt-1 line-clamp-2 leading-relaxed">{stripMd(note.content).slice(0, 140)}</p>
-                  )}
-                  {note.book_name && note.chapter_number && (
-                    <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary/70 bg-primary/8 px-1.5 py-0.5 rounded-full">
-                      <BookOpen className="w-2.5 h-2.5" />{note.book_name} {note.chapter_number}
-                    </span>
-                  )}
-                </button>
+                <div key={note.id} className="group flex items-stretch hover:bg-muted/30 transition-colors">
+                  <button onClick={() => openNote(note)} className="flex-1 text-left px-4 py-3.5 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium text-foreground leading-snug line-clamp-1 flex-1">{note.title || 'Untitled Note'}</p>
+                      <span className="text-[10px] text-muted-foreground/40 shrink-0 mt-0.5 tabular-nums">{timeAgo(note.updated_at)}</span>
+                    </div>
+                    {note.content && (
+                      <p className="text-xs text-muted-foreground/55 mt-1 line-clamp-2 leading-relaxed">{stripMd(note.content).slice(0, 140)}</p>
+                    )}
+                    {note.book_name && note.chapter_number && (
+                      <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary/70 bg-primary/8 px-1.5 py-0.5 rounded-full">
+                        <BookOpen className="w-2.5 h-2.5" />{note.book_name} {note.chapter_number}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteNote(note.id) }}
+                    className="opacity-0 group-hover:opacity-100 flex items-center px-3 text-muted-foreground/40 hover:text-destructive transition-all shrink-0"
+                    title="Delete note"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -545,9 +616,11 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
           {saveState === 'saving' && <span className="flex items-center gap-1 text-[10px] text-muted-foreground/50"><Clock className="w-2.5 h-2.5" /> saving…</span>}
           {saveState === 'saved' && savedAt && <span className="flex items-center gap-1 text-[10px] text-emerald-500/80"><Check className="w-2.5 h-2.5" /> saved {fmtSaved(savedAt)}</span>}
           {saveState === 'unsaved' && <span className="text-[10px] text-amber-500/80">unsaved</span>}
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
-            <X className="w-3.5 h-3.5" />
-          </button>
+          {onClose && (
+            <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/60 text-muted-foreground hover:bg-muted transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -559,6 +632,8 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
         <ToolBtn title="Blockquote"  onClick={() => editor?.chain().focus().toggleBlockquote().run()}         active={editor?.isActive('blockquote')}><span className="text-base leading-none font-serif">&ldquo;</span></ToolBtn>
         <ToolBtn title="Bullet list" onClick={() => editor?.chain().focus().toggleBulletList().run()}         active={editor?.isActive('bulletList')}><span className="text-sm">•</span></ToolBtn>
         <ToolBtn title="Divider"     onClick={() => editor?.chain().focus().setHorizontalRule().run()}>       <Minus className="w-3.5 h-3.5" /></ToolBtn>
+        <ToolBtn title="Insert image" onClick={() => imageInputRef.current?.click()}><ImageIcon className="w-3.5 h-3.5" /></ToolBtn>
+        <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) insertImage(f); e.target.value = '' }} />
         <div className="flex-1" />
         <span className="text-[10px] text-muted-foreground/30 mr-1">/ for commands</span>
         <button
@@ -657,33 +732,52 @@ export function StudyNotesPanel({ bookId, bookName, chapter, onClose, isAuthenti
                   <div key={i} className="h-2.5 bg-muted rounded animate-pulse" style={{ width: `${w}%`, animationDelay: `${i * 80}ms` }} />
                 ))}
               </div>
-            ) : sections.map((section, i) => (
-              <div
-                key={i}
-                className={`rounded-lg border transition-all ${
-                  section.inserted
-                    ? 'border-border bg-muted/20 opacity-50'
-                    : 'border-amber-500/30 bg-amber-500/5'
-                }`}
-              >
-                <div className="flex items-center justify-between px-3 py-2 border-b border-inherit">
-                  <span className="text-[11px] font-semibold text-foreground/80">{section.title}</span>
-                  {section.inserted ? (
-                    <span className="flex items-center gap-1 text-[10px] text-emerald-500/70"><Check className="w-3 h-3" /> Added</span>
-                  ) : (
-                    <button
-                      onClick={() => insertSection(i)}
-                      className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 hover:text-foreground transition-colors font-medium"
-                    >
-                      <Plus className="w-3 h-3" /> Insert
-                    </button>
-                  )}
+            ) : sections.map((section, i) => {
+              const isExpanded = expandedSections.has(i)
+              const fullText = stripMd(section.content)
+              const isLong = fullText.length > 160
+              return (
+                <div
+                  key={i}
+                  className={`rounded-lg border transition-all ${
+                    section.inserted
+                      ? 'border-border bg-muted/20 opacity-50'
+                      : 'border-amber-500/30 bg-amber-500/5'
+                  }`}
+                >
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-inherit">
+                    <span className="text-[11px] font-semibold text-foreground/80">{section.title}</span>
+                    {section.inserted ? (
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-500/70"><Check className="w-3 h-3" /> Added</span>
+                    ) : (
+                      <button
+                        onClick={() => insertSection(i)}
+                        className="flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 hover:text-foreground transition-colors font-medium"
+                      >
+                        <Plus className="w-3 h-3" /> Insert
+                      </button>
+                    )}
+                  </div>
+                  <div className="px-3 py-2">
+                    <p className={`text-[11px] text-muted-foreground leading-relaxed ${isExpanded ? '' : 'line-clamp-3'}`}>
+                      {fullText}
+                    </p>
+                    {isLong && (
+                      <button
+                        onClick={() => setExpandedSections(prev => {
+                          const next = new Set(prev)
+                          isExpanded ? next.delete(i) : next.add(i)
+                          return next
+                        })}
+                        className="mt-1 text-[10px] text-amber-700 dark:text-amber-400 hover:text-foreground transition-colors"
+                      >
+                        {isExpanded ? 'see less' : 'see more…'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed px-3 py-2 line-clamp-3">
-                  {stripMd(section.content).slice(0, 200)}
-                </p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

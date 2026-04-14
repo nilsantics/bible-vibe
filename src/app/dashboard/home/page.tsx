@@ -20,37 +20,16 @@ function getGreeting() {
 }
 
 const QUICK_ACTIONS = [
-  { href: '/dashboard/reading/genesis/1', icon: BookOpen,  label: 'Bible Reader',    desc: 'Continue reading' },
-  { href: '/dashboard/maps',              icon: Map,        label: 'Biblical Maps',   desc: 'Geography of Scripture' },
-  { href: '/dashboard/church-fathers',    icon: BookMarked, label: 'Church Fathers',  desc: 'Early church writings' },
-  { href: '/dashboard/topics',            icon: GraduationCap, label: 'Topics',       desc: 'Browse by theme' },
+  { href: '/dashboard/reading/genesis/1', icon: BookOpen,     label: 'Bible Reader',   desc: 'Continue reading' },
+  { href: '/dashboard/maps',              icon: Map,           label: 'Biblical Maps',  desc: 'Geography of Scripture' },
+  { href: '/dashboard/church-fathers',    icon: BookMarked,    label: 'Church Fathers', desc: 'Early church writings' },
+  { href: '/dashboard/topics',            icon: GraduationCap, label: 'Topics',         desc: 'Browse by theme' },
 ]
 
 const PLAN_SUGGESTIONS = [
-  {
-    id: 'chronological',
-    icon: '📅',
-    title: 'Chronological Bible',
-    desc: 'Read the Bible in historical order',
-    days: 365,
-    gradient: 'from-amber-600 to-orange-700',
-  },
-  {
-    id: 'new-testament',
-    icon: '✝️',
-    title: 'New Testament in 90 Days',
-    desc: 'The Gospels, Acts, Epistles & Revelation',
-    days: 90,
-    gradient: 'from-sky-600 to-blue-700',
-  },
-  {
-    id: 'psalms-proverbs',
-    icon: '🌿',
-    title: 'Psalms & Proverbs',
-    desc: 'Poetry and wisdom for daily life',
-    days: 31,
-    gradient: 'from-emerald-600 to-green-700',
-  },
+  { id: 'chronological',  icon: '📅', title: 'Chronological Bible',        desc: 'Read the Bible in historical order',       days: 365, gradient: 'from-amber-500 to-orange-600' },
+  { id: 'new-testament',  icon: '✝️', title: 'New Testament in 90 Days',   desc: 'Gospels, Acts, Epistles & Revelation',     days: 90,  gradient: 'from-sky-500 to-blue-600' },
+  { id: 'psalms-proverbs',icon: '🌿', title: 'Psalms & Proverbs',          desc: 'Poetry and wisdom for daily life',         days: 31,  gradient: 'from-emerald-500 to-green-600' },
 ]
 
 export default async function DashboardPage({
@@ -70,7 +49,6 @@ export default async function DashboardPage({
   let badgeCount = 0
   let todayPlanTask: { icon: string; name: string; bookName: string; chapters: number[]; href: string } | null = null
 
-  // Verse of the day
   const votd = getVerseOfDay()
   const { data: votdVerse } = await supabase
     .from('verses')
@@ -127,47 +105,75 @@ export default async function DashboardPage({
   const greeting = getGreeting()
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-6 pb-28 sm:pb-8">
       {upgraded === '1' && <UpgradeToast />}
       {welcome === '1' && <WelcomeToast />}
       {user && <PushPrompt streak={streak} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* ── Left column (2/3) ── */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* ── Left / main column ── */}
+        <div className="lg:col-span-2 space-y-5">
 
           {/* Greeting */}
-          <div>
-            <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-              {greeting}{displayName ? `, ${displayName}` : ''}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                {greeting}{displayName ? `, ${displayName}` : ''}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+            {user && streak > 0 && (
+              <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full px-3 py-1.5 shrink-0">
+                <span className="streak-fire text-base">🔥</span>
+                <span className="text-sm font-bold" style={{ fontFamily: 'system-ui' }}>{streak}</span>
+              </div>
+            )}
           </div>
 
-          {/* Today's plan — compact card */}
+          {/* Verse of the Day — shown inline on mobile, hidden on lg (it's in sidebar) */}
+          {votdVerse && votdBook && (
+            <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`} className="block lg:hidden">
+              <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:border-primary/40 transition-colors group">
+                <p className="text-[10px] font-bold text-primary/70 mb-2.5 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
+                  Verse of the Day
+                </p>
+                <p className="text-base leading-relaxed text-foreground italic mb-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                  &ldquo;{votdVerse.text.length > 180 ? votdVerse.text.slice(0, 180) + '…' : votdVerse.text}&rdquo;
+                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground font-medium" style={{ fontFamily: 'system-ui' }}>
+                    {votdBook.name} {votd.chapter}:{votd.verse}
+                  </p>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* Today's reading plan */}
           {todayPlanTask ? (
             <Link href={todayPlanTask.href}>
               <Card className="p-4 border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/8 transition-all group">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-xl">
                     {todayPlanTask.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-bold text-primary uppercase tracking-widest mb-0.5" style={{ fontFamily: 'system-ui' }}>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5" style={{ fontFamily: 'system-ui' }}>
                       Today&apos;s Reading Plan
                     </p>
-                    <p className="text-sm font-semibold leading-snug" style={{ fontFamily: 'system-ui' }}>
+                    <p className="text-sm font-semibold truncate" style={{ fontFamily: 'system-ui' }}>
                       {todayPlanTask.name}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: 'system-ui' }}>
+                    <p className="text-xs text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
                       {todayPlanTask.bookName} {todayPlanTask.chapters.join(', ')}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 text-primary shrink-0">
-                    <span className="text-xs font-medium hidden sm:block" style={{ fontFamily: 'system-ui' }}>Read now</span>
+                    <span className="text-xs font-medium hidden sm:block" style={{ fontFamily: 'system-ui' }}>Read</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -195,18 +201,18 @@ export default async function DashboardPage({
           )}
 
           {/* Quick actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {QUICK_ACTIONS.map((action) => (
               <Link key={action.href} href={action.href}>
-                <Card className="p-3 border-border hover:border-primary/40 hover:bg-primary/5 transition-all group h-full text-center flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors flex items-center justify-center">
-                    <action.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <Card className="p-3 border-border hover:border-primary/40 hover:bg-primary/5 transition-all group h-full flex items-center gap-3 sm:flex-col sm:items-center sm:text-center sm:gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors flex items-center justify-center shrink-0">
+                    <action.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div>
                     <p className="text-xs font-semibold leading-tight group-hover:text-primary transition-colors" style={{ fontFamily: 'system-ui' }}>
                       {action.label}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight" style={{ fontFamily: 'system-ui' }}>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight hidden sm:block" style={{ fontFamily: 'system-ui' }}>
                       {action.desc}
                     </p>
                   </div>
@@ -218,7 +224,7 @@ export default async function DashboardPage({
           {/* Continue reading */}
           <ContinueReading />
 
-          {/* Recent activity (logged-in) */}
+          {/* Recent activity */}
           {user && recentReading.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -236,10 +242,7 @@ export default async function DashboardPage({
                   if (!bookMeta) return null
                   const nextCh = r.chapter_number < bookMeta.chapters ? r.chapter_number + 1 : null
                   return (
-                    <Link
-                      key={i}
-                      href={`/dashboard/reading/${bookMeta.name.toLowerCase().replace(/\s+/g, '-')}/${nextCh ?? r.chapter_number}`}
-                    >
+                    <Link key={i} href={`/dashboard/reading/${bookMeta.name.toLowerCase().replace(/\s+/g, '-')}/${nextCh ?? r.chapter_number}`}>
                       <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-muted/30 transition-colors group">
                         <BookOpen className="w-4 h-4 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
@@ -259,63 +262,66 @@ export default async function DashboardPage({
             </div>
           )}
 
-          {/* Plan suggestions */}
+          {/* Reading plan suggestions — horizontal scroll on mobile */}
           <div>
-            <h2 className="text-sm font-semibold mb-3" style={{ fontFamily: 'system-ui' }}>
-              Explore reading plans
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>Reading plans</h2>
+              <Link href="/dashboard/plans" className="text-xs text-primary hover:underline" style={{ fontFamily: 'system-ui' }}>See all</Link>
+            </div>
+            {/* Mobile: horizontal scroll strip */}
+            <div className="flex gap-3 overflow-x-auto pb-1 sm:hidden snap-x snap-mandatory scrollbar-none">
+              {PLAN_SUGGESTIONS.map((plan) => (
+                <Link key={plan.id} href="/dashboard/plans" className="shrink-0 snap-start w-48">
+                  <div className="rounded-2xl overflow-hidden border border-border">
+                    <div className={`h-20 bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}>
+                      <span className="text-3xl">{plan.icon}</span>
+                    </div>
+                    <div className="p-3 bg-card">
+                      <p className="text-xs font-semibold leading-snug" style={{ fontFamily: 'system-ui' }}>{plan.title}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-mono">{plan.days} days</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {/* Desktop: 3-col grid */}
+            <div className="hidden sm:grid grid-cols-3 gap-3">
               {PLAN_SUGGESTIONS.map((plan) => (
                 <Link key={plan.id} href="/dashboard/plans">
-                  <Card className="overflow-hidden border-border hover:border-primary/40 transition-colors group cursor-pointer">
-                    <div className={`h-14 bg-gradient-to-br ${plan.gradient} flex items-center justify-center relative`}>
+                  <div className="rounded-2xl overflow-hidden border border-border hover:border-primary/40 transition-colors group cursor-pointer">
+                    <div className={`h-16 bg-gradient-to-br ${plan.gradient} flex items-center justify-center`}>
                       <span className="text-2xl">{plan.icon}</span>
                     </div>
-                    <div className="p-3">
-                      <p className="text-sm font-semibold group-hover:text-primary transition-colors leading-snug" style={{ fontFamily: 'system-ui' }}>
-                        {plan.title}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug" style={{ fontFamily: 'system-ui' }}>
-                        {plan.desc}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-mono">
-                        {plan.days} days
-                      </p>
+                    <div className="p-3 bg-card">
+                      <p className="text-sm font-semibold group-hover:text-primary transition-colors leading-snug" style={{ fontFamily: 'system-ui' }}>{plan.title}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug" style={{ fontFamily: 'system-ui' }}>{plan.desc}</p>
+                      <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-mono">{plan.days} days</p>
                     </div>
-                  </Card>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         </div>
 
-        {/* ── Right column (1/3) ── */}
-        <div className="space-y-5">
+        {/* ── Right sidebar (desktop only) ── */}
+        <div className="hidden lg:flex flex-col gap-5">
 
           {/* Verse of the Day */}
           {votdVerse && votdBook && (
             <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`}>
-              <div className="relative rounded-2xl overflow-hidden group cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #c2813a 0%, #a0522d 40%, #7c3f1e 100%)' }}
-              >
-                <div className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
-                />
-                <div className="relative px-5 py-5">
-                  <p className="text-[10px] font-bold text-white/70 mb-3 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
-                    ✦ Verse of the Day
+              <div className="rounded-2xl border border-border bg-card px-5 py-5 hover:border-primary/40 transition-colors group cursor-pointer">
+                <p className="text-[10px] font-bold text-primary/70 mb-3 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
+                  Verse of the Day
+                </p>
+                <p className="text-base leading-relaxed text-foreground italic mb-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+                  &ldquo;{votdVerse.text}&rdquo;
+                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground font-medium" style={{ fontFamily: 'system-ui' }}>
+                    {votdBook.name} {votd.chapter}:{votd.verse}
                   </p>
-                  <p className="text-base leading-relaxed text-white italic mb-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
-                    &ldquo;{votdVerse.text}&rdquo;
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-white/70" style={{ fontFamily: 'system-ui' }}>
-                      {votdBook.name} {votd.chapter}:{votd.verse}
-                    </p>
-                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                      <ChevronRight className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                 </div>
               </div>
             </Link>
@@ -355,7 +361,7 @@ export default async function DashboardPage({
                 <div className="text-center">
                   <div className="text-xl font-bold mb-0.5 flex items-center justify-center gap-1">
                     <Zap className="w-4 h-4 text-primary" />
-                    <span style={{ fontFamily: 'system-ui' }}>{Math.round(totalXP / 100) * 100 >= 1000 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}</span>
+                    <span style={{ fontFamily: 'system-ui' }}>{totalXP >= 1000 ? `${(totalXP / 1000).toFixed(1)}k` : totalXP}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'system-ui' }}>XP</p>
                 </div>

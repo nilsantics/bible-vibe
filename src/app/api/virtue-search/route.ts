@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { CLAUDE_HAIKU_MODEL } from '@/lib/claude'
 import { createClient } from '@/lib/supabase/server'
 import { checkFeatureRateLimit } from '@/lib/rate-limit'
+import { logAIUsage } from '@/lib/usage-log'
 
 // Node runtime — longer timeout, needed for Claude response time
 export const maxDuration = 60
@@ -61,6 +62,8 @@ Rules:
 - Return ONLY valid JSON array, no markdown`
     }]
   })
+
+  logAIUsage({ userId: user.id, route: '/api/virtue-search', feature: 'verse_discovery', model: CLAUDE_HAIKU_MODEL, inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens })
 
   try {
     const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'

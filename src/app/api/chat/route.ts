@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getSystemPromptForDepth, type StudyDepth } from '@/lib/claude'
 import { createClient } from '@/lib/supabase/server'
 import { checkChatRateLimit } from '@/lib/rate-limit'
+import { logAIUsage } from '@/lib/usage-log'
 
 export const runtime = 'edge'
 

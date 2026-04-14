@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ReactMarkdown from 'react-markdown'
 import {
-  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap, Tag, BookMarked,
+  X, Sparkles, Pencil, Check, Bookmark, GitBranch, Search, ExternalLink, Copy, Share2, MessageSquare, Zap, Tag, BookMarked, FileText,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { HighlightColor } from '@/types'
@@ -39,13 +39,12 @@ interface Props {
   bookName: string
   translation: string
   currentHighlight: HighlightColor | null
-  currentNote: string
   isBookmarked: boolean
   onHighlight: (color: HighlightColor | null) => void
-  onSaveNote: (content: string) => void
   onBookmark: () => void
   onClose: () => void
   onOpenChat: () => void
+  onAddToNotes: (ref: string, text: string) => void
   anchor: { x: number; y: number }
   isAuthenticated: boolean
   isPro?: boolean
@@ -127,13 +126,12 @@ export function VersePopup({
   bookName,
   translation,
   currentHighlight,
-  currentNote,
   isBookmarked,
   onHighlight,
-  onSaveNote,
   onBookmark,
   onClose,
   onOpenChat,
+  onAddToNotes,
   anchor,
   isAuthenticated,
   isPro = false,
@@ -142,8 +140,6 @@ export function VersePopup({
   const [explainTriggered, setExplainTriggered] = useState(false)
   const [commentaryTriggered, setCommentaryTriggered] = useState(false)
   const { tradition } = useTradition()
-  const [noteText, setNoteText] = useState(currentNote)
-  const [noteSaved, setNoteSaved] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -354,12 +350,6 @@ export function VersePopup({
     }
   }
 
-  async function handleSaveNote() {
-    await onSaveNote(noteText)
-    setNoteSaved(true)
-    setTimeout(() => setNoteSaved(false), 2000)
-  }
-
   function copyVerse() {
     const text = `"${verse.text}" — ${verseRef} (${translation})`
     navigator.clipboard.writeText(text).then(() => {
@@ -384,8 +374,8 @@ export function VersePopup({
 
   const vw = typeof window !== 'undefined' ? window.innerWidth : 400
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-  const popupWidth = 340
-  const popupMaxHeight = 480
+  const popupWidth = 420
+  const popupMaxHeight = 520
   const clampedLeft = Math.min(Math.max(anchor.x, 8), vw - popupWidth - 8)
   const fitsBelow = anchor.y + popupMaxHeight < vh
   const desktopStyle: React.CSSProperties = {
@@ -432,9 +422,14 @@ export function VersePopup({
                 <Share2 className="w-4 h-4" />
               </Button>
               {isAuthenticated && (
-                <Button variant="ghost" size="icon" className="w-10 h-10" onClick={onBookmark}>
-                  <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
-                </Button>
+                <>
+                  <Button variant="ghost" size="icon" className="w-10 h-10" onClick={() => { onClose(); onAddToNotes(verseRef, verse.text) }} title="Add to Notes">
+                    <FileText className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="w-10 h-10" onClick={onBookmark}>
+                    <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
+                  </Button>
+                </>
               )}
               <Button variant="ghost" size="icon" className="w-10 h-10" onClick={onClose}>
                 <X className="w-4 h-4" />
@@ -581,10 +576,6 @@ export function VersePopup({
               chipEntryLoading={chipEntryLoading}
               handleChipClick={handleChipClick}
               onClearChip={() => { setSelectedChip(null); setChipEntry(null) }}
-              noteText={noteText}
-              setNoteText={setNoteText}
-              noteSaved={noteSaved}
-              handleSaveNote={handleSaveNote}
               isAuthenticated={isAuthenticated}
               tags={tags}
               tagInput={tagInput}
@@ -618,9 +609,14 @@ export function VersePopup({
               <Share2 className="w-3.5 h-3.5" />
             </Button>
             {isAuthenticated && (
-              <Button variant="ghost" size="icon" className="w-7 h-7" onClick={onBookmark}>
-                <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
-              </Button>
+              <>
+                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => { onClose(); onAddToNotes(verseRef, verse.text) }} title="Add to Notes">
+                  <FileText className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={onBookmark}>
+                  <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
+                </Button>
+              </>
             )}
             <Button variant="ghost" size="icon" className="w-7 h-7" onClick={onClose}>
               <X className="w-3.5 h-3.5" />
@@ -770,10 +766,6 @@ export function VersePopup({
             chipEntryLoading={chipEntryLoading}
             handleChipClick={handleChipClick}
             onClearChip={() => { setSelectedChip(null); setChipEntry(null) }}
-            noteText={noteText}
-            setNoteText={setNoteText}
-            noteSaved={noteSaved}
-            handleSaveNote={handleSaveNote}
             explainLimitError={explainLimitError}
             commentaryLimitError={commentaryLimitError}
             isAuthenticated={isAuthenticated}
@@ -822,10 +814,6 @@ interface TabContentProps {
   chipEntryLoading: boolean
   handleChipClick: (w: TaggedWord) => void
   onClearChip: () => void
-  noteText: string
-  setNoteText: (v: string) => void
-  noteSaved: boolean
-  handleSaveNote: () => void
   isAuthenticated: boolean
   tags: { id: string; tag_name: string }[]
   tagInput: string
@@ -841,7 +829,7 @@ function TabContent({
   crossRefs, loadingCrossRefs, otNtConns, onClose, onOpenChat,
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
-  noteText, setNoteText, noteSaved, handleSaveNote, isAuthenticated,
+  isAuthenticated,
   tags, tagInput, setTagInput, addTag, removeTag, setActiveTab,
 }: TabContentProps) {
   async function handleStrongsNumberClick(number: string) {
@@ -1151,29 +1139,6 @@ function TabContent({
                 </p>
               )}
             </>
-          )}
-        </div>
-      )}
-
-      {/* Note */}
-      {activeTab === 'note' && (
-        <div className="px-4 py-3 space-y-2">
-          <Textarea
-            placeholder={isAuthenticated ? 'Write a note about this verse…' : 'Sign in to save notes'}
-            className="text-xs min-h-24 resize-none border-0 bg-muted/40 focus:bg-muted/60 rounded-lg"
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            disabled={!isAuthenticated}
-          />
-          {isAuthenticated && (
-            <Button size="sm" className="w-full h-8 text-xs gap-1.5" onClick={handleSaveNote} disabled={!noteText.trim()}>
-              {noteSaved ? <><Check className="w-3 h-3" /> Saved!</> : 'Save note'}
-            </Button>
-          )}
-          {!isAuthenticated && (
-            <p className="text-xs text-muted-foreground text-center" style={{ fontFamily: 'system-ui' }}>
-              <a href="/auth/login" className="text-primary hover:underline">Sign in</a> to save notes
-            </p>
           )}
         </div>
       )}
