@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -591,6 +591,7 @@ export function VersePopup({
               setTagInput={setTagInput}
               addTag={addTag}
               removeTag={removeTag}
+              setActiveTab={setActiveTab}
             />
           </div>
         </div>
@@ -781,6 +782,7 @@ export function VersePopup({
             setTagInput={setTagInput}
             addTag={addTag}
             removeTag={removeTag}
+            setActiveTab={setActiveTab}
           />
         </div>
       </div>
@@ -830,6 +832,7 @@ interface TabContentProps {
   setTagInput: (v: string) => void
   addTag: () => void
   removeTag: (id: string) => void
+  setActiveTab: (tab: Tab) => void
 }
 
 function TabContent({
@@ -839,8 +842,18 @@ function TabContent({
   wordQuery, setWordQuery, wordResults, wordLoading, selectedEntry, setSelectedEntry, searchWord,
   verseWords, verseWordsLoading, selectedChip, chipEntry, chipEntryLoading, handleChipClick, onClearChip,
   noteText, setNoteText, noteSaved, handleSaveNote, isAuthenticated,
-  tags, tagInput, setTagInput, addTag, removeTag,
+  tags, tagInput, setTagInput, addTag, removeTag, setActiveTab,
 }: TabContentProps) {
+  async function handleStrongsNumberClick(number: string) {
+    setActiveTab('words')
+    setSelectedEntry(null)
+    try {
+      const r = await fetch(`/api/strongs?number=${encodeURIComponent(number)}`)
+      const d = await r.json()
+      if (d.entry) setSelectedEntry(d.entry)
+    } catch { /* ignore */ }
+  }
+
   return (
     <>
       {/* Explain */}
@@ -859,7 +872,7 @@ function TabContent({
           <UpgradeBanner message={explainLimitError} />
         ) : (
           <>
-            <StreamingContent text={explanation} loading={loadingExplain} />
+            <StreamingContent text={explanation} loading={loadingExplain} onStrongsClick={handleStrongsNumberClick} />
             {!loadingExplain && explanation && (
               <div className="px-4 pb-4">
                 <button
@@ -1249,7 +1262,64 @@ function StrongsEntryCard({ entry }: { entry: StrongsEntry }) {
   )
 }
 
-function StreamingContent({ text, loading }: { text: string; loading: boolean }) {
+// Splits text into segments, wrapping G/H Strong's numbers as clickable chips
+function renderWithStrongsLinks(text: string, onClick: (n: string) => void): React.ReactNode[] {
+  const STRONGS_RE = /\b([GH]\d+)\b/g
+  const parts: React.ReactNode[] = []
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = STRONGS_RE.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index))
+    const num = m[1]
+    parts.push(
+      <button
+        key={m.index}
+        onClick={() => onClick(num)}
+        className="inline-flex items-center font-mono text-[10px] bg-primary/10 text-primary hover:bg-primary/20 rounded px-1 py-0.5 mx-0.5 transition-colors cursor-pointer"
+        title={`Look up ${num} in Strong's lexicon`}
+      >
+        {num}
+      </button>
+    )
+    last = m.index + m[0].length
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts
+}
+
+function StreamingContent({
+  text,
+  loading,
+  onStrongsClick,
+}: {
+  text: string
+  loading: boolean
+  onStrongsClick?: (number: string) => void
+}) {
+  const components = onStrongsClick
+    ? {
+        // Override text rendering inside paragraphs and other elements
+        p: ({ children }: { children?: React.ReactNode }) => (
+          <p className="mb-3 last:mb-0">
+            {React.Children.map(children, (child) =>
+              typeof child === 'string'
+                ? renderWithStrongsLinks(child, onStrongsClick)
+                : child
+            )}
+          </p>
+        ),
+        li: ({ children }: { children?: React.ReactNode }) => (
+          <li className="mb-1">
+            {React.Children.map(children, (child) =>
+              typeof child === 'string'
+                ? renderWithStrongsLinks(child, onStrongsClick)
+                : child
+            )}
+          </li>
+        ),
+      }
+    : {}
+
   return (
     <div className="px-4 py-4">
       {!text && loading ? (
@@ -1264,7 +1334,7 @@ function StreamingContent({ text, loading }: { text: string; loading: boolean })
         </div>
       ) : (
         <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed [&>p]:mb-3 [&>p:last-child]:mb-0 [&>h1]:text-sm [&>h1]:font-semibold [&>h1]:mt-4 [&>h1]:mb-1.5 [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:mt-4 [&>h2]:mb-1.5 [&>h3]:text-xs [&>h3]:font-semibold [&>h3]:mt-3 [&>h3]:mb-1 [&>strong]:font-semibold [&>ul]:mt-2 [&>ul]:mb-3 [&>ul>li]:mb-1 text-xs">
-          <ReactMarkdown>{text}</ReactMarkdown>
+          <ReactMarkdown components={components as any}>{text}</ReactMarkdown>
           {loading && <span className="inline-block w-0.5 h-3 bg-primary ml-0.5 animate-pulse align-middle" />}
         </div>
       )}
