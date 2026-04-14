@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
 Provide:
 1. **Plain meaning** (1-2 sentences)
 2. **Historical/ANE context** (2-3 sentences)
-3. **Key word insight** (1 sentence, only if there's a meaningful Hebrew/Greek word)
+3. **Key word** — Pick the single most theologically significant Hebrew or Greek word in this verse. Format it exactly like this: the word in original script, Strong's number in parentheses, transliteration, then its definition drawn from Thayer's Greek Lexicon (NT) or Brown-Driver-Briggs (OT). Explain how the word's range of meaning illuminates this verse. 2-3 sentences. Example format: "The Greek ἀγάπη (G26, *agapē*) — Thayer's defines this as unconditional, self-giving love distinct from φιλέω..."
 4. **Theological significance** (1-2 sentences)
 
-Use markdown. Keep under 250 words.${traditionSuffix}`,
+Use markdown. Keep under 300 words.${traditionSuffix}`,
       },
     ],
   })

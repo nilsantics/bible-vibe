@@ -82,10 +82,10 @@ export async function explainVerse(
 Provide:
 1. **Plain meaning** (1-2 sentences): What does this verse say in simple terms?
 2. **Historical/ANE context** (2-3 sentences): When was this written, to whom, and what cultural situation does it address?
-3. **Key word insight** (1 sentence): If there's a meaningful Hebrew or Greek word here, briefly explain it.
+3. **Key word** — Pick the single most theologically significant Hebrew or Greek word. Give: the word in original script, Strong's number in parentheses, transliteration, and its definition drawn from Thayer's Greek Lexicon (NT) or Brown-Driver-Briggs (OT). Explain how the word's range of meaning illuminates this verse. 2-3 sentences. Example: "The Greek ἀγάπη (G26, *agapē*) — Thayer's defines this as unconditional, self-giving love distinct from φιλέω..."
 4. **Theological significance** (1-2 sentences): Why does this verse matter in the bigger biblical story?
 
-Keep the total response under 250 words. Use markdown formatting.`,
+Keep the total response under 300 words. Use markdown formatting.`,
       },
     ],
   })
