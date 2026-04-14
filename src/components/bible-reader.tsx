@@ -77,10 +77,27 @@ interface TaggedWord {
 }
 
 const TRANSLATIONS = [
-  { code: 'ESV', name: 'Eng. Standard Version', recommended: true },
-  { code: 'BSB', name: 'Berean Standard Bible' },
-  { code: 'WEB', name: 'World English Bible' },
-  { code: 'KJV', name: 'King James Version' },
+  {
+    code: 'ESV',
+    name: 'Eng. Standard Version',
+    recommended: true,
+    manuscript: 'Critical text (NA28/UBS5) — modern eclectic Greek NT',
+  },
+  {
+    code: 'BSB',
+    name: 'Berean Standard Bible',
+    manuscript: 'Critical text (NA28/UBS5) — modern eclectic Greek NT',
+  },
+  {
+    code: 'WEB',
+    name: 'World English Bible',
+    manuscript: 'Majority/Byzantine text — closer to TR but not identical',
+  },
+  {
+    code: 'KJV',
+    name: 'King James Version',
+    manuscript: 'Textus Receptus (TR) — Erasmus/Stephanus Greek NT, 1516–1550',
+  },
 ]
 
 export function BibleReader({
@@ -613,11 +630,16 @@ export function BibleReader({
               <SelectContent>
                 {TRANSLATIONS.map((t) => (
                   <SelectItem key={t.code} value={t.code}>
-                    <span className="font-semibold">{t.code}</span>
-                    <span className="text-muted-foreground ml-2 text-xs">{t.name}</span>
-                    {'recommended' in t && t.recommended && (
-                      <span className="ml-2 text-xs text-primary font-medium">Recommended</span>
-                    )}
+                    <div className="flex flex-col gap-0.5 py-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{t.code}</span>
+                        <span className="text-muted-foreground text-xs">{t.name}</span>
+                        {'recommended' in t && t.recommended && (
+                          <span className="text-xs text-primary font-medium">Recommended</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground/70 leading-tight">{t.manuscript}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
