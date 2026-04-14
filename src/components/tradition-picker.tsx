@@ -43,23 +43,22 @@ export function TraditionPicker({ onChange, compact = false }: Props) {
       <div className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className={`flex items-center gap-1.5 h-7 px-2 rounded-lg border text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1 h-7 px-2 rounded-lg border text-xs font-medium transition-colors ${
             tradition !== 'balanced'
               ? 'border-primary/40 bg-primary/5 text-primary'
               : 'border-border text-muted-foreground hover:text-foreground hover:border-border/80'
           }`}
           style={{ fontFamily: 'system-ui' }}
-          title="Theological tradition"
+          title={`Theological tradition: ${current.label}`}
         >
           <BookMarked className="w-3 h-3 shrink-0" />
-          <span className="hidden sm:inline">{current.label}</span>
           <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
         </button>
 
         {open && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div className="absolute right-0 top-9 z-50 w-56 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
+            <div className="absolute left-0 top-9 z-50 w-56 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
                   Theological Tradition

@@ -66,7 +66,6 @@ const TABS = [
   { id: 'commentary' as Tab, label: 'Commentary', shortLabel: 'Sources', icon: BookMarked },
   { id: 'crossref'   as Tab, label: 'Cross-refs', shortLabel: 'Refs',   icon: GitBranch  },
   { id: 'words'      as Tab, label: "Strong's",   shortLabel: "Strong's",icon: Search     },
-  { id: 'note'       as Tab, label: 'My Note',    shortLabel: 'Note',   icon: Pencil     },
   { id: 'tags'       as Tab, label: 'Tags',       shortLabel: 'Tags',   icon: Tag        },
 ] as const
 
