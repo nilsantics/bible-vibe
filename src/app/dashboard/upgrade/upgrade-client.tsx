@@ -20,7 +20,7 @@ const PRO_FEATURES = [
   { icon: Infinity,       text: 'Unlimited Ezra conversations' },
   { icon: Brain,          text: 'Scholar mode — original languages & theology' },
   { icon: Languages,      text: 'Interlinear Hebrew & Greek view' },
-  { icon: MessageSquare,  text: 'Sermon prep & study guide generator' },
+  { icon: MessageSquare,  text: 'Study notes with AI connections' },
   { icon: BookOpen,       text: 'All commentaries & patristic sources' },
   { icon: Zap,            text: 'Priority response speed' },
 ]
