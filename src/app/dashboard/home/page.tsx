@@ -116,7 +116,7 @@ export default async function DashboardPage({
         <div className="lg:col-span-2 space-y-5">
 
           {/* Greeting */}
-          <div className="flex items-start justify-between">
+          <div className="animate-fade-up flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
                 {greeting}{displayName ? `, ${displayName}` : ''}
@@ -135,7 +135,7 @@ export default async function DashboardPage({
 
           {/* Verse of the Day — shown inline on mobile, hidden on lg (it's in sidebar) */}
           {votdVerse && votdBook && (
-            <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`} className="block lg:hidden">
+            <Link href={`/dashboard/reading/${votdBook.name.toLowerCase().replace(/\s+/g, '-')}/${votd.chapter}#v${votd.verse}`} className="animate-fade-up-1 block lg:hidden">
               <div className="rounded-2xl border border-border bg-card px-5 py-4 hover:border-primary/40 transition-colors group">
                 <p className="text-[10px] font-bold text-primary/70 mb-2.5 uppercase tracking-widest" style={{ fontFamily: 'system-ui' }}>
                   Verse of the Day
@@ -201,10 +201,10 @@ export default async function DashboardPage({
           )}
 
           {/* Quick actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="animate-fade-up-2 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {QUICK_ACTIONS.map((action) => (
               <Link key={action.href} href={action.href}>
-                <Card className="p-3 border-border hover:border-primary/40 hover:bg-primary/5 transition-all group h-full flex items-center gap-3 sm:flex-col sm:items-center sm:text-center sm:gap-2">
+                <Card className="p-3 border-border hover:border-primary/40 hover:bg-primary/5 hover:shadow-md hover:scale-[1.02] transition-all duration-200 group h-full flex items-center gap-3 sm:flex-col sm:items-center sm:text-center sm:gap-2">
                   <div className="w-9 h-9 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors flex items-center justify-center shrink-0">
                     <action.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
@@ -263,7 +263,7 @@ export default async function DashboardPage({
           )}
 
           {/* Reading plan suggestions — horizontal scroll on mobile */}
-          <div>
+          <div className="animate-fade-up-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold" style={{ fontFamily: 'system-ui' }}>Reading plans</h2>
               <Link href="/dashboard/plans" className="text-xs text-primary hover:underline" style={{ fontFamily: 'system-ui' }}>See all</Link>
@@ -305,7 +305,7 @@ export default async function DashboardPage({
         </div>
 
         {/* ── Right sidebar (desktop only) ── */}
-        <div className="hidden lg:flex flex-col gap-5">
+        <div className="animate-fade-up-3 hidden lg:flex flex-col gap-5">
 
           {/* Verse of the Day */}
           {votdVerse && votdBook && (

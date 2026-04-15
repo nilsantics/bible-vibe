@@ -713,26 +713,24 @@ export function VersePopup({
           )}
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-y border-border/60 overflow-x-auto">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs transition-colors shrink-0 relative ${
-                activeTab === id
-                  ? 'text-primary border-b-2 border-primary font-semibold bg-primary/5'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
-              }`}
-              style={{ fontFamily: 'system-ui' }}
-              onClick={() => setActiveTab(id)}
-            >
-              <Icon className="w-3 h-3" />
-              {label}
-              {id === 'words' && !isPro && (
-                <Zap className="w-2.5 h-2.5 text-primary" />
-              )}
-            </button>
-          ))}
+        {/* Tabs — segmented control */}
+        <div className="px-3 py-2.5 border-b border-border/40">
+          <div className="segmented-tabs">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                className={`segmented-tab${activeTab === id ? ' active' : ''}`}
+                style={{ fontFamily: 'system-ui' }}
+                onClick={() => setActiveTab(id)}
+              >
+                <Icon className="w-3 h-3 shrink-0" />
+                {label}
+                {id === 'words' && !isPro && (
+                  <Zap className="w-2.5 h-2.5 text-primary shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab content */}
