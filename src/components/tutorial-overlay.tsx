@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, MousePointerClick, MessageSquare, ChevronRight } from 'lucide-react'
+import { X, MousePointerClick, MessageSquare, Search, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
 
 const STEPS = [
   {
     icon: MousePointerClick,
     title: 'Tap any verse',
-    desc: 'A study panel opens instantly — cross-references, Hebrew & Greek meanings, highlights, notes, and an AI explanation.',
-    tip: 'Try it now — tap any verse number',
+    desc: 'A study panel opens — cross-references, Hebrew & Greek word meanings, highlights, bookmarks, and an AI explanation.',
+    tip: 'Try it now — tap any verse',
     color: 'from-primary/30 to-primary/10',
   },
   {
@@ -19,6 +19,27 @@ const STEPS = [
     tip: 'Hit "Ask Ezra" in the toolbar above',
     color: 'from-blue-500/20 to-primary/20',
   },
+  {
+    icon: BookOpen,
+    title: 'Take study notes',
+    desc: 'Open the Notes panel while reading to write, quote verses, and let AI surface connections across Scripture you might have missed.',
+    tip: 'Look for the Notes icon in the reader toolbar',
+    color: 'from-emerald-500/20 to-primary/20',
+  },
+  {
+    icon: Sparkles,
+    title: 'Discover verses by theme',
+    desc: 'In Verse Discovery, type a goal or struggle — "dealing with fear", "leadership" — and AI finds passages that speak to it, not just by keyword.',
+    tip: 'Find it under Discover in the nav',
+    color: 'from-amber-500/20 to-primary/20',
+  },
+  {
+    icon: Search,
+    title: 'Search all 31,102 verses',
+    desc: 'Search any word or phrase across the whole Bible. Filter by book or testament to narrow it down.',
+    tip: 'Search is in the nav — try "fear not"',
+    color: 'from-violet-500/20 to-primary/20',
+  },
 ]
 
 export function TutorialOverlay() {
@@ -27,13 +48,22 @@ export function TutorialOverlay() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    // Only show after onboarding is complete, and only once
     const onboardingDone = localStorage.getItem('kairos_onboarding_done')
     const tutorialDone = localStorage.getItem('kairos_tutorial_done')
     if (onboardingDone && !tutorialDone) {
       const t = setTimeout(() => setVisible(true), 1000)
       return () => clearTimeout(t)
     }
+  }, [])
+
+  // Allow re-triggering from settings via custom event
+  useEffect(() => {
+    function handleReplay() {
+      setStep(0)
+      setVisible(true)
+    }
+    window.addEventListener('kairos:replay-tutorial', handleReplay)
+    return () => window.removeEventListener('kairos:replay-tutorial', handleReplay)
   }, [])
 
   function dismiss() {

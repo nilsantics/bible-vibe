@@ -234,11 +234,31 @@ export function SettingsForm({
           variant="outline"
           size="sm"
           onClick={() => {
-            localStorage.removeItem('bv_onboarding_done')
+            localStorage.removeItem('kairos_onboarding_done')
             window.location.reload()
           }}
         >
           {readingGoal ? 'Update goals' : 'Set up goals'}
+        </Button>
+      </Card>
+
+      {/* Help & Tutorial */}
+      <Card className="p-5">
+        <h2 className="text-base font-semibold mb-1" style={{ fontFamily: 'system-ui' }}>
+          Help
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4" style={{ fontFamily: 'system-ui' }}>
+          Replay the feature tour to rediscover how to use Kairos.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            localStorage.removeItem('kairos_tutorial_done')
+            window.dispatchEvent(new Event('kairos:replay-tutorial'))
+          }}
+        >
+          Replay feature tour
         </Button>
       </Card>
 
