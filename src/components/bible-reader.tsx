@@ -430,29 +430,6 @@ export function BibleReader({
     }
   }, [nextHref, prevHref, router, book.name, book.chapters, chapter, translation])
 
-  // Touch swipe gestures
-  useEffect(() => {
-    let touchStartX = 0
-    let touchStartY = 0
-    function onTouchStart(e: TouchEvent) {
-      touchStartX = e.touches[0].clientX
-      touchStartY = e.touches[0].clientY
-    }
-    function onTouchEnd(e: TouchEvent) {
-      const dx = e.changedTouches[0].clientX - touchStartX
-      const dy = e.changedTouches[0].clientY - touchStartY
-      if (Math.abs(dx) < 60 || Math.abs(dy) > 80) return
-      if (selectedVerse) return
-      if (dx < 0 && nextHref) router.push(nextHref)
-      if (dx > 0 && prevHref) router.push(prevHref)
-    }
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [nextHref, prevHref, selectedVerse, router])
 
   // Keyboard shortcuts
   useEffect(() => {
