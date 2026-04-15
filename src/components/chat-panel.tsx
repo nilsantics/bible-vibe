@@ -403,27 +403,6 @@ export function ChatPanel({
         )}
       </div>
 
-      {/* Source focus chips */}
-      <div className="px-4 pt-2 pb-1 shrink-0 border-t border-border/50">
-        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
-          {FOCUS_OPTIONS.map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              onClick={() => setFocusArea(value)}
-              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border whitespace-nowrap transition-colors shrink-0 ${
-                focusArea === value
-                  ? 'bg-primary text-primary-foreground border-primary font-medium'
-                  : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40'
-              }`}
-              style={{ fontFamily: 'system-ui' }}
-            >
-              <Icon className="w-2.5 h-2.5" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Input */}
       <div className="border-t border-border p-3 shrink-0">
         <div className="flex gap-2">
